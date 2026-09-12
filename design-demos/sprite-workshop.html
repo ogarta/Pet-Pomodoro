@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sprite Workshop · Tàn Lửa + Trứng — 3 hướng vẽ kiểu Pokémon Ruby · Pet Pomodoro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="./sprite-workshop-data.js"></script>
+<style>
+  :root{
+    --paper:#FBF5E9; --cream:#F2E9D8; --ink:#26201D; --ink2:#5A4F47;
+    --red:#BC3A28; --mustard:#E3A72F; --blue:#2B54A3; --green:#5F6B2F; --pink:#E89BB0;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--cream);color:var(--ink);font-family:'Space Mono',monospace;}
+  .f-serif{font-family:'DM Serif Display',serif;}
+  .wrap{max-width:1660px;margin:0 auto;padding:34px 30px 60px;}
+
+  .head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;
+        border-bottom:4px solid var(--ink);padding-bottom:18px;margin-bottom:10px;}
+  .head h1{font-size:44px;line-height:1;margin:0 0 8px;}
+  .head h1 em{font-style:italic;color:var(--red);}
+  .head p{margin:0;color:var(--ink2);font-size:14px;max-width:640px;line-height:1.55;}
+  .spec-chip{border:3px solid var(--ink);background:var(--paper);box-shadow:5px 5px 0 var(--ink);
+             padding:12px 16px;font-size:12.5px;line-height:1.6;max-width:330px;}
+  .spec-chip b{color:var(--red);}
+
+  .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:24px;}
+  @media (max-width:1200px){.cols{grid-template-columns:1fr;}}
+
+  .card{background:var(--paper);border:3px solid var(--ink);box-shadow:7px 7px 0 var(--ink);
+        padding:0 0 20px;display:flex;flex-direction:column;}
+  .card-head{padding:14px 18px 12px;border-bottom:3px solid var(--ink);display:flex;align-items:baseline;gap:12px;}
+  .card-letter{font-size:40px;line-height:1;font-weight:700;}
+  .card-name{font-size:17px;font-weight:700;letter-spacing:.5px;}
+  .card-concept{padding:10px 18px 0;color:var(--ink2);font-size:12.5px;line-height:1.6;}
+
+  .stage{display:flex;align-items:flex-end;justify-content:center;gap:26px;padding:22px 16px 8px;}
+  .stage .who{text-align:center;}
+  .stage .who .lbl{font-size:11px;font-weight:700;letter-spacing:2px;color:var(--ink2);margin-top:8px;}
+  .stage .who .lv{font-size:11px;color:var(--ink2);margin-top:2px;}
+  .eggbox{padding-bottom:14px;}
+
+  .zoomrow{display:flex;align-items:center;justify-content:center;gap:14px;padding:6px 16px 2px;}
+  .zoom{border:2px solid var(--ink);background:
+        repeating-conic-gradient(#EFE6D2 0% 25%, #E7DCC3 0% 50%) 0 0/16px 16px;}
+  .zoom-lbl{font-size:10.5px;color:var(--ink2);max-width:110px;line-height:1.5;}
+
+  .pal{padding:12px 18px 0;}
+  .pal h4{margin:0 0 8px;font-size:11px;letter-spacing:2px;color:var(--ink2);}
+  .swatches{display:flex;flex-wrap:wrap;gap:6px;}
+  .sw{display:flex;align-items:center;gap:5px;border:2px solid var(--ink);padding:2px 6px 2px 2px;background:var(--cream);font-size:10.5px;}
+  .sw i{width:16px;height:16px;display:block;border:1.5px solid var(--ink);}
+
+  .points{padding:12px 18px 0;font-size:12.5px;line-height:1.65;}
+  .points li{margin-bottom:4px;}
+  .points b{color:var(--red);}
+  .gridok{margin:12px 18px 0;font-size:10.5px;color:var(--green);font-weight:700;letter-spacing:1px;}
+  .gridbad{color:var(--red);}
+
+  .foot{margin-top:30px;border:3px dashed var(--ink);background:var(--paper);padding:16px 22px;
+        font-size:13.5px;line-height:1.6;display:flex;gap:16px;align-items:center;flex-wrap:wrap;}
+  .foot .arrow{font-size:26px;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const D = globalThis.SPRITE_DATA;
+
+/* ---------- render sprite: SVG rect, nét gạch pixel ---------- */
+function PixelSprite({ grid, palette, scale = 6, gridLines = false }){
+  const w = grid[0].length, h = grid.length;
+  const rects = [];
+  grid.forEach((row, y) => {
+    for (let x = 0; x < row.length; x++) {
+      const ch = row[x];
+      if (ch !== "." && palette[ch]) {
+        rects.push(<rect key={x + "," + y} x={x} y={y} width={1} height={1} fill={palette[ch].hex} />);
+      }
+    }
+  });
+  const lines = [];
+  if (gridLines) {
+    for (let i = 0; i <= w; i++) lines.push(<line key={"v"+i} x1={i} y1={0} x2={i} y2={h} stroke="rgba(38,32,29,.14)" strokeWidth={0.05} />);
+    for (let i = 0; i <= h; i++) lines.push(<line key={"h"+i} x1={0} y1={i} x2={w} y2={i} stroke="rgba(38,32,29,.14)" strokeWidth={0.05} />);
+  }
+  return (
+    <svg width={w * scale} height={h * scale} viewBox={"0 0 " + w + " " + h}
+         shapeRendering="crispEdges" style={{ display: "block" }}>
+      {rects}{lines}
+    </svg>
+  );
+}
+
+/* ---------- dải palette ---------- */
+function Swatches({ palette }){
+  return (
+    <div className="swatches">
+      {Object.entries(palette).map(([ch, p]) => (
+        <span className="sw" key={ch}><i style={{ background: p.hex }}></i>{ch}·{p.ten}</span>
+      ))}
+    </div>
+  );
+}
+
+/* ---------- kiểm tra grid hiển thị trạng thái ---------- */
+function GridStatus({ grid }){
+  const w = grid[0].length;
+  const bad = grid.map((r, i) => ({ i, len: r.length })).filter(r => r.len !== w);
+  return bad.length === 0
+    ? <div className="gridok">GRID OK · {grid.length}×{w} · {Object.keys(D.palettes).length && "pixel-perfect"}</div>
+    : <div className="gridok gridbad">LỖI: hàng {bad.map(b => b.i + 1).join(", ")}</div>;
+}
+
+/* ---------- thẻ 1 hướng ---------- */
+function DirectionCard({ dirKey }){
+  const dir = D.dirs[dirKey];
+  const pal = D.palettes[dirKey];
+  return (
+    <div className="card">
+      <div className="card-head">
+        <span className="card-letter" style={{ color: dirKey === "A" ? "var(--red)" : dirKey === "B" ? "var(--blue)" : "var(--mustard)" }}>{dirKey}</span>
+        <span className="card-name">{dir.ten}</span>
+      </div>
+      <div className="card-concept">{dir.concept}</div>
+
+      <div className="stage">
+        <div className="who">
+          <PixelSprite grid={dir.grids.tanLua} palette={pal} scale={7} />
+          <div className="lbl">TÀN LỬA</div>
+          <div className="lv">Stage 1 · 32×32</div>
+        </div>
+        <div className="who eggbox">
+          <PixelSprite grid={dir.grids.trung} palette={pal} scale={4} />
+          <div className="lbl">TRỨNG</div>
+          <div className="lv">32×32</div>
+        </div>
+      </div>
+
+      <div className="zoomrow">
+        <div className="zoom">
+          <PixelSprite grid={dir.grids.tanLua} palette={pal} scale={9} gridLines={true} />
+        </div>
+        <div className="zoom-lbl">Bản zoom từng pixel — soi rõ từng ô để đánh giá dáng và chỗ đặt màu.</div>
+      </div>
+
+      <div className="pal">
+        <h4>PALETTE ({Object.keys(pal).length} MÀU)</h4>
+        <Swatches palette={pal} />
+      </div>
+
+      <ul className="points">
+        {dir.points.map((p, i) => <li key={i} dangerouslySetInnerHTML={{ __html: p }} />)}
+      </ul>
+
+      <GridStatus grid={dir.grids.tanLua} />
+    </div>
+  );
+}
+
+function App(){
+  return (
+    <div className="wrap">
+      <div className="head">
+        <div>
+          <h1 className="f-serif">Sprite Workshop <em>· chọn hướng vẽ</em></h1>
+          <p>Tàn Lửa (stage 1) + Trứng được vẽ theo <b>3 hướng diễn giải style Pokémon Ruby (GBA)</b> —
+             cùng chuẩn kỹ thuật: outline 1px hue-shifted, 3 tông + highlight, sáng từ trên-trái,
+             silhouette đọc được khi tô đặc. Chọn 1 hướng (hoặc mix) để tôi vẽ nốt toàn bộ 3 line × 3 stage + bản ốm.</p>
+        </div>
+        <div className="spec-chip">
+          <b>Chuẩn sprite v3 (spec §2.5):</b> sprite CÓ MÀU ≥24×24 · outline tối gần đen ·
+          thân 2–3 tông + highlight · độ phức tạp tăng theo stage · tham chiếu dáng starter thật, tên thú giữ Việt.
+        </div>
+      </div>
+
+      <div className="cols">
+        <DirectionCard dirKey="A" />
+        <DirectionCard dirKey="B" />
+        <DirectionCard dirKey="C" />
+      </div>
+
+      <div className="foot">
+        <span className="arrow">▶</span>
+        <span>
+          <b>Câu hỏi cho bạn:</b> chọn <b>A</b> (GBA cổ điển) · <b>B</b> (Ruby nhiều tông) · <b>C</b> (chibi max-cute)
+          — hoặc mix (VD "dáng A + mắt B"). Trả lời xong tôi vẽ nốt Bồng Bột, Diễm Long, 2 line còn lại và bản ỐM theo đúng hướng đó.
+        </span>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

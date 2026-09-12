@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hướng 2 · Tham chiếu Finch — Pet Pomodoro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  html, body { margin:0; padding:0; }
+  body {
+    background-color:#F4EBDC;
+    background-image: radial-gradient(#E7DAC4 1px, transparent 1.4px);
+    background-size: 26px 26px;
+    font-family:'Nunito', sans-serif;
+    color:#43382E;
+  }
+  a { color:#0D5C49; }
+  .pp-btn { cursor:pointer; transition: transform .15s ease, filter .15s ease, box-shadow .15s ease; }
+  .pp-btn:hover { transform: translateY(-1px); filter: brightness(1.045); }
+  .pp-btn:active { transform: scale(.965); }
+  .pp-btn[disabled] { cursor:not-allowed; opacity:.55; transform:none; filter:none; }
+  .pp-tab { cursor:pointer; transition: background .18s ease, color .18s ease; }
+  .pp-tab:hover { background:#F1E7D4; }
+  .pp-egg { cursor:pointer; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+  .pp-egg:hover { transform: translateY(-3px); }
+  @keyframes ppBounce { 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-9%) } }
+  @keyframes ppBreath { 0%,100%{ transform:scale(1) } 50%{ transform:scale(1.04) } }
+  @keyframes ppFloatZ { 0%{ opacity:0; transform:translate(0,8px) scale(.7) } 30%{ opacity:.95 } 100%{ opacity:0; transform:translate(14px,-30px) scale(1.15) } }
+  @keyframes ppHeart { 0%{ opacity:0; transform:translateY(8px) scale(.6) } 25%{ opacity:1 } 100%{ opacity:0; transform:translateY(-30px) scale(1.1) } }
+  @keyframes ppWiggle { 0%,100%{ transform:rotate(-2.5deg) } 50%{ transform:rotate(2.5deg) } }
+  .pp-bounce { animation: ppBounce 1.5s ease-in-out infinite; }
+  .pp-bounce.pp-still { animation-play-state: paused; }
+  .pp-breath { animation: ppBreath 3.2s ease-in-out infinite; }
+  .pp-z { position:absolute; font-family:'Baloo 2', cursive; font-weight:800; color:#2C5F8F; animation: ppFloatZ 2.6s ease-out infinite; }
+  .pp-heart { position:absolute; animation: ppHeart 2.2s ease-out infinite; }
+  .pp-wiggle { animation: ppWiggle 1.1s ease-in-out infinite; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState } = React;
+
+/* ============================================================
+   AndroidFrame — copy từ huashu-design/assets/android_frame.jsx
+   ============================================================ */
+const androidFrameStyles = {
+  wrapper: {
+    display: 'inline-block',
+    padding: 10,
+    background: '#1a1a1a',
+    borderRadius: 44,
+    boxShadow: '0 0 0 2px #2a2a2a, 0 20px 60px rgba(0,0,0,0.3)',
+    position: 'relative',
+  },
+  screen: {
+    position: 'relative',
+    borderRadius: 36,
+    overflow: 'hidden',
+    background: '#fff',
+  },
+  statusBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 32,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '0 24px',
+    fontSize: 14,
+    fontWeight: 500,
+    fontFamily: 'Roboto, -apple-system, sans-serif',
+    zIndex: 20,
+    pointerEvents: 'none',
+  },
+  punchHole: {
+    position: 'absolute',
+    top: 10,
+    left: '50%',
+    transform: 'translateX(-50%)',
+    width: 14,
+    height: 14,
+    background: '#000',
+    borderRadius: '50%',
+    zIndex: 30,
+  },
+  statusIcons: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+  },
+  batteryText: {
+    fontSize: 11,
+    fontWeight: 600,
+    marginLeft: 2,
+  },
+  content: {
+    position: 'absolute',
+    top: 32,
+    left: 0,
+    right: 0,
+    bottom: 24,
+    overflow: 'auto',
+  },
+  navBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 24,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 60,
+    zIndex: 10,
+  },
+  navButton: {
+    width: 36,
+    height: 4,
+    background: 'rgba(0,0,0,0.3)',
+    borderRadius: 999,
+  },
+};
+
+function AndroidFrame({
+  children,
+  width = 412,
+  height = 892,
+  time = '9:41',
+  battery = 100,
+  darkMode = false,
+  navStyle = 'gesture',
+}) {
+  const textColor = darkMode ? '#fff' : '#1a1a1a';
+
+  return (
+    <div style={androidFrameStyles.wrapper}>
+      <div style={{
+        ...androidFrameStyles.screen,
+        width,
+        height,
+        background: darkMode ? '#000' : '#fff',
+      }}>
+        <div style={{ ...androidFrameStyles.statusBar, color: textColor }}>
+          <span>{time}</span>
+          <div style={androidFrameStyles.statusIcons}>
+            <svg width="14" height="10" viewBox="0 0 14 10" fill="currentColor">
+              <rect x="0" y="6" width="2" height="4" rx="0.5" />
+              <rect x="4" y="4" width="2" height="6" rx="0.5" />
+              <rect x="8" y="2" width="2" height="8" rx="0.5" />
+              <rect x="12" y="0" width="2" height="10" rx="0.5" />
+            </svg>
+            <svg width="14" height="10" viewBox="0 0 14 10" fill="none">
+              <path d="M7 9a1 1 0 100-2 1 1 0 000 2z" fill="currentColor" />
+              <path d="M3 6a5 5 0 018 0" stroke="currentColor" strokeWidth="1.2" />
+              <path d="M0.5 3.5a11 11 0 0113 0" stroke="currentColor" strokeWidth="1.2" opacity="0.6" />
+            </svg>
+            <div style={{
+              width: 22,
+              height: 10,
+              border: '1.5px solid currentColor',
+              borderRadius: 2,
+              padding: 1,
+              position: 'relative',
+            }}>
+              <div style={{
+                width: `${battery}%`,
+                height: '100%',
+                background: 'currentColor',
+                borderRadius: 1,
+              }} />
+            </div>
+            <span style={androidFrameStyles.batteryText}>{battery}%</span>
+          </div>
+        </div>
+
+        <div style={androidFrameStyles.punchHole} />
+
+        <div style={androidFrameStyles.content}>
+          {children}
+        </div>
+
+        {navStyle === 'gesture' && (
+          <div style={androidFrameStyles.navBar}>
+            <div style={{
+              ...androidFrameStyles.navButton,
+              width: 100,
+              height: 4,
+              background: darkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)',
+            }} />
+          </div>
+        )}
+
+        {navStyle === 'buttons' && (
+          <div style={androidFrameStyles.navBar}>
+            <span style={{ color: textColor, fontSize: 20 }}>◁</span>
+            <span style={{ color: textColor, fontSize: 16 }}>○</span>
+            <span style={{ color: textColor, fontSize: 16 }}>□</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   BrowserWindow — copy từ huashu-design/assets/browser_window.jsx
+   ============================================================ */
+const browserWindowStyles = {
+  window: {
+    display: 'inline-block',
+    background: '#fff',
+    borderRadius: 10,
+    overflow: 'hidden',
+    boxShadow: '0 30px 80px rgba(0,0,0,0.25), 0 0 0 0.5px rgba(0,0,0,0.15)',
+  },
+  chrome: {
+    background: '#dee1e6',
+    paddingTop: 10,
+    paddingLeft: 10,
+    paddingRight: 10,
+    userSelect: 'none',
+  },
+  tabRow: {
+    display: 'flex',
+    alignItems: 'flex-end',
+    gap: 6,
+    position: 'relative',
+  },
+  trafficLights: {
+    display: 'flex',
+    gap: 8,
+    alignItems: 'center',
+    paddingBottom: 10,
+    marginRight: 8,
+  },
+  light: {
+    width: 12,
+    height: 12,
+    borderRadius: '50%',
+    border: '0.5px solid rgba(0,0,0,0.15)',
+  },
+  close: { background: '#ff5f57' },
+  minimize: { background: '#febc2e' },
+  maximize: { background: '#28c840' },
+  tab: {
+    background: '#fff',
+    padding: '8px 30px 8px 14px',
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+    fontSize: 12,
+    color: '#222',
+    fontFamily: '-apple-system, sans-serif',
+    maxWidth: 220,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    position: 'relative',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  },
+  favicon: {
+    width: 14,
+    height: 14,
+    borderRadius: 2,
+    background: '#999',
+    flexShrink: 0,
+  },
+  navBar: {
+    background: '#fff',
+    padding: '8px 14px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    borderBottom: '1px solid #e5e7eb',
+  },
+  navButtons: {
+    display: 'flex',
+    gap: 4,
+    color: '#5f6368',
+    fontSize: 16,
+  },
+  navButton: {
+    width: 28,
+    height: 28,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: '50%',
+    cursor: 'pointer',
+  },
+  urlBar: {
+    flex: 1,
+    background: '#f1f3f4',
+    borderRadius: 999,
+    padding: '7px 14px',
+    fontSize: 13,
+    color: '#333',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    fontFamily: '-apple-system, sans-serif',
+  },
+  lockIcon: {
+    color: '#5f6368',
+    fontSize: 12,
+  },
+  content: {
+    position: 'relative',
+    overflow: 'auto',
+    background: '#fff',
+  },
+};
+
+function BrowserWindow({
+  title = 'New Tab',
+  url = 'https://example.com',
+  width = 1200,
+  height = 800,
+  showTrafficLights = true,
+  children,
+}) {
+  return (
+    <div style={browserWindowStyles.window}>
+      <div style={browserWindowStyles.chrome}>
+        <div style={browserWindowStyles.tabRow}>
+          {showTrafficLights && (
+            <div style={browserWindowStyles.trafficLights}>
+              <div style={{ ...browserWindowStyles.light, ...browserWindowStyles.close }} />
+              <div style={{ ...browserWindowStyles.light, ...browserWindowStyles.minimize }} />
+              <div style={{ ...browserWindowStyles.light, ...browserWindowStyles.maximize }} />
+            </div>
+          )}
+          <div style={browserWindowStyles.tab}>
+            <div style={browserWindowStyles.favicon} />
+            <span>{title}</span>
+          </div>
+        </div>
+      </div>
+
+      <div style={browserWindowStyles.navBar}>
+        <div style={browserWindowStyles.navButtons}>
+          <div style={browserWindowStyles.navButton}>←</div>
+          <div style={browserWindowStyles.navButton}>→</div>
+          <div style={browserWindowStyles.navButton}>↻</div>
+        </div>
+        <div style={browserWindowStyles.urlBar}>
+          <span style={browserWindowStyles.lockIcon}>🔒</span>
+          <span>{url}</span>
+        </div>
+      </div>
+
+      <div style={{ ...browserWindowStyles.content, width, height }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   Pet Pomodoro — direction: Finch (self-care pet app)
+   Palette pastel kem–mint · card trắng bo tròn · nút pill
+   ============================================================ */
+
+const C = {
+  cream:'#FBF3E4', card:'#FFFFFF', ink:'#43382E', sub:'#6E6257',
+  mint:'#C8EBDC', mintDeep:'#0D5C49', mintBar:'#5FC4A2',
+  peach:'#FFE4D2', peachDeep:'#96471E', peachBar:'#F5A26B',
+  pink:'#FFDCE7', pinkDeep:'#A63559', pinkBar:'#F49BC0',
+  sky:'#DBEBFA', skyDeep:'#27567F', skyBar:'#8FBEE8',
+  butter:'#FFF2C9', butterDeep:'#7C5A0E',
+  danger:'#FFE3DE', dangerDeep:'#A93B29',
+  track:'#F3EADC', line:'#F0E4D2',
+};
+const F = { display:"'Baloo 2', 'Nunito', sans-serif", body:"'Nunito', sans-serif" };
+
+/* ---------- Pixel art: pet 16×16 (3 loài = đổi palette) ---------- */
+const PET_ART = [
+  "................",
+  "...O........O...",
+  "..OBO......OBO..",
+  "..OBPO....OPBO..",
+  "..OBBBOOOOBBBO..",
+  "..OBBBBBBBBBBO..",
+  "..OBEEBBBBEEBO..",
+  "..OBEEBBBBEEBO..",
+  "..OBBBBPPBBBBO..",
+  "..OBBBBOOBBBBO..",
+  "..OBBBBBBBBBBO..",
+  "...OBBBBBBBBO...",
+  "....OBBLLBBO....",
+  "...OBBLLLLBBO...",
+  "...OBBBBBBBBO...",
+  "....OOOOOOOO....",
+];
+// patch trạng thái: [row, col, ký tự]
+const PET_PATCHES = {
+  sleep: [[6,4,'B'],[6,5,'B'],[6,10,'B'],[6,11,'B'],[7,4,'O'],[7,5,'O'],[7,10,'O'],[7,11,'O']],
+  sad:   [[6,4,'B'],[6,5,'B'],[6,10,'B'],[6,11,'B'],[8,4,'A']],
+  happy: [[9,6,'P'],[9,7,'P'],[9,8,'P'],[9,9,'P'],[8,3,'P'],[8,12,'P']],
+};
+const SPECIES = {
+  cat:   { name:'Mochi',    B:'#EDEAF3', L:'#FCFBFF', P:'#F5B3C3', O:'#5C5566', E:'#3B3644', A:'#7EC8F0' },
+  dog:   { name:'Bánh Bao', B:'#F5C07A', L:'#FBE7C0', P:'#EE9B87', O:'#7A5433', E:'#4A3520', A:'#7EC8F0' },
+  bunny: { name:'Bún',      B:'#F7C9DA', L:'#FDEFF4', P:'#F091B0', O:'#8A5A6B', E:'#5A3D47', A:'#7EC8F0' },
+};
+
+/* ---------- Pixel art: trứng 12×13 ---------- */
+const EGG_ART = [
+  "....OOOO....",
+  "...OBBBBO...",
+  "..OBBSBBBO..",
+  "..OBBBBSBO..",
+  ".OBSBBBBBBO.",
+  ".OBBBSBSBBO.",
+  ".OBBBBSBBBO.",
+  "OBWBBBBBBBBO",
+  "OBWBSBBSBBBO",
+  "OBBSBBBBBBBO",
+  "OBBBBSBBBSBO",
+  "OBBBBSBBSBBO",
+  ".OOOOOOOOOO.",
+];
+const EGGS = [
+  { id:'mochi',   species:'cat',   name:'Mochi',    desc:'Mèo trắng · điềm tĩnh', stage:'#E7F6EE', pal:{ B:'#F2F0F7', S:'#C9C4D8', O:'#6B6478', W:'#FFFFFF' } },
+  { id:'banhbao', species:'dog',   name:'Bánh Bao', desc:'Cún vàng · tung tăng',  stage:'#FFF0DE', pal:{ B:'#FFE3B3', S:'#F0B36A', O:'#8A5A2B', W:'#FFF8E8' } },
+  { id:'bun',     species:'bunny', name:'Bún',      desc:'Thỏ hồng · mơ mộng',   stage:'#FDE9F0', pal:{ B:'#FBD7E4', S:'#F199BB', O:'#A05470', W:'#FFF3F7' } },
+];
+
+/* ---------- Pixel art phụ: sushi, lửa, tim ---------- */
+const SUSHI_ART = [
+  "..OOOOOOOO..",
+  ".OTTGGTTTTO.",
+  ".OTTGGTTTTO.",
+  ".OWWGGWWWWO.",
+  ".OWWGGWWWWO.",
+  ".OWWGGWWWWO.",
+  "..OOOOOOOO..",
+];
+const SUSHI_PAL = { O:'#4A3728', T:'#FB9E5C', W:'#FFF6EA', G:'#7FB069' };
+
+const FLAME_ART = [
+  "...O...",
+  "..OFO..",
+  "..OFFO.",
+  ".OFFFO.",
+  ".OFYYFO",
+  "OFYYYFO",
+  ".OOOOO.",
+];
+const FLAME_PAL = { O:'#9A3412', F:'#FB923C', Y:'#FDE68A' };
+
+const HEART_ART = [
+  ".OO.OO.",
+  "OHHOHHO",
+  "OHHHHHO",
+  ".OHHHO.",
+  "..OHO..",
+  "...O...",
+];
+const HEART_PAL = { O:'#B23A5E', H:'#F472A0' };
+
+/* ---------- Sprite renderer (CSS grid, palette swap) ---------- */
+function PixelSprite({ art, palette, px = 6, patches = [], style }) {
+  const grid = art.map(r => r.split(''));
+  patches.forEach(([r, c, ch]) => { if (grid[r] && c < grid[r].length) grid[r][c] = ch; });
+  const w = art[0].length;
+  const cells = [];
+  grid.forEach((row, y) => row.forEach((ch, x) => {
+    cells.push(<div key={x + '_' + y} style={{ width: px, height: px, background: ch === '.' ? 'transparent' : (palette[ch] || 'transparent') }} />);
+  }));
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${w}, ${px}px)`, gridTemplateRows: `repeat(${grid.length}, ${px}px)`, lineHeight: 0, ...style }}>
+      {cells}
+    </div>
+  );
+}
+
+function Pet({ species, state = 'idle', px = 7, className = '' }) {
+  const pal = SPECIES[species] || SPECIES.cat;
+  const patches = PET_PATCHES[state] || [];
+  return (
+    <PixelSprite art={PET_ART} palette={pal} px={px} patches={patches}
+      style={{ filter: 'drop-shadow(0 6px 0 rgba(67,56,46,0.10))' }}
+      className={className} />
+  );
+}
+
+function PixelPetWrap({ species, state, px, animClass, still, children }) {
+  const cls = animClass + (still ? ' pp-still' : '');
+  return (
+    <div style={{ position: 'relative', display: 'inline-block' }}>
+      <div className={cls} style={{ display: 'inline-block' }}>
+        <Pet species={species} state={state} px={px} />
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function Zzz() {
+  return (
+    <div>
+      <span className="pp-z" style={{ left: '62%', top: '2%', fontSize: 20, animationDelay: '0s' }}>z</span>
+      <span className="pp-z" style={{ left: '76%', top: '-8%', fontSize: 15, animationDelay: '0.9s' }}>z</span>
+      <span className="pp-z" style={{ left: '88%', top: '-16%', fontSize: 11, animationDelay: '1.7s' }}>z</span>
+    </div>
+  );
+}
+
+function Hearts() {
+  return (
+    <div>
+      <span className="pp-heart" style={{ left: '8%', top: '6%', animationDelay: '0s' }}><PixelSprite art={HEART_ART} palette={HEART_PAL} px={2} /></span>
+      <span className="pp-heart" style={{ left: '82%', top: '0%', animationDelay: '0.7s' }}><PixelSprite art={HEART_ART} palette={HEART_PAL} px={3} /></span>
+      <span className="pp-heart" style={{ left: '46%', top: '-10%', animationDelay: '1.3s' }}><PixelSprite art={HEART_ART} palette={HEART_PAL} px={2} /></span>
+    </div>
+  );
+}
+
+/* ---------- Atoms ---------- */
+function Card({ children, style }) {
+  return (
+    <div style={{ background: C.card, borderRadius: 22, padding: 14, boxShadow: '0 6px 18px rgba(67,56,46,0.07)', border: `1px solid ${C.line}`, ...style }}>
+      {children}
+    </div>
+  );
+}
+
+const PILL_TONES = {
+  mint:   { bg: C.mint,   fg: C.mintDeep,   bd: '#9ADBC2' },
+  white:  { bg: '#FFFFFF', fg: C.ink,       bd: '#E4D5BE' },
+  peach:  { bg: C.peach,  fg: C.peachDeep,  bd: '#F6C7AC' },
+  danger: { bg: C.danger, fg: C.dangerDeep, bd: '#F6C0B6' },
+  sky:    { bg: C.sky,    fg: C.skyDeep,    bd: '#BAD7F0' },
+};
+
+function PillButton({ tone = 'mint', children, onClick, disabled, style }) {
+  const t = PILL_TONES[tone];
+  return (
+    <button className="pp-btn" onClick={onClick} disabled={disabled}
+      style={{
+        border: `1.5px solid ${t.bd}`, background: t.bg, color: t.fg,
+        borderRadius: 999, padding: '12px 20px', fontFamily: F.body,
+        fontSize: 15, fontWeight: 800, lineHeight: 1.2, cursor: 'pointer',
+        boxShadow: '0 4px 12px rgba(67,56,46,0.08)', width: '100%', ...style,
+      }}>
+      {children}
+    </button>
+  );
+}
+
+function Meter({ label, value, barColor, textColor }) {
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
+        <span style={{ color: C.sub }}>{label}</span>
+        <span style={{ color: textColor }}>{value}%</span>
+      </div>
+      <div style={{ height: 10, background: C.track, borderRadius: 999, overflow: 'hidden' }}>
+        <div style={{ width: `${value}%`, height: '100%', background: barColor, borderRadius: 999, transition: 'width .5s ease' }} />
+      </div>
+    </div>
+  );
+}
+
+function CoinChip({ coins }) {
+  return (
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: C.card, border: `1px solid ${C.line}`, borderRadius: 999, padding: '4px 12px 4px 8px', boxShadow: '0 3px 8px rgba(67,56,46,0.06)' }}>
+      <PixelSprite art={SUSHI_ART} palette={SUSHI_PAL} px={2} />
+      <span style={{ fontFamily: F.body, fontWeight: 800, fontSize: 14, color: C.ink }}>× {coins} sushi</span>
+    </div>
+  );
+}
+
+/* Logo Google G — 4 màu chuẩn (SVG inline, paths logo G chính thức) */
+function GoogleG({ size = 18 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" aria-hidden="true">
+      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+    </svg>
+  );
+}
+
+function GoogleButton({ onClick, style }) {
+  return (
+    <button className="pp-btn" onClick={onClick}
+      style={{
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+        background: '#FFFFFF', border: '1.5px solid #DADCE0', borderRadius: 999,
+        padding: '11px 20px', fontFamily: F.body, fontSize: 15, fontWeight: 700,
+        color: '#3C4043', cursor: 'pointer', width: '100%',
+        boxShadow: '0 3px 10px rgba(60,64,67,0.12)', ...style,
+      }}>
+      <GoogleG size={19} />
+      <span>Đăng nhập bằng Google</span>
+    </button>
+  );
+}
+
+/* ---------- Sân khấu pastel: pet đặt trên bục tròn (motif Finch) ---------- */
+function Stage({ bg, height = 190, children }) {
+  return (
+    <div style={{ position: 'relative', background: bg, borderRadius: 30, height, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', overflow: 'hidden', paddingTop: 22 }}>
+      <div style={{ position: 'absolute', bottom: 18, left: '50%', transform: 'translateX(-50%)', width: 168, height: 34, background: 'rgba(255,255,255,0.55)', borderRadius: '50%' }} />
+      <div style={{ position: 'relative', marginBottom: 30 }}>{children}</div>
+    </div>
+  );
+}
+
+/* ---------- Tab icons (stroke SVG nhỏ, sạch) ---------- */
+function TabIcon({ kind }) {
+  const common = { fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' };
+  return (
+    <svg width={21} height={21} viewBox="0 0 24 24" {...common}>
+      {kind === 'egg' && <path d="M12 3.5c3.3 0 6 4.8 6 8.7a6 6 0 11-12 0c0-3.9 2.7-8.7 6-8.7z" />}
+      {kind === 'timer' && (<g><circle cx="12" cy="13" r="7.5" /><path d="M12 9.5V13l2.5 2" /><path d="M9.5 2.5h5" /></g>)}
+      {kind === 'bowl' && (<g><path d="M4 12h16a8 8 0 01-16 0z" /><path d="M8.5 8.5c0-1.5 2-1.5 2-3M14 8.5c0-1.5 2-1.5 2-3" /></g>)}
+      {kind === 'chart' && (<g><path d="M5 20V13M12 20V5M19 20v-9" /></g>)}
+    </svg>
+  );
+}
+
+/* ============================================================
+   Các màn hình app
+   ============================================================ */
+
+function AppHeader({ petName, coins, lv }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ width: 38, height: 38, borderRadius: '50%', background: C.mint, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: `1px solid #9ADBC2` }}>
+          <PixelSprite art={PET_ART} palette={SPECIES.cat} px={2} style={{ transform: 'translateY(2px)' }} />
+        </div>
+        <div style={{ fontFamily: F.display, fontWeight: 700, fontSize: 16, color: C.ink, lineHeight: 1.1 }}>
+          {petName}
+          <span style={{ fontFamily: F.body, fontSize: 12, color: C.mintDeep, background: C.mint, borderRadius: 999, padding: '1px 8px', marginLeft: 6, fontWeight: 800, verticalAlign: 'middle' }}>Lv.{lv}</span>
+        </div>
+      </div>
+      <CoinChip coins={coins} />
+    </div>
+  );
+}
+
+/* ----- Màn 1: Chọn trứng ----- */
+function EggScreen({ app }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div>
+        <div style={{ fontFamily: F.display, fontWeight: 800, fontSize: 25, color: C.ink, lineHeight: 1.15 }}>Chọn quả trứng của bạn</div>
+        <div style={{ fontSize: 14, color: C.sub, marginTop: 3 }}>Bé nào sẽ cùng bạn tập trung mỗi ngày?</div>
+      </div>
+
+      {EGGS.map(egg => {
+        const selected = app.selectedEgg === egg.id;
+        const adoptedThis = app.adopted && app.species === egg.species;
+        return (
+          <div key={egg.id} className="pp-egg" onClick={() => app.selectEgg(egg.id)}
+            style={{
+              background: C.card, borderRadius: 24, padding: '12px 16px',
+              display: 'flex', alignItems: 'center', gap: 14,
+              border: selected ? '2px solid #5FC4A2' : `1px solid ${C.line}`,
+              boxShadow: selected ? '0 10px 22px rgba(19,132,102,0.16)' : '0 5px 14px rgba(67,56,46,0.06)',
+              position: 'relative',
+            }}>
+            <div style={{ width: 86, height: 76, borderRadius: '50%', background: egg.stage, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div className={selected ? 'pp-wiggle' : ''}>
+                <PixelSprite art={EGG_ART} palette={egg.pal} px={6} />
+              </div>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: F.display, fontWeight: 800, fontSize: 18, color: C.ink }}>{egg.name}</div>
+              <div style={{ fontSize: 13.5, color: C.sub, marginTop: 2 }}>{egg.desc}</div>
+            </div>
+            {selected && (
+              <div style={{ width: 26, height: 26, borderRadius: '50%', background: C.mintDeep, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800, fontFamily: F.body }}>✓</div>
+            )}
+            {adoptedThis && !selected && (
+              <div style={{ fontSize: 12, fontWeight: 800, color: C.mintDeep, background: C.mint, padding: '3px 10px', borderRadius: 999 }}>Đang nuôi</div>
+            )}
+          </div>
+        );
+      })}
+
+      <PillButton tone={app.selectedEgg ? 'mint' : 'white'} disabled={app.adopted}
+        onClick={() => app.adopt()}>
+        {app.adopted ? `Đã đón ${app.petName} về nhà ✓` : 'Nhận bé về nhà'}
+      </PillButton>
+
+      {app.eggMsg && (
+        <div style={{ textAlign: 'center', fontSize: 14, fontWeight: 800, color: C.mintDeep, background: C.mint, borderRadius: 999, padding: '8px 14px' }}>
+          {app.eggMsg}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ----- Màn 2+3: Tập trung / Tạm dừng / Giờ nghỉ ----- */
+function FocusScreen({ app }) {
+  const mode = app.mode; // 'focus' | 'paused' | 'break' | 'ready'
+  const running = mode === 'focus';
+  const onBreak = mode === 'break';
+
+  const timeText = onBreak ? '04:12' : (mode === 'ready' ? '25:00' : '24:31');
+  const statusText =
+    onBreak ? `Giờ nghỉ · Phiên ${app.session}/4`
+    : mode === 'paused' ? `Đã tạm dừng · Phiên ${app.session}/4`
+    : mode === 'ready' ? `Sẵn sàng · Phiên ${app.session}/4`
+    : `Đang tập trung · Phiên ${app.session}/4`;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <AppHeader petName={app.petName} coins={app.coins} lv={4} />
+
+      <Stage bg={onBreak ? C.sky : C.mint} height={196}>
+        {onBreak ? (
+          <PixelPetWrap species={app.species} state="sleep" px={7} animClass="pp-breath">
+            <Zzz />
+          </PixelPetWrap>
+        ) : (
+          <PixelPetWrap species={app.species} state={mode === 'paused' ? 'idle' : 'bounce'} px={7} animClass="pp-bounce" still={mode === 'paused'} />
+        )}
+      </Stage>
+
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 8 }}>
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} style={{ width: i < app.session ? 26 : 10, height: 10, borderRadius: 999, background: i < app.session ? C.mintBar : (i === app.session && running ? C.peachBar : C.track), transition: 'all .3s ease' }} />
+        ))}
+      </div>
+
+      <Card style={{ textAlign: 'center', padding: '16px 14px' }}>
+        <div style={{ fontFamily: F.display, fontWeight: 800, fontSize: 62, color: onBreak ? C.skyDeep : C.ink, lineHeight: 1, letterSpacing: 1 }}>{timeText}</div>
+        <div style={{ fontSize: 14, fontWeight: 700, color: onBreak ? C.skyDeep : C.mintDeep, marginTop: 6 }}>{statusText}</div>
+      </Card>
+
+      {onBreak && (
+        <Card style={{ background: C.butter, borderColor: '#F2DD9B', textAlign: 'center' }}>
+          <div style={{ fontFamily: F.display, fontWeight: 700, fontSize: 15.5, color: C.butterDeep }}>Bé {app.petName} đang ngủ…</div>
+          <div style={{ fontSize: 13.5, color: '#8A6A1E', marginTop: 3, fontWeight: 600 }}>Mẹo nhỏ: Đứng lên vươn vai nào!</div>
+        </Card>
+      )}
+
+      <Card style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 800 }}>
+          <span style={{ color: C.sub }}>Kinh nghiệm</span>
+          <span style={{ color: C.peachDeep }}>Lv.4 · 120/200 XP</span>
+        </div>
+        <div style={{ height: 12, background: C.track, borderRadius: 999, overflow: 'hidden' }}>
+          <div style={{ width: '60%', height: '100%', background: C.peachBar, borderRadius: 999 }} />
+        </div>
+        <Meter label="Đói" value={62} barColor={C.peachBar} textColor={C.peachDeep} />
+        <Meter label="Vui" value={78} barColor={C.pinkBar} textColor={C.pinkDeep} />
+      </Card>
+
+      {onBreak ? (
+        <PillButton tone="sky" onClick={() => app.skipBreak()}>Bỏ qua nghỉ</PillButton>
+      ) : mode === 'ready' ? (
+        <PillButton tone="mint" onClick={() => app.startSession()}>Bắt đầu phiên {app.session}</PillButton>
+      ) : (
+        <div style={{ display: 'flex', gap: 10 }}>
+          <PillButton tone={running ? 'white' : 'mint'} onClick={() => app.togglePause()}>
+            {running ? 'Tạm dừng' : 'Tiếp tục'}
+          </PillButton>
+          <PillButton tone="danger" onClick={() => app.abortSession()}>Bỏ phiên</PillButton>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ----- Màn 4: Cho ăn ----- */
+function FeedScreen({ app }) {
+  const happy = app.fedTimes > 0;
+  const state = happy ? 'happy' : 'sad';
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <AppHeader petName={app.petName} coins={app.coins} lv={4} />
+
+      <Stage bg={C.peach} height={196}>
+        <PixelPetWrap species={app.species} state={state} px={7} animClass="pp-breath">
+          {happy && <Hearts />}
+        </PixelPetWrap>
+      </Stage>
+
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ fontFamily: F.display, fontWeight: 800, fontSize: 20, color: C.ink }}>
+          {happy ? `${app.petName} thích lắm!` : `${app.petName} nhìn hơi buồn…`}
+        </div>
+        <div style={{ fontSize: 14, color: C.sub, marginTop: 3, fontWeight: 600 }}>
+          {happy ? 'Bé no bụng rồi, tập trung thôi!' : 'Đói lắm rồi — cho bé ăn một miếng nhé?'}
+        </div>
+      </div>
+
+      <Card style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <Meter label="Đói" value={app.hunger} barColor={C.peachBar} textColor={C.peachDeep} />
+        <Meter label="Vui" value={app.joy} barColor={C.pinkBar} textColor={C.pinkDeep} />
+      </Card>
+
+      <Card style={{ display: 'flex', alignItems: 'center', gap: 12, background: C.butter, borderColor: '#F2DD9B' }}>
+        <PixelSprite art={SUSHI_ART} palette={SUSHI_PAL} px={3} />
+        <div style={{ flex: 1 }}>
+          <div style={{ fontFamily: F.display, fontWeight: 800, fontSize: 16, color: C.butterDeep }}>Kho sushi</div>
+          <div style={{ fontSize: 13.5, color: '#8A6A1E', fontWeight: 700 }}>Còn {app.coins} miếng · ăn 1 miếng = +38 đói, +23 vui</div>
+        </div>
+      </Card>
+
+      <PillButton tone={app.coins > 0 ? 'peach' : 'white'} disabled={app.coins <= 0} onClick={() => app.feed()}>
+        {app.coins > 0 ? `Cho ăn 1 sushi (còn ${app.coins})` : 'Hết sushi — hoàn thành phiên để nhận thêm'}
+      </PillButton>
+
+      {app.feedMsg && (
+        <div style={{ textAlign: 'center', fontSize: 14, fontWeight: 800, color: C.peachDeep, background: C.peach, borderRadius: 999, padding: '8px 14px' }}>
+          {app.feedMsg}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ----- Màn 5: Thống kê & Đồng bộ ----- */
+const WEEK_MINUTES = [95, 120, 60, 140, 80, 25, 112];
+const DAYS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+
+function StreakCard({ compact }) {
+  return (
+    <Card>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
+        <span style={{ fontFamily: F.display, fontWeight: 800, fontSize: 16, color: C.ink }}>Streak 7 ngày</span>
+        <span style={{ fontSize: 13, fontWeight: 800, color: C.peachDeep }}>đều đặn!</span>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 6 }}>
+        {DAYS.map((d, i) => (
+          <div key={d} style={{ flex: 1, textAlign: 'center' }}>
+            <div style={{ background: i === 6 ? C.peach : '#F6F8F4', border: `1px solid ${i === 6 ? '#F6C7AC' : C.line}`, borderRadius: 14, padding: '8px 0 6px', display: 'flex', justifyContent: 'center' }}>
+              <PixelSprite art={FLAME_ART} palette={FLAME_PAL} px={compact ? 2 : 3} />
+            </div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: C.sub, marginTop: 4 }}>{d}</div>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+function TodayCard({ compact }) {
+  const max = Math.max(...WEEK_MINUTES);
+  return (
+    <Card>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
+        <span style={{ fontFamily: F.display, fontWeight: 800, fontSize: 16, color: C.ink }}>Hôm nay: 112 phút · 3 phiên</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: compact ? 8 : 12, height: compact ? 64 : 84 }}>
+        {WEEK_MINUTES.map((m, i) => (
+          <div key={i} style={{ flex: 1, textAlign: 'center' }}>
+            <div style={{ height: (compact ? 44 : 60) * m / max, background: i === 6 ? C.peachBar : C.mintBar, borderRadius: 8, minHeight: 6, margin: '0 auto', width: '70%' }} />
+            <div style={{ fontSize: 12, fontWeight: 700, color: C.sub, marginTop: 4 }}>{DAYS[i]}</div>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+function HistoryCard() {
+  const rows = [
+    { t: '09:04', d: 'Phiên 1 · 25 phút', xp: '+30 XP', tone: C.mint },
+    { t: '09:41', d: 'Nghỉ 5 phút · vươn vai', xp: '✓', tone: C.sky },
+    { t: '09:52', d: 'Phiên 2 · 25 phút', xp: '+30 XP', tone: C.mint },
+    { t: '10:26', d: 'Phiên 3 · 25 phút', xp: '+32 XP', tone: C.mint },
+  ];
+  return (
+    <Card>
+      <div style={{ fontFamily: F.display, fontWeight: 800, fontSize: 16, color: C.ink, marginBottom: 10 }}>Lịch sử phiên</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {rows.map((r, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 34, height: 34, borderRadius: 12, background: r.tone, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12.5, fontWeight: 800, color: r.tone === C.mint ? C.mintDeep : C.skyDeep, fontFamily: F.body }}>{r.t}</div>
+            <div style={{ flex: 1, fontSize: 14, fontWeight: 700, color: C.ink }}>{r.d}</div>
+            <div style={{ fontSize: 13, fontWeight: 800, color: C.peachDeep }}>{r.xp}</div>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+function SyncCard({ compact }) {
+  const [signed, setSigned] = useState(false);
+  return (
+    <Card>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+        <div style={{ width: 46, height: 46, borderRadius: '50%', background: C.peach, border: '2px solid #F6C7AC', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: F.display, fontWeight: 800, fontSize: 16, color: C.peachDeep }}>MA</div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontFamily: F.display, fontWeight: 800, fontSize: 16.5, color: C.ink }}>Minh Anh</div>
+          <div style={{ fontSize: 13, color: C.sub, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#34A853', display: 'inline-block' }} />
+            Đã đồng bộ · web ↔ Android · 2 phút trước
+          </div>
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+        <span style={{ fontSize: 12.5, fontWeight: 800, background: C.mint, color: C.mintDeep, borderRadius: 999, padding: '4px 12px' }}>Nuxt Web</span>
+        <span style={{ fontSize: 12.5, fontWeight: 800, background: C.sky, color: C.skyDeep, borderRadius: 999, padding: '4px 12px' }}>Android Kotlin</span>
+      </div>
+      {signed ? (
+        <div style={{ textAlign: 'center', fontSize: 14, fontWeight: 800, color: C.mintDeep, background: C.mint, borderRadius: 999, padding: '11px 16px' }}>
+          Đã đăng nhập bằng Google ✓
+        </div>
+      ) : (
+        <GoogleButton onClick={() => setSigned(true)} />
+      )}
+    </Card>
+  );
+}
+
+function StatsScreen({ app }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div>
+        <div style={{ fontFamily: F.display, fontWeight: 800, fontSize: 22, color: C.ink }}>Thống kê</div>
+        <div style={{ fontSize: 14, color: C.sub, marginTop: 2, fontWeight: 600 }}>Chào, Minh Anh — tuần này tuyệt lắm!</div>
+      </div>
+      <StreakCard compact />
+      <TodayCard compact />
+      <HistoryCard />
+      <SyncCard compact />
+    </div>
+  );
+}
+
+/* ----- Nav dưới 4 tab ----- */
+const TABS = [
+  { id: 'egg', label: 'Trứng', icon: 'egg' },
+  { id: 'focus', label: 'Tập', icon: 'timer' },
+  { id: 'feed', label: 'Ăn', icon: 'bowl' },
+  { id: 'stats', label: 'Stats', icon: 'chart' },
+];
+
+function NavBar({ tab, onTab }) {
+  return (
+    <div style={{ background: C.card, borderTop: `1px solid ${C.line}`, display: 'flex', padding: '6px 10px 10px', borderRadius: '24px 24px 0 0', boxShadow: '0 -6px 18px rgba(67,56,46,0.06)' }}>
+      {TABS.map(t => {
+        const active = tab === t.id;
+        return (
+          <div key={t.id} className="pp-tab" onClick={() => onTab(t.id)}
+            style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '7px 0 5px', borderRadius: 16, color: active ? C.mintDeep : C.sub, background: active ? C.mint : 'transparent', cursor: 'pointer' }}>
+            <TabIcon kind={t.icon} />
+            <span style={{ fontSize: 12, fontWeight: 800, fontFamily: F.body }}>{t.label}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ----- Mini state machine cho mỗi phone ----- */
+function PhoneApp({ initialTab = 'egg', initialMode = 'focus', initialAdopted }) {
+  const [tab, setTab] = useState(initialTab);
+  const [species, setSpecies] = useState('cat');
+  const [petName, setPetName] = useState('Mochi');
+  const [selectedEgg, setSelectedEgg] = useState(null);
+  const [adopted, setAdopted] = useState(initialAdopted !== undefined ? initialAdopted : initialTab !== 'egg');
+  const [eggMsg, setEggMsg] = useState(null);
+  const [coins, setCoins] = useState(12);
+  const [fedTimes, setFedTimes] = useState(0);
+  const [hunger, setHunger] = useState(34);
+  const [joy, setJoy] = useState(62);
+  const [feedMsg, setFeedMsg] = useState(null);
+  const [mode, setMode] = useState(initialMode); // focus | paused | break | ready
+  const [session, setSession] = useState(2);
+
+  const app = {
+    tab, species, petName, selectedEgg, adopted, eggMsg, coins, fedTimes, hunger, joy, feedMsg, mode, session,
+    selectEgg: (id) => {
+      setSelectedEgg(id);
+      setEggMsg(null);
+    },
+    adopt: () => {
+      const egg = EGGS.find(e => e.id === selectedEgg);
+      if (!egg || adopted) return;
+      setSpecies(egg.species);
+      setPetName(egg.name);
+      setAdopted(true);
+      setEggMsg(`Đã đón ${egg.name} về nhà! Chúc hai bạn tập trung vui nhé.`);
+    },
+    togglePause: () => setMode(m => m === 'paused' ? 'focus' : 'paused'),
+    abortSession: () => { setMode('ready'); setSession(s => Math.min(s + 1, 4)); },
+    skipBreak: () => { setMode('ready'); setSession(s => Math.min(s + 1, 4)); },
+    startSession: () => setMode('focus'),
+    feed: () => {
+      if (coins <= 0) return;
+      setCoins(c => c - 1);
+      setFedTimes(n => n + 1);
+      setHunger(h => Math.min(h + 38, 100));
+      setJoy(j => Math.min(j + 23, 100));
+      setFeedMsg(`${petName} thích lắm! Đói +38 · Vui +23`);
+    },
+  };
+
+  const screen =
+    tab === 'egg' ? <EggScreen app={app} />
+    : tab === 'focus' ? <FocusScreen app={app} />
+    : tab === 'feed' ? <FeedScreen app={app} />
+    : <StatsScreen app={app} />;
+
+  return (
+    <div style={{ height: '100%', background: C.cream, display: 'flex', flexDirection: 'column', fontFamily: F.body, userSelect: 'none' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px 18px' }}>
+        {screen}
+      </div>
+      <NavBar tab={tab} onTab={setTab} />
+    </div>
+  );
+}
+
+/* ============================================================
+   Bản web desktop (trong BrowserWindow) — Thống kê & Đồng bộ
+   ============================================================ */
+function DesktopWeb() {
+  const [coins] = useState(12);
+  const [signed, setSigned] = useState(false);
+  return (
+    <div style={{ width: '100%', height: '100%', background: C.cream, fontFamily: F.body, display: 'flex', flexDirection: 'column' }}>
+      {/* top bar */}
+      <div style={{ background: C.card, borderBottom: `1px solid ${C.line}`, padding: '14px 28px', display: 'flex', alignItems: 'center', gap: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 30, height: 30, borderRadius: 10, background: C.mint, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <PixelSprite art={PET_ART} palette={SPECIES.cat} px={1.6} style={{ transform: 'translateY(1px)' }} />
+          </div>
+          <span style={{ fontFamily: F.display, fontWeight: 800, fontSize: 19, color: C.ink }}>Pet Pomodoro</span>
+        </div>
+        <div style={{ display: 'flex', gap: 6, marginLeft: 16 }}>
+          {['Tổng quan', 'Thống kê', 'Đồng bộ'].map((l, i) => (
+            <span key={l} style={{ fontSize: 14, fontWeight: 700, color: i === 1 ? C.mintDeep : C.sub, background: i === 1 ? C.mint : 'transparent', padding: '7px 16px', borderRadius: 999, cursor: 'pointer' }}>{l}</span>
+          ))}
+        </div>
+        <div style={{ flex: 1 }} />
+        <CoinChip coins={coins} />
+        <div style={{ width: 38, height: 38, borderRadius: '50%', background: C.peach, border: '2px solid #F6C7AC', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: F.display, fontWeight: 800, fontSize: 13, color: C.peachDeep }}>MA</div>
+      </div>
+
+      {/* body 2 cột */}
+      <div style={{ flex: 1, overflow: 'auto', padding: '24px 28px', display: 'grid', gridTemplateColumns: '1fr 350px', gap: 22, alignItems: 'start' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+          <div>
+            <div style={{ fontFamily: F.display, fontWeight: 800, fontSize: 27, color: C.ink }}>Thống kê của Minh Anh</div>
+            <div style={{ fontSize: 14.5, color: C.sub, marginTop: 3, fontWeight: 600 }}>Tuần này bạn đã giữ lửa 7 ngày liên tiếp — Mochi rất tự hào!</div>
+          </div>
+          <StreakCard />
+          <TodayCard />
+          <HistoryCard />
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+          {/* pet mini */}
+          <Card>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <div style={{ width: 120, height: 104, borderRadius: 26, background: C.mint, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
+                <div style={{ position: 'absolute', bottom: 12, width: 74, height: 18, background: 'rgba(255,255,255,0.55)', borderRadius: '50%' }} />
+                <div className="pp-bounce" style={{ marginBottom: 18 }}>
+                  <Pet species="cat" state="bounce" px={5} />
+                </div>
+              </div>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div>
+                  <div style={{ fontFamily: F.display, fontWeight: 800, fontSize: 18, color: C.ink }}>Mochi</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: C.mintDeep }}>Lv.4 · 120/200 XP</div>
+                </div>
+                <Meter label="Đói" value={62} barColor={C.peachBar} textColor={C.peachDeep} />
+                <Meter label="Vui" value={78} barColor={C.pinkBar} textColor={C.pinkDeep} />
+              </div>
+            </div>
+          </Card>
+
+          {/* đồng bộ */}
+          <Card>
+            <div style={{ fontFamily: F.display, fontWeight: 800, fontSize: 16, color: C.ink, marginBottom: 10 }}>Đồng bộ tài khoản</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+              <div style={{ width: 46, height: 46, borderRadius: '50%', background: C.peach, border: '2px solid #F6C7AC', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: F.display, fontWeight: 800, fontSize: 16, color: C.peachDeep }}>MA</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontFamily: F.display, fontWeight: 800, fontSize: 16.5, color: C.ink }}>Minh Anh</div>
+                <div style={{ fontSize: 13, color: C.sub, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#34A853', display: 'inline-block' }} />
+                  Đã đồng bộ · web ↔ Android · 2 phút trước
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+              <span style={{ fontSize: 12.5, fontWeight: 800, background: C.mint, color: C.mintDeep, borderRadius: 999, padding: '4px 12px' }}>Nuxt Web</span>
+              <span style={{ fontSize: 12.5, fontWeight: 800, background: C.sky, color: C.skyDeep, borderRadius: 999, padding: '4px 12px' }}>Android Kotlin</span>
+            </div>
+            {signed ? (
+              <div style={{ textAlign: 'center', fontSize: 14, fontWeight: 800, color: C.mintDeep, background: C.mint, borderRadius: 999, padding: '11px 16px' }}>Đã đăng nhập bằng Google ✓</div>
+            ) : (
+              <GoogleButton onClick={() => setSigned(true)} />
+            )}
+          </Card>
+
+          <div style={{ textAlign: 'center', fontSize: 13, color: C.sub, fontWeight: 600 }}>
+            Dữ liệu giống hệt trên điện thoại — thoải mái chuyển thiết bị.
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   Trang demo
+   ============================================================ */
+const finchStyles = {
+  page: { maxWidth: 1900, margin: '0 auto', padding: '36px 40px 64px' },
+  header: {
+    background: C.card, borderRadius: 28, padding: '26px 32px', marginBottom: 34,
+    boxShadow: '0 10px 28px rgba(67,56,46,0.08)', border: `1px solid ${C.line}`,
+  },
+  headerTitle: { fontFamily: F.display, fontWeight: 800, fontSize: 30, color: C.ink, lineHeight: 1.2 },
+  headerDesc: { fontSize: 16, color: C.sub, marginTop: 8, lineHeight: 1.55, maxWidth: 1100, fontWeight: 600 },
+  sources: { fontSize: 13.5, color: C.sub, marginTop: 12, lineHeight: 1.7, fontWeight: 600 },
+  board: { display: 'flex', flexWrap: 'wrap', gap: '32px', alignItems: 'flex-start' },
+  slot: { display: 'flex', flexDirection: 'column' },
+  slotLabel: { fontStyle: 'italic', fontSize: 14, color: C.sub, marginBottom: 8, fontWeight: 600 },
+};
+
+function Demo() {
+  return (
+    <div style={finchStyles.page}>
+      <div style={finchStyles.header}>
+        <div style={finchStyles.headerTitle}>Hướng 2 · 🏆 Tham chiếu — Finch (self-care pet app)</div>
+        <div style={finchStyles.headerDesc}>
+          Học ngôn ngữ thiết kế của <b>Finch</b> — pet self-care app: pastel dịu, card trắng bo tròn lớn với soft shadow,
+          pet đặt trên 「sân khấu」 màu pastel, nút pill to dễ bấm, typography tròn trịa — cảm giác 「an toàn + được chăm sóc」.
+          Việt hoá cho Pet Pomodoro bằng accent <b>mint</b> chủ đạo trên nền <b>kem pastel</b>, font Baloo 2 + Nunito; pet pixel-art giữ nguyên như nội dung game.
+        </div>
+        <div style={finchStyles.sources}>
+          Nguồn đã WebSearch xác nhận:{' '}
+          <a href="https://play.google.com/store/apps/details?id=com.finch.finch" target="_blank" rel="noreferrer">Google Play — Finch: Self-Care Pet (Finch Care PBC, 10M+ lượt tải)</a> ·{' '}
+          <a href="https://finchcare.com/" target="_blank" rel="noreferrer">finchcare.com (trang chủ chính thức)</a> ·{' '}
+          <a href="https://medium.com/@manya.manuseema/how-a-virtual-pet-bird-helped-me-rebuild-small-habits-3d10d00cef22" target="_blank" rel="noreferrer">Medium — trải nghiệm dùng Finch</a>.
+          Ghi chú kiểm chứng: theo <a href="https://blog.google/products-and-platforms/platforms/google-play/google-plays-best-apps-and-games-of-2022/" target="_blank" rel="noreferrer">Google Play Best of 2022 (blog.google)</a>, Users' Choice App 2022 thuộc về BeReal — Finch không nằm trong danh sách, nên ở đây chỉ xem Finch là app thể loại pet + habit tham chiếu gần nhất.
+        </div>
+      </div>
+
+      <div style={finchStyles.board}>
+        <div style={finchStyles.slot}>
+          <div style={finchStyles.slotLabel}>① Chọn trứng</div>
+          <AndroidFrame time="9:41" battery={85}>
+            <PhoneApp initialTab="egg" initialAdopted={false} />
+          </AndroidFrame>
+        </div>
+
+        <div style={finchStyles.slot}>
+          <div style={finchStyles.slotLabel}>② Đang tập trung</div>
+          <AndroidFrame time="9:41" battery={85}>
+            <PhoneApp initialTab="focus" initialMode="focus" />
+          </AndroidFrame>
+        </div>
+
+        <div style={finchStyles.slot}>
+          <div style={finchStyles.slotLabel}>③ Giờ nghỉ</div>
+          <AndroidFrame time="9:41" battery={85}>
+            <PhoneApp initialTab="focus" initialMode="break" />
+          </AndroidFrame>
+        </div>
+
+        <div style={finchStyles.slot}>
+          <div style={finchStyles.slotLabel}>④ Thống kê &amp; Đồng bộ</div>
+          <AndroidFrame time="9:41" battery={85}>
+            <PhoneApp initialTab="stats" />
+          </AndroidFrame>
+        </div>
+
+        <div style={finchStyles.slot}>
+          <div style={finchStyles.slotLabel}>⑤ Bản web desktop — Thống kê &amp; Đồng bộ (bấm tab 「Ăn」 trong phone ② hoặc ④ để xem màn Cho ăn)</div>
+          <BrowserWindow title="Pet Pomodoro — Thống kê" url="petpomodoro.app" width={1000} height={760}>
+            <DesktopWeb />
+          </BrowserWindow>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo />);
+</script>
+</body>
+</html>

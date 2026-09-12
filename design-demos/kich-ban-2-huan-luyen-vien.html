@@ -1,0 +1,2162 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kịch bản 2 · Huấn luyện viên — Pet Pomodoro (gameplay v2 · Finch)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  html, body { margin:0; padding:0; }
+  body {
+    background-color:#F4EBDC;
+    background-image: radial-gradient(#E7DAC4 1px, transparent 1.4px);
+    background-size: 26px 26px;
+    font-family:'Nunito', sans-serif;
+    color:#43382E;
+  }
+  a { color:#0D5C49; }
+  .pp-btn { cursor:pointer; transition: transform .15s ease, filter .15s ease, box-shadow .15s ease; }
+  .pp-btn:hover { transform: translateY(-1px); filter: brightness(1.045); }
+  .pp-btn:active { transform: scale(.965); }
+  .pp-btn[disabled] { cursor:not-allowed; opacity:.55; transform:none; filter:none; }
+  .pp-tab { cursor:pointer; transition: background .18s ease, color .18s ease; }
+  .pp-tab:hover { background:#F1E7D4; }
+  .pp-egg { cursor:pointer; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+  .pp-egg:hover { transform: translateY(-3px); }
+  @keyframes ppBounce { 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-9%) } }
+  @keyframes ppBreath { 0%,100%{ transform:scale(1) } 50%{ transform:scale(1.04) } }
+  @keyframes ppFloatZ { 0%{ opacity:0; transform:translate(0,8px) scale(.7) } 30%{ opacity:.95 } 100%{ opacity:0; transform:translate(14px,-30px) scale(1.15) } }
+  @keyframes ppHeart { 0%{ opacity:0; transform:translateY(8px) scale(.6) } 25%{ opacity:1 } 100%{ opacity:0; transform:translateY(-30px) scale(1.1) } }
+  @keyframes ppWiggle { 0%,100%{ transform:rotate(-2.5deg) } 50%{ transform:rotate(2.5deg) } }
+  @keyframes ppFlash { 0%{ filter:brightness(1); transform:scale(1) } 25%{ filter:brightness(2.6) saturate(.2); transform:scale(1.16) rotate(-3deg) } 55%{ filter:brightness(1.5) saturate(.6); transform:scale(.94) rotate(3deg) } 100%{ filter:brightness(1); transform:scale(1) } }
+  @keyframes ppRing { 0%{ transform:translate(-50%,0) scale(.35); opacity:.9 } 100%{ transform:translate(-50%,0) scale(2); opacity:0 } }
+  @keyframes ppPulse { 0%,100%{ opacity:.35 } 50%{ opacity:1 } }
+  .pp-bounce { animation: ppBounce 1.5s ease-in-out infinite; }
+  .pp-breath { animation: ppBreath 3.2s ease-in-out infinite; }
+  .pp-wiggle { animation: ppWiggle 1.1s ease-in-out infinite; }
+  .pp-flash { animation: ppFlash .95s ease both; }
+  .pp-ring { animation: ppRing .95s ease-out both; }
+  .pp-pulse { animation: ppPulse 1.6s ease-in-out infinite; }
+  .pp-z { position:absolute; font-family:'Baloo 2', cursive; font-weight:800; color:#2C5F8F; animation: ppFloatZ 2.6s ease-out infinite; }
+  .pp-heart { position:absolute; animation: ppHeart 2.2s ease-out infinite; }
+  @keyframes ppShiver { 0%,100%{ transform:translate(0,0) } 25%{ transform:translate(-1px,1px) } 50%{ transform:translate(1px,0) } 75%{ transform:translate(-1px,-1px) } }
+  .pp-shiver { animation: ppShiver .4s linear infinite; }
+  @keyframes ppSweatFly { 0%{ opacity:0; transform:translate(0,7px) scale(.8) } 25%{ opacity:1 } 100%{ opacity:0; transform:translate(8px,-15px) scale(1.05) } }
+  .pp-sweat { position:absolute; animation: ppSweatFly 1.5s ease-out infinite; }
+  @keyframes ppBob { 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-3px) } }
+  .pp-bob { animation: ppBob 2.4s ease-in-out infinite; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState } = React;
+
+/* ============================================================
+   AndroidFrame — copy từ huashu-design/assets/android_frame.jsx
+   ============================================================ */
+const androidFrameStyles = {
+  wrapper: {
+    display: 'inline-block',
+    padding: 10,
+    background: '#1a1a1a',
+    borderRadius: 44,
+    boxShadow: '0 0 0 2px #2a2a2a, 0 20px 60px rgba(0,0,0,0.3)',
+    position: 'relative',
+  },
+  screen: {
+    position: 'relative',
+    borderRadius: 36,
+    overflow: 'hidden',
+    background: '#fff',
+  },
+  statusBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 32,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '0 24px',
+    fontSize: 14,
+    fontWeight: 500,
+    fontFamily: 'Roboto, -apple-system, sans-serif',
+    zIndex: 20,
+    pointerEvents: 'none',
+  },
+  punchHole: {
+    position: 'absolute',
+    top: 10,
+    left: '50%',
+    transform: 'translateX(-50%)',
+    width: 14,
+    height: 14,
+    background: '#000',
+    borderRadius: '50%',
+    zIndex: 30,
+  },
+  statusIcons: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+  },
+  batteryText: {
+    fontSize: 11,
+    fontWeight: 600,
+    marginLeft: 2,
+  },
+  content: {
+    position: 'absolute',
+    top: 32,
+    left: 0,
+    right: 0,
+    bottom: 24,
+    overflow: 'auto',
+  },
+  navBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 24,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 60,
+    zIndex: 10,
+  },
+  navButton: {
+    width: 36,
+    height: 4,
+    background: 'rgba(0,0,0,0.3)',
+    borderRadius: 999,
+  },
+};
+
+function AndroidFrame({
+  children,
+  width = 412,
+  height = 892,
+  time = '9:41',
+  battery = 100,
+  darkMode = false,
+  navStyle = 'gesture',
+}) {
+  const textColor = darkMode ? '#fff' : '#1a1a1a';
+
+  return (
+    <div style={androidFrameStyles.wrapper}>
+      <div style={{
+        ...androidFrameStyles.screen,
+        width,
+        height,
+        background: darkMode ? '#000' : '#fff',
+      }}>
+        <div style={{ ...androidFrameStyles.statusBar, color: textColor }}>
+          <span>{time}</span>
+          <div style={androidFrameStyles.statusIcons}>
+            <svg width="14" height="10" viewBox="0 0 14 10" fill="currentColor">
+              <rect x="0" y="6" width="2" height="4" rx="0.5" />
+              <rect x="4" y="4" width="2" height="6" rx="0.5" />
+              <rect x="8" y="2" width="2" height="8" rx="0.5" />
+              <rect x="12" y="0" width="2" height="10" rx="0.5" />
+            </svg>
+            <svg width="14" height="10" viewBox="0 0 14 10" fill="none">
+              <path d="M7 9a1 1 0 100-2 1 1 0 000 2z" fill="currentColor" />
+              <path d="M3 6a5 5 0 018 0" stroke="currentColor" strokeWidth="1.2" />
+              <path d="M0.5 3.5a11 11 0 0113 0" stroke="currentColor" strokeWidth="1.2" opacity="0.6" />
+            </svg>
+            <div style={{
+              width: 22,
+              height: 10,
+              border: '1.5px solid currentColor',
+              borderRadius: 2,
+              padding: 1,
+              position: 'relative',
+            }}>
+              <div style={{
+                width: `${battery}%`,
+                height: '100%',
+                background: 'currentColor',
+                borderRadius: 1,
+              }} />
+            </div>
+            <span style={androidFrameStyles.batteryText}>{battery}%</span>
+          </div>
+        </div>
+
+        <div style={androidFrameStyles.punchHole} />
+
+        <div style={androidFrameStyles.content}>
+          {children}
+        </div>
+
+        {navStyle === 'gesture' && (
+          <div style={androidFrameStyles.navBar}>
+            <div style={{
+              ...androidFrameStyles.navButton,
+              width: 100,
+              height: 4,
+              background: darkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)',
+            }} />
+          </div>
+        )}
+
+        {navStyle === 'buttons' && (
+          <div style={androidFrameStyles.navBar}>
+            <span style={{ color: textColor, fontSize: 20 }}>◁</span>
+            <span style={{ color: textColor, fontSize: 16 }}>○</span>
+            <span style={{ color: textColor, fontSize: 16 }}>□</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   BrowserWindow — copy từ huashu-design/assets/browser_window.jsx
+   ============================================================ */
+const browserWindowStyles = {
+  window: {
+    display: 'inline-block',
+    background: '#fff',
+    borderRadius: 10,
+    overflow: 'hidden',
+    boxShadow: '0 30px 80px rgba(0,0,0,0.25), 0 0 0 0.5px rgba(0,0,0,0.15)',
+  },
+  chrome: {
+    background: '#dee1e6',
+    paddingTop: 10,
+    paddingLeft: 10,
+    paddingRight: 10,
+    userSelect: 'none',
+  },
+  tabRow: {
+    display: 'flex',
+    alignItems: 'flex-end',
+    gap: 6,
+    position: 'relative',
+  },
+  trafficLights: {
+    display: 'flex',
+    gap: 8,
+    alignItems: 'center',
+    paddingBottom: 10,
+    marginRight: 8,
+  },
+  light: {
+    width: 12,
+    height: 12,
+    borderRadius: '50%',
+    border: '0.5px solid rgba(0,0,0,0.15)',
+  },
+  close: { background: '#ff5f57' },
+  minimize: { background: '#febc2e' },
+  maximize: { background: '#28c840' },
+  tab: {
+    background: '#fff',
+    padding: '8px 30px 8px 14px',
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+    fontSize: 12,
+    color: '#222',
+    fontFamily: '-apple-system, sans-serif',
+    maxWidth: 220,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    position: 'relative',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  },
+  favicon: {
+    width: 14,
+    height: 14,
+    borderRadius: 2,
+    background: '#999',
+    flexShrink: 0,
+  },
+  navBar: {
+    background: '#fff',
+    padding: '8px 14px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    borderBottom: '1px solid #e5e7eb',
+  },
+  navButtons: {
+    display: 'flex',
+    gap: 4,
+    color: '#5f6368',
+    fontSize: 16,
+  },
+  navButton: {
+    width: 28,
+    height: 28,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: '50%',
+    cursor: 'pointer',
+  },
+  urlBar: {
+    flex: 1,
+    background: '#f1f3f4',
+    borderRadius: 999,
+    padding: '7px 14px',
+    fontSize: 13,
+    color: '#333',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    fontFamily: '-apple-system, sans-serif',
+  },
+  lockIcon: {
+    color: '#5f6368',
+    fontSize: 12,
+  },
+  content: {
+    position: 'relative',
+    overflow: 'auto',
+    background: '#fff',
+  },
+};
+
+function BrowserWindow({
+  title = 'New Tab',
+  url = 'https://example.com',
+  width = 1200,
+  height = 800,
+  showTrafficLights = true,
+  children,
+}) {
+  return (
+    <div style={browserWindowStyles.window}>
+      <div style={browserWindowStyles.chrome}>
+        <div style={browserWindowStyles.tabRow}>
+          {showTrafficLights && (
+            <div style={browserWindowStyles.trafficLights}>
+              <div style={{ ...browserWindowStyles.light, ...browserWindowStyles.close }} />
+              <div style={{ ...browserWindowStyles.light, ...browserWindowStyles.minimize }} />
+              <div style={{ ...browserWindowStyles.light, ...browserWindowStyles.maximize }} />
+            </div>
+          )}
+          <div style={browserWindowStyles.tab}>
+            <div style={browserWindowStyles.favicon} />
+            <span>{title}</span>
+          </div>
+        </div>
+      </div>
+
+      <div style={browserWindowStyles.navBar}>
+        <div style={browserWindowStyles.navButtons}>
+          <div style={browserWindowStyles.navButton}>←</div>
+          <div style={browserWindowStyles.navButton}>→</div>
+          <div style={browserWindowStyles.navButton}>↻</div>
+        </div>
+        <div style={browserWindowStyles.urlBar}>
+          <span style={browserWindowStyles.lockIcon}>🔒</span>
+          <span>{url}</span>
+        </div>
+      </div>
+
+      <div style={{ ...browserWindowStyles.content, width, height }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   Pet Pomodoro — KỊCH BẢN 2 · HUẤN LUYỆN VIÊN (gameplay v2)
+   Style Finch: pastel kem–mint · card trắng bo tròn 22 · nút pill
+   Điểm nhấn: Sức mạnh là trung tâm + Ốm yếu chặn cổng tiến hoá.
+   ============================================================ */
+
+const C = {
+  cream:'#FBF3E4', card:'#FFFFFF', ink:'#43382E', sub:'#6E6257',
+  mint:'#C8EBDC', mintDeep:'#0D5C49', mintBar:'#5FC4A2',
+  peach:'#FFE4D2', peachDeep:'#96471E', peachBar:'#F5A26B',
+  pink:'#FFDCE7', pinkDeep:'#A63559', pinkBar:'#F49BC0',
+  sky:'#DBEBFA', skyDeep:'#27567F', skyBar:'#8FBEE8',
+  butter:'#FFF2C9', butterDeep:'#7C5A0E', butterBar:'#E8C25A',
+  danger:'#FFE3DE', dangerDeep:'#A93B29', dangerBar:'#E88A76',
+  track:'#F3EADC', line:'#F0E4D2',
+};
+const F = { display:"'Baloo 2', 'Nunito', sans-serif", body:"'Nunito', sans-serif" };
+const MONO = "'SF Mono', Menlo, Consolas, monospace";
+
+/* ============================================================
+   §1 KIẾN TRÚC MỞ — bằng chứng sống (spec §1)
+   core chỉ có event bus; mọi hệ là 1 entry trong SYSTEMS.
+   ============================================================ */
+
+// Công thức chung (spec §3)
+const capOf = (L) => Math.min(100, 40 + 6 * L);   // cap Sức mạnh theo level → Lv.4 = 64
+const need = (L) => 80 + 30 * L;                  // XP lên mức → Lv.4→5 cần 200
+
+// §1.1 Core tối thiểu — fixture dùng chung mọi demo (spec §3)
+const FIXTURE = {
+  speciesId: 'flame', stageIndex: 0,
+  level: 4, xp: 120,            // Lv.4 · 120/200 XP
+  power: 62, condition: 78,     // Sức mạnh 62/64 · Thể trạng 78 (Khỏe mạnh)
+  coins: 12, streak: 7,         // 12 sushi · Streak 7 ngày
+  todaySessions: 3, todayMinutes: 112,
+  healthyDays: 1,               // chuỗi ngày khỏe mạnh (cổng tiến hoá cần 3)
+};
+
+// §1.3 Registry điều kiện (dùng chung, combo AND/OR) — thêm loại mới = đăng ký 1 key
+const COND = {
+  level_at_least:          (s, v) => s.level       >= v,
+  power_at_least:          (s, v) => s.power       >= v,
+  streak_at_least:         (s, v) => s.streak      >= v,
+  healthy_days_at_least:   (s, v) => s.healthyDays >= v,
+  sessions_today_at_least: (s, v) => s.todaySessions >= v,
+  and: (s, of) => of.every((c) => evalCond(s, c)),
+  or:  (s, of) => of.some((c) => evalCond(s, c)),
+};
+const CUR = {
+  level_at_least: (s) => s.level, power_at_least: (s) => s.power,
+  streak_at_least: (s) => s.streak, healthy_days_at_least: (s) => s.healthyDays,
+  sessions_today_at_least: (s) => s.todaySessions,
+};
+const COND_LABEL = {
+  level_at_least: (v) => `Lv.${v}`,
+  power_at_least: (v) => `Sức mạnh ≥ ${v}`,
+  streak_at_least: (v) => `Streak ≥ ${v}`,
+  healthy_days_at_least: (v) => `Khỏe mạnh ${v} ngày liên tục`,
+  sessions_today_at_least: (v) => `≥ ${v} phiên hôm nay`,
+};
+function evalCond(s, c) { return COND[c.key](s, c.value); }
+function evalGate(s, gate) { return COND[gate.op](s, gate.of); }
+function condText(c) { return COND_LABEL[c.key](c.value); }
+
+// §1.2 Module hệ — mỗi hệ = 1 khai báo; UI đọc SYSTEMS[].ui để biết vẽ gì ở slot nào
+const SYSTEMS = [
+  { id: 'level', name: 'Level & XP',
+    on: {
+      session_complete: (c, m) => ({ xp: c.xp + m, coins: c.coins + 1 }),
+      feed: (c) => ({ xp: c.xp + 5, coins: c.coins - 1 }),
+    },
+    emits: ['level_up'], ui: [] },
+  { id: 'power', name: 'Sức mạnh',
+    on: { session_complete: (c) => ({ power: Math.min(capOf(c.level), c.power + 8) }) },
+    decay: { perIdleDay: -6, perGoalDay: -2 },
+    ui: [{ slot: 'focus', type: 'meter', label: 'Sức mạnh' }] },
+  { id: 'condition', name: 'Thể trạng',
+    on: { feed: (c) => ({ condition: Math.min(100, c.condition + 15) }) },
+    decay: { perIdleDay: -10 },
+    ui: [{ slot: 'focus', type: 'meter', label: 'Thể trạng' }, { slot: 'care', type: 'health_status' }] },
+  { id: 'evolution', name: 'Tiến hoá',
+    on: { level_up: 'checkEvolution' },
+    rules: ['stage gate (registry)', 'branch Stage 3', 'form lai'],
+    ui: [{ slot: 'stats', type: 'evo_gate' }] },
+  { id: 'collection', name: 'Sưu tầm',
+    ui: [{ slot: 'desktop', type: 'pokedex' }] },
+];
+
+// Event bus tối thiểu: dispatcher gọi mọi hệ lắng nghe sự kiện, gom patch lại.
+function dispatch(core, event, payload = 25) {
+  let s = { ...core };
+  if (event === 'session_complete') {
+    s.todaySessions = s.todaySessions + 1;
+    s.todayMinutes = s.todayMinutes + payload;
+  }
+  SYSTEMS.forEach((sys) => {
+    const h = sys.on && sys.on[event];
+    if (typeof h === 'function') s = { ...s, ...h(s, payload) };
+  });
+  while (s.xp >= need(s.level)) {
+    // hệ level phát 'level_up' → hệ evolution nghe được (checkEvolution):
+    // trong game thật, đủ gate stage kế tiếp sẽ tự tiến hoá ngay tại đây.
+    s = { ...s, xp: s.xp - need(s.level), level: s.level + 1 };
+  }
+  return s;
+}
+
+// §1.6 Ví dụ hệ tương lai (spec bắt đầu ghi trong comment code — chứng minh tính mở):
+// Ngày mai thêm hệ Nhiệm vụ hằng ngày — KHÔNG đụng core:
+//   registerSystem({ id:'daily_quests', on:{ session_complete: quests.check, feed: quests.check },
+//                    ui:[{ slot:'home_bottom', type:'quest_list' }] });
+//   registerConditionType('total_sessions_at_least', (s,v) => s.stats.totalSessions >= v);
+// Hệ Đấu trường: cond 'power_at_least' có sẵn → chỉ thêm config đối thủ.
+
+/* ============================================================
+   §2 CATALOG sinh vật (data-driven — thêm loài = thêm entry)
+   Sprite CHUẨN v3 (spec §2.5): Pokémon MÀU — tham chiếu starter thật,
+   grid 26/30/32 (stage càng cao càng lớn), outline tối, thân 2–3 tông
+   + highlight, sáng trên-trái nhất quán.
+   ĐỘ PHỨC TẠP TĂNG THEO STAGE (tiêu chí nghiệm thu):
+   - Tàn Lửa   = Charmander-like: tròn nhỏ, ngố, bụng kem, đuôi lửa nhỏ
+   - Bồng Bột  = Charmeleon-like: cao + đỏ hơn, sừng mào, mắt dữ,
+                 cánh mầm, đuôi lửa to
+   - Diễm Long = Charizard-like: rồng đứng thẳng, 2 sừng, CÁNH LỚN,
+                 đuôi lửa lớn — phức tạp nhất
+   Line Thủy (Squirtle-like) / Thảo (Bulbasaur-like): cùng chuẩn màu.
+   Chữ: . trống · K viền · còn lại = tone màu (xem SPECIES_PAL).
+   ============================================================ */
+const TANLUA_ART = [
+  "............................",
+  "..........KKKKKKKK..........",
+  ".........KLLLLLLLDK.........",
+  "........KLOOOOOOOODK........",
+  ".......KLOOOOOOOOOODK.......",
+  "......KLOWKOOOOOOWKODK......",
+  "......KLOWKOOOOOOWKODK...RR.",
+  "......KLOKKOOOOOOKKODK..RRY.",
+  "......KLOOOOOOOOOOOODK.RRYYR",
+  "......KDOOOKOOOKOOOODK.RYYYR",
+  ".......KDOOOKKKOOOODK.RYYWYR",
+  "........KDDOOOOOODDK..RYWWWY",
+  ".........KKLOOOODKK....RYWYR",
+  "........KLLOCCCOOLDK...KRYYR",
+  ".......KKLOCCCCCOODKK.KLLDK.",
+  "......KLLOCCCCCCCOOLDKLOODK.",
+  "......KLOOCCCCCCCOOOOLOOODK.",
+  "......KDOOCCCCCCCOOOOOODDK..",
+  ".......KDOOCCCCCOOOOOODKK...",
+  "........KLOOCCCOOOOOODK.....",
+  "........KLOOOOOOOOODDK......",
+  "........KLOOODDOOODKK.......",
+  "........KDOODKKDOODK........",
+  ".........KDDK..KDDK.........",
+  "..........KK....KK..........",
+  "............................",
+];
+const BONGBOT_ART = [
+  ".............KHK..............",
+  "............KHHHK.............",
+  "...........KHHHHHK............",
+  "............KKKKKK............",
+  "..........KKLLLLLDKK..........",
+  ".........KLLEEEEEELDK.........",
+  "........KKKKEEEEEEKKKK........",
+  "........KLEKEEEEEEKEDK........",
+  ".......KLEKKEEEEEEKKEDK.R..R..",
+  ".......KLEWKEEEEEEWKEDKRR.RR..",
+  ".......KDEEEELLLLEEEEDKRRYRYR.",
+  "......K.KLELLLLLLLLEDKRRYYYRR.",
+  ".....KDKKDDLKKKKKKLDDKRYYYYYRR",
+  ".....KLDKKKDLWLLWLDKKKRYYWYYRR",
+  ".....KDDDK.KKLLLDKK.KDRYWWWYRR",
+  "......KKK..KLEEEEDK..KRYWWWWYR",
+  "..........KLECCCEEDK...RYWWYR.",
+  ".........KLECCCCCEEDK..RYYYYR.",
+  "........KLECCCCCCCEEDKKLRYYR..",
+  ".......KLEECCCCCCCEEELLEEDK...",
+  ".......KLEECCCCCCCEEEEEEEDK...",
+  ".......KDDEECCCCCEEEEEEEDDK...",
+  "........KKLECCCCCEEEEEDDKK....",
+  ".........KLEEEEEEEEEDDKK......",
+  ".........KLEEEDDEEEDKK........",
+  ".........KLEEDKKLEEDK.........",
+  ".........KLEEDKKLEEDK.........",
+  ".........KDEDDKKDDEDK.........",
+  "..........KDKK..KKDK..........",
+  "...........K......K...........",
+];
+const DIEMPLONG_ART = [
+  "........KHK..........KHK........",
+  "...K....KHHK...K....KHHK....K...",
+  "..KAK....KHHKKKDKKKKHHK....KAK..",
+  ".KAABK..KKKKLLLOLLDKKK....KBAAK.",
+  ".KAABAK..KLKOOOOOOKLDK...KABAAK.",
+  "KAABAABK.KKKOOOOOOKKDK..KBAABAAK",
+  "KAABAAAKKLWKOOOOOOWKODK.KAAABAAK",
+  "KAABAAAAKDOOOOLLLOOOODKKAAAABAAK",
+  "KAABAAAAKKLOLKLLLKLODKKKAAAABAAK",
+  "KAABAAAAKKDLLLLLLLLLDKKKAAAABAAK",
+  "KAABAAAAKKKDKKKKKKKDK.KKAAAABAAK",
+  ".KAABAAKK..KLOOOOODK...KKAABAAK.",
+  ".KAAAAAAKKKKLOOOOODK..KKAAAAAAK.",
+  "..KAAAAKKKLLOOOOOOODK..KKAAAAK..",
+  "...KKAKKKLOOOCCCOOOODKK.KKAKK...",
+  ".....KKLLOOCCCCCCCOOOLDKKRKKRKK.",
+  "......KLOOOCCCCCCCOOOOORRKRRKRRK",
+  ".....KDOOOCCCCCCCCCOOOOORYRYYRRK",
+  "......KDOOCCCCCCCCCOOOORYYYYYRRK",
+  ".......KDOCCCCCCCCCOODRYYYYYYYYR",
+  "........KLOSSSSSSSSODKRYYWYYYWYR",
+  "........KDOCCCCCCCOODKRYWWYYWWYR",
+  ".........KLOOCCCOOOODKRYWWWWWWYR",
+  "........KLOOODDDDOOOODKRYWWWWYRK",
+  ".......KLOOODKKKKLOOODKRYYWWYYRK",
+  ".......KLOOOODKKDOOOOODKRYYYYRK.",
+  ".......KDOOODK..KLOOODKDKRYYRK..",
+  "........KNODDK..KDDONK.KDKKKK...",
+  "........KNNKK....KKNNK..K.......",
+  ".........KK........KK...........",
+  "................................",
+];
+// Line Thủy / Thảo: cùng chuẩn màu v3 — Giọt (Squirtle-like: xanh dương,
+// mai nâu sau lưng), Mầm (Bulbasaur-like: xanh lá + bầu hạt nảy mầm).
+const GIOT_ART = [
+  "........................",
+  "........KKKKKK..........",
+  "......KKBBBBBBKK........",
+  ".....KBBLBBBBBBK........",
+  "....KBLLBBBBBBBBBK......",
+  "....KBBBBBBBBBBBBK......",
+  "...KBKWBBBBBBBKWBK......",
+  "...KBKKBBBBBBBKKBK......",
+  "...KBKKBBBBBBBKKBK......",
+  "...KBBBBBKKBBBBBBK......",
+  "...KKBBBBBBBBBBBBBKK....",
+  "....KKTTTTTTTTTTKK......",
+  "...KBTTKCCCCCCKTTBK.KK..",
+  "..KBKTTKCCCCCCKTTKBKKBBK",
+  "..KBKTTKCCCCCCKTTKBK..KK",
+  "...KBTTKCCCCCKTTBK......",
+  "....KKKSSSSSSKKK........",
+  ".....KBBK......KBBK.....",
+  ".....KBBK......KBBK.....",
+  "....KBBBBK....KBBBBK....",
+  "....KBBBBK....KBBBBK....",
+  "....KKKKKK....KKKKKK....",
+];
+const MAM_ART = [
+  "........................",
+  "...........KK...........",
+  "..........KVVK..........",
+  ".....KK...KGGK..KK......",
+  "....KMK..KHGGHK..KMK....",
+  "..KKKKKKKKHGGHKKKKKKKK..",
+  ".KMMLLMMMMMMMMMMMMMMMMK.",
+  ".KMMMKWMMMMMMMMMKWMMMMK.",
+  ".KMMMKKMMMMMMMMMKKMMMMK.",
+  ".KMMMMMMMMKKKKMMMMMMMMK.",
+  ".KMMMMMMMMMMMMMMMMMMMMK.",
+  "..KKMMMMMMMMMMMMMMMMKK..",
+  "..KKMMCCCCCCCCCCMM..KK..",
+  "..KMMMMKCCCCCCCCKMMMMK..",
+  "..KMMMMKCCCCCCCCKMMMMK..",
+  "..KMMMMKCCCCCCCCKMMMMK..",
+  "...KMMK..........KMMK...",
+  "...KMMK..........KMMK...",
+  "..KMMMMK........KMMMMK..",
+  "..KMMMMK........KMMMMK..",
+  "..KKKKK.........KKKKK...",
+];
+
+// Bảng màu v3 (spec §2.5): CÓ MÀU — outline nâu-đen gần đen, thân 2–3 tông + highlight.
+const SPECIES_PAL = {
+  flame: { // Lửa: cam Tàn Lửa / đỏ Bồng Bột (E) / bụng kem, lửa đuôi Y/R/W, sừng H,
+           // cánh Diễm Long A + gân sáng B, vuốt N
+    K: '#3B2A1F', O: '#F5883A', L: '#FFB067', D: '#D2681F', C: '#F9E8C2', S: '#E2C48F',
+    R: '#F25C2A', Y: '#FCD968', W: '#FFFFFF', H: '#F6E3B8', N: '#F6E3B8', E: '#DE442B',
+    A: '#3E8E7E', B: '#63B79F',
+  },
+  water: { // Thủy: xanh dương, bụng kem, mai nâu S + viền mai T
+    K: '#3B2A1F', B: '#7EC5E8', L: '#B9E2F5', D: '#4E96C4', C: '#F6E7C4', S: '#A9653A', T: '#CC8B54', W: '#FFFFFF',
+  },
+  grass: { // Thảo: xanh lá, bụng kem, bầu hạt G + lá mầm V, tai M
+    K: '#3B2A1F', M: '#8CC46E', L: '#BCE39A', D: '#5E9B49', G: '#4E8F49', H: '#6FB05C', V: '#3F7C40', C: '#F3E9C8', W: '#FFFFFF',
+  },
+};
+// Ốm yếu (§2.4.4): palette NHỢT/desaturate của màu próp — vẫn giữ outline đậm.
+// L = cam nhợt của thân, D = bóng tan, C = bụng kem phai, G = khói xám (nguyên tố "tắt").
+const SICK_PAL = { K: '#4A382E', L: '#ECB694', D: '#C39B77', C: '#F2E4C8', G: '#9C948A' };
+
+/* §2.4 BIẾN THỂ ỐM YẾU — grid vẽ RIÊNG (silhouette riêng, CẤM chỉ đổi màu),
+   render bằng SICK_PAL nhợt (§2.4.4).
+   Tiêu chí nghiệm thu: nhìn mờ (blur) vẫn phân biệt được khỏe vs ốm.
+   Tàn Lửa ốm = dáng xìu hoàn toàn khác bản khỏe:
+   - đầu cúi thấp 2px (mặt nằm nửa dưới đầu), tai ngọn lửa RŨ phẳng d sát thân
+   - lưng GÙ:crest vòng cung sau lưng cao hơn cả đầu cúi
+   - bụng HÓP: viền bụng lõm lên 2px giữa 2 chân, chân co thấp, tổng thể
+     thấp hơn ~17% (mực chân lùi từ hàng 23 xuống 21)
+   - nguyên tố TẮT: ngọn lửa tai + đuôi chỉ còn vệt khói chekered K/D rung
+   - mặt KHÁC hẳn: mắt NHẮM HẰN cong xuống (∪) + lông mày chéo buồn + miệng wavy ~
+   Data-driven: SICK_ART[stage.id] bật khi condition < 30 (band §3). */
+const TANLUA_SICK_ART = [
+  "........................",
+  "........................",
+  "....KG....GK............",
+  "....GK....KG............",
+  "........................",
+  ".....K.....K............",
+  "...KKK...KKK.KKK........",
+  "..KKKKKKKKKKKDDDK.......",
+  ".KLLLLLLLLLDDDDDLK......",
+  "KLLLKLLKLLDDDDDDDLK.....",
+  "KLKKLLLLKKLDDDDDDDDK....",
+  "KLLLLLLLLLLDDDDDDLLK....",
+  "KLKLKLLKLKLLLLLLLDDDK...",
+  "KLLKLLLLKLLLLLDDDDDDK...",
+  "KLLLKLKLLLLLLDDDDDDDK.KG",
+  ".KLKLKLKLLLLLLDDDDDDK.GK",
+  ".KLLCCCCCCLLLDDDDDDDK.KG",
+  ".KLLCCCDDDDDLLLLLLLK..KG",
+  ".KLLLLLLKKKLLLLLLLLK....",
+  ".KLLLLKK...KKDDDDDDKKKK.",
+  ".KLLLK.......KDDDDDK..K.",
+  ".KKKK.........KKKKK.....",
+];
+const SICK_ART = { 'tan-lua': TANLUA_SICK_ART };
+
+// Fallback generic cho form CHƯA có grid ốm riêng: nhắm mắt = patch 'K'
+// đè lên đốm sáng mắt W + shiver + filter desaturate (xem StageSprite).
+const SICK_EYES = {
+  'bong-bot':  [[9, 10, 'K'], [9, 18, 'K']],
+  'diem-long': [[6, 10, 'K'], [6, 18, 'K']],
+  'giot':      [[6, 6, 'K'], [6, 15, 'K']],
+  'mam':       [[7, 6, 'K'], [7, 17, 'K']],
+};
+
+// §2 Catalog 3 line starter + nhánh Stage 3 + form lai (tên khớp CHÍNH XÁC spec §2)
+// Helper điều kiện từ registry — gate/branch/hybrid đều tổ hợp từ các key này.
+const LV = (v) => ({ key: 'level_at_least', value: v });
+const PW = (v) => ({ key: 'power_at_least', value: v });
+const HD = (v) => ({ key: 'healthy_days_at_least', value: v });
+const ST = (v) => ({ key: 'streak_at_least', value: v });
+const AND = (...of) => ({ op: 'and', of });
+const GATE2 = AND(LV(8), HD(3));    // cửa Stage 2: đủ Lv + khỏe mạnh liên tục (cổng ốm yếu chặn ở đây)
+const GATE3 = AND(LV(16), PW(70));  // cửa Stage 3: đủ Lv + sức mạnh
+const BRANCHES = (tenHien, noteHien, tenCB, noteCB) => [
+  { id: 'hien', name: tenHien, note: noteHien, cond: AND(LV(16), ST(7)) },
+  { id: 'chien-binh', name: tenCB, note: noteCB, cond: AND(LV(16), PW(80)) },
+];
+
+const CATALOG = {
+  flame: {
+    id: 'flame', element: '🔥', lineName: 'Lửa',
+    stages: [
+      { atLevel: 1,  id: 'tan-lua',   name: 'Tàn Lửa',   note: 'hổ lửa con', art: TANLUA_ART, gate: null },
+      { atLevel: 8,  id: 'bong-bot',  name: 'Bồng Bột',  note: 'thiếu niên lửa · mọc cánh mầm', art: BONGBOT_ART, gate: GATE2 },
+      { atLevel: 16, id: 'diem-long', name: 'Diễm Long', note: 'rồng lửa nhỏ', art: DIEMPLONG_ART, gate: GATE3 },
+    ],
+    branches: BRANCHES('Diễm Long Hiền', 'aura dịu — thưởng thói quen đều đặn', 'Diễm Long Chiến Binh', 'giáp uy phong — thưởng sức mạnh cao'),
+    hybridsWith: ['water', 'grass'],
+  },
+  water: {
+    id: 'water', element: '💧', lineName: 'Thủy',
+    stages: [
+      { atLevel: 1,  id: 'giot',       name: 'Giọt',       note: 'gấu nước', art: GIOT_ART, gate: null },
+      { atLevel: 8,  id: 'suoi-vot',   name: 'Suối Vọt',   note: 'cá heo nước ngọt', art: null, gate: GATE2 },
+      { atLevel: 16, id: 'trieu-long', name: 'Triều Long', note: 'rồng sóng', art: null, gate: GATE3 },
+    ],
+    branches: BRANCHES('Triều Long Hiền', 'sóng êm — thưởng thói quen', 'Triều Long Chiến Binh', 'giáp vảy — thưởng sức mạnh'),
+    hybridsWith: ['flame', 'grass'],
+  },
+  grass: {
+    id: 'grass', element: '🌿', lineName: 'Thảo',
+    stages: [
+      { atLevel: 1,  id: 'mam',         name: 'Mầm',         note: 'hạt nảy mầm', art: MAM_ART, gate: null },
+      { atLevel: 8,  id: 'bup-xanh',    name: 'Búp Xanh',    note: 'hươu lá', art: null, gate: GATE2 },
+      { atLevel: 16, id: 'co-thu-linh', name: 'Cổ Thụ Linh', note: 'linh thú cây cổ tích', art: null, gate: GATE3 },
+    ],
+    branches: BRANCHES('Cổ Thụ Linh Hiền', 'bóng râm — thưởng thói quen', 'Cổ Thụ Linh Chiến Binh', 'vỏ gỗ giáp — thưởng sức mạnh'),
+    hybridsWith: ['flame', 'water'],
+  },
+};
+
+// §2.3 Form lai hiếm — điều kiện KÉP đọc từ registry
+const HYBRIDS = [
+  { id: 'hoi-nuoc-boc', name: 'Hơi Nước Bốc', of: ['flame', 'water'], cond: AND(PW(85), ST(10)) },
+  { id: 'diem-hoa', name: 'Diễm Hoa', of: ['grass', 'flame'], cond: AND(PW(85), ST(10)) },
+  { id: 'sen-mua', name: 'Sen Mưa', of: ['water', 'grass'], cond: AND(PW(85), ST(10)) },
+];
+
+// Cấu hình tuần (dùng chung phone ② và desktop ⑤) — decay nhìn thấy được
+const WEEK = [
+  { d: 'T2', min: 95,  goal: true,  power: 64, cond: 78 },
+  { d: 'T3', min: 120, goal: true,  power: 62, cond: 78 },
+  { d: 'T4', min: 60,  goal: false, power: 56, cond: 72 },
+  { d: 'T5', min: 140, goal: true,  power: 54, cond: 72 },
+  { d: 'T6', min: 80,  goal: true,  power: 52, cond: 66 },
+  { d: 'T7', min: 25,  goal: false, power: 46, cond: 60 },
+  { d: 'CN', min: 112, goal: true,  power: 62, cond: 78 },
+];
+
+/* ============================================================
+   Pixel art renderer — CSS grid of divs + patch dữ liệu
+   ============================================================ */
+function PixelSprite({ art, palette, px = 6, patches = [], shiftDown = 0, style }) {
+  let grid = art.map((r) => r.split(''));
+  if (shiftDown > 0) {
+    const empty = new Array(grid[0].length).fill('.');
+    const kept = grid.slice(0, grid.length - shiftDown);
+    const pad = [];
+    for (let i = 0; i < shiftDown; i++) pad.push([...empty]);
+    grid = pad.concat(kept);
+  }
+  patches.forEach(([r, c, ch]) => { if (grid[r] && c < grid[r].length) grid[r][c] = ch; });
+  const w = grid[0].length;
+  const cells = [];
+  grid.forEach((row, y) => row.forEach((ch, x) => {
+    cells.push(<div key={x + '_' + y} style={{ width: px, height: px, background: ch === '.' ? 'transparent' : (palette[ch] || 'transparent') }} />);
+  }));
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${w}, ${px}px)`, gridTemplateRows: `repeat(${grid.length}, ${px}px)`, lineHeight: 0, ...style }}>
+      {cells}
+    </div>
+  );
+}
+
+function stageOf(speciesId, stageIndex) {
+  const sp = CATALOG[speciesId] || CATALOG.flame;
+  return sp.stages[Math.min(stageIndex, sp.stages.length - 1)];
+}
+
+function StageSprite({ speciesId = 'flame', stageIndex = 0, sick = false, px = 7, style }) {
+  const sp = CATALOG[speciesId] || CATALOG.flame;
+  const stage = stageOf(speciesId, stageIndex);
+  const art = stage.art || sp.stages[0].art;
+  // §2.4: form có grid ốm RIÊNG (silhouette vẽ lại từ đầu) → dùng grid đó
+  // + palette nhợt SICK_PAL, không qua patch. Form khác chưa có grid →
+  // fallback generic: patch mắt nhắm + desaturate.
+  if (sick && SICK_ART[stage.id]) {
+    return <PixelSprite art={SICK_ART[stage.id]} palette={SICK_PAL} px={px} style={style} />;
+  }
+  const pal = SPECIES_PAL[speciesId] || SPECIES_PAL.flame;   // màu v3 theo line (spec §2.5)
+  const patches = sick ? (SICK_EYES[stage.id] || []) : [];
+  return (
+    <PixelSprite art={art} palette={pal} px={px} patches={patches} shiftDown={sick ? 1 : 0}
+      style={{ ...(sick ? { filter: 'saturate(0.45) brightness(1.05)' } : {}), ...style }} />
+  );
+}
+
+// Form chưa mở → silhouette một màu ink ấm (chất Pokédex, spec §2.5)
+function Silhouette({ speciesId, stageIndex = 0, px = 4 }) {
+  const sp = CATALOG[speciesId] || CATALOG.flame;
+  const stage = stageOf(speciesId, stageIndex);
+  const art = stage.art || sp.stages[0].art;
+  const pal = {};
+  Object.keys(SPECIES_PAL[speciesId] || SPECIES_PAL.flame).forEach((ch) => { pal[ch] = '#4A3F35'; });
+  return <PixelSprite art={art} palette={pal} px={px} />;
+}
+
+/* ---------- Pixel phụ: trứng, sushi, lửa, tim ----------
+   Trứng NGUYÊN TỐ (v3): vỏ kem soft kiểu Finch + hoa văn element
+   riêng từng line (Lửa = ngọn lửa cam/đỏ · Thủy = giọt nước xanh · Thảo = mầm lá). */
+const EGG_FLAME_ART = [
+  "....OOOO....",
+  "...OBBBBO...",
+  "..OBWBBBO...",
+  "..OBWWBBO...",
+  ".OBWBBBBBSO.",
+  "OBBBBRRBBBSO",
+  "OBBBRYYRBBBO",
+  "OBBBRYYRBBBO",
+  "OBBBRRRRBBBO",
+  "OBBSBBBBSBBO",
+  "OBBBBSBBBBSO",
+  ".OBSBBBBSBO.",
+  ".OOOOOOOOOO.",
+];
+const EGG_WATER_ART = [
+  "....OOOO....",
+  "...OBBBBO...",
+  "..OBWBBBO...",
+  "..OBWWBBO...",
+  ".OBWBBBBBSO.",
+  "OBBBBMMBBBSO",
+  "OBBBMWWMBBBO",
+  "OBBBMWWMBBBO",
+  "OBBBMMMMBBBO",
+  "OBBSBBBBSBBO",
+  "OBBBBSBBBBSO",
+  ".OBSBBBBSBO.",
+  ".OOOOOOOOOO.",
+];
+const EGG_GRASS_ART = [
+  "....OOOO....",
+  "...OBBBBO...",
+  "..OBWBBBO...",
+  "..OBWWBBO...",
+  ".OBWBBBBBSO.",
+  "OBBBBGGBBBSO",
+  "OBBBGGVGBBBO",
+  "OBBBGGVGBBBO",
+  "OBBBGGGGBBBO",
+  "OBBSBBBBSBBO",
+  "OBBBBSBBBBSO",
+  ".OBSBBBBSBO.",
+  ".OOOOOOOOOO.",
+];
+const EGGS = [
+  { id: 'flame', speciesId: 'flame', name: 'Trứng Lửa',  starter: 'Tàn Lửa', desc: 'Line Lửa · nở thành Tàn Lửa',  stageBg: '#FFE9DB', art: EGG_FLAME_ART,
+    pal: { O:'#8A3B1E', B:'#FFD9C4', S:'#F5A26B', W:'#FFF6EC', R:'#F25C2A', Y:'#FCD968' } },
+  { id: 'water', speciesId: 'water', name: 'Trứng Thủy', starter: 'Giọt',    desc: 'Line Thủy · nở thành Giọt',    stageBg: '#E3F0FB', art: EGG_WATER_ART,
+    pal: { O:'#2E5E86', B:'#CFE6F8', S:'#8FBEE8', W:'#F6FBFF', M:'#4E96C4' } },
+  { id: 'grass', speciesId: 'grass', name: 'Trứng Thảo', starter: 'Mầm',     desc: 'Line Thảo · nở thành Mầm',     stageBg: '#EAF4DC', art: EGG_GRASS_ART,
+    pal: { O:'#3E6B2E', B:'#DCEEC8', S:'#A5CE85', W:'#F7FCF0', G:'#5E9B49', V:'#3F7C40' } },
+];
+
+const SUSHI_ART = [
+  "..OOOOOOOO..",
+  ".OTTGGTTTTO.",
+  ".OTTGGTTTTO.",
+  ".OWWGGWWWWO.",
+  ".OWWGGWWWWO.",
+  ".OWWGGWWWWO.",
+  "..OOOOOOOO..",
+];
+const SUSHI_PAL = { O:'#4A3728', T:'#FB9E5C', W:'#FFF6EA', G:'#7FB069' };
+
+const FLAME_ART = [
+  "...O...",
+  "..OFO..",
+  "..OFFO.",
+  ".OFFFO.",
+  ".OFYYFO",
+  "OFYYYFO",
+  ".OOOOO.",
+];
+const FLAME_PAL = { O:'#9A3412', F:'#FB923C', Y:'#FDE68A' };
+
+const HEART_ART = [
+  ".OO.OO.",
+  "OHHOHHO",
+  "OHHHHHO",
+  ".OHHHO.",
+  "..OHO..",
+  "...O...",
+];
+const HEART_PAL = { O:'#B23A5E', H:'#F472A0' };
+
+function Hearts() {
+  return (
+    <div>
+      <span className="pp-heart" style={{ left: '8%', top: '6%', animationDelay: '0s' }}><PixelSprite art={HEART_ART} palette={HEART_PAL} px={2} /></span>
+      <span className="pp-heart" style={{ left: '82%', top: '0%', animationDelay: '0.7s' }}><PixelSprite art={HEART_ART} palette={HEART_PAL} px={3} /></span>
+      <span className="pp-heart" style={{ left: '46%', top: '-10%', animationDelay: '1.3s' }}><PixelSprite art={HEART_ART} palette={HEART_PAL} px={2} /></span>
+    </div>
+  );
+}
+
+/* ---------- Hiệu ứng ốm yếu (spec §2.4.5–6): 2 giọt mồ hôi nhỏ bay quanh đầu +
+   bubble "…" phía trên đầu (vũng bóng tối dưới chân nằm ở podium, chỗ pet). ---------- */
+const SWEAT_ART = [
+  "..K",
+  ".KK",
+  "KKK",
+];
+const SWEAT_PAL = { K: '#4A80BF' };
+
+function SickFx() {
+  return (
+    <React.Fragment>
+      <span className="pp-sweat" style={{ left: 10, top: 30, animationDelay: '0s' }}><PixelSprite art={SWEAT_ART} palette={SWEAT_PAL} px={3} /></span>
+      <span className="pp-sweat" style={{ left: 64, top: 14, animationDelay: '0.75s' }}><PixelSprite art={SWEAT_ART} palette={SWEAT_PAL} px={2.5} /></span>
+      <div style={{ position: 'absolute', top: -30, left: '50%', transform: 'translateX(-50%)' }}>
+        <div className="pp-bob" style={{
+          background: '#FFF9EE', border: '2px solid #43382E', borderRadius: 7,
+          padding: '1px 9px 2px', fontFamily: MONO, fontWeight: 800, fontSize: 14,
+          color: '#43382E', lineHeight: 1.2, letterSpacing: 1,
+          boxShadow: '0 3px 8px rgba(67,56,46,0.12)',
+        }}>…</div>
+      </div>
+    </React.Fragment>
+  );
+}
+
+/* ============================================================
+   Atoms — card bo 22, nút pill 999, meter, chip sushi
+   ============================================================ */
+function Card({ children, style }) {
+  return (
+    <div style={{ background: C.card, borderRadius: 22, padding: 14, boxShadow: '0 6px 18px rgba(67,56,46,0.07)', border: `1px solid ${C.line}`, ...style }}>
+      {children}
+    </div>
+  );
+}
+
+const PILL_TONES = {
+  mint:   { bg: C.mint,   fg: C.mintDeep,   bd: '#9ADBC2' },
+  white:  { bg: '#FFFFFF', fg: C.ink,       bd: '#E4D5BE' },
+  peach:  { bg: C.peach,  fg: C.peachDeep,  bd: '#F6C7AC' },
+  danger: { bg: C.danger, fg: C.dangerDeep, bd: '#F6C0B6' },
+  sky:    { bg: C.sky,    fg: C.skyDeep,    bd: '#BAD7F0' },
+  butter: { bg: C.butter, fg: C.butterDeep, bd: '#F2DD9B' },
+};
+
+function PillButton({ tone = 'mint', children, onClick, disabled, style }) {
+  const t = PILL_TONES[tone];
+  return (
+    <button className="pp-btn" onClick={onClick} disabled={disabled}
+      style={{
+        border: `1.5px solid ${t.bd}`, background: t.bg, color: t.fg,
+        borderRadius: 999, padding: '12px 20px', fontFamily: F.body,
+        fontSize: 15, fontWeight: 800, lineHeight: 1.2, cursor: 'pointer',
+        boxShadow: '0 4px 12px rgba(67,56,46,0.08)', width: '100%', ...style,
+      }}>
+      {children}
+    </button>
+  );
+}
+
+function Chip({ bg, fg, children, style }) {
+  return (
+    <span style={{ fontSize: 12, fontWeight: 800, background: bg, color: fg, borderRadius: 999, padding: '3px 10px', whiteSpace: 'nowrap', ...style }}>
+      {children}
+    </span>
+  );
+}
+
+function Meter({ label, value, max = 100, barColor, textColor, chip }) {
+  const pct = Math.max(0, Math.min(100, (value / max) * 100));
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, fontWeight: 800, marginBottom: 5 }}>
+        <span style={{ color: C.sub }}>{label}</span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          {chip && <Chip bg={chip.bg} fg={chip.fg}>{chip.label}</Chip>}
+          <span style={{ color: textColor }}>{value}/{max}</span>
+        </span>
+      </div>
+      <div style={{ height: 10, background: C.track, borderRadius: 999, overflow: 'hidden' }}>
+        <div style={{ width: `${pct}%`, height: '100%', background: barColor, borderRadius: 999, transition: 'width .5s ease' }} />
+      </div>
+    </div>
+  );
+}
+
+// Meter Sức mạnh có VẠCH CAP theo level — cap(L) = min(100, 40 + 6×L)
+function PowerMeter({ power, cap, level }) {
+  return (
+    <div style={{ paddingTop: 14 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 800, marginBottom: 5 }}>
+        <span style={{ color: C.sub }}>Sức mạnh</span>
+        <span style={{ color: C.peachDeep }}>{power}/{cap} · vạch cap Lv.{level}</span>
+      </div>
+      <div style={{ position: 'relative', height: 12, background: C.track, borderRadius: 999 }}>
+        <div style={{ width: `${power}%`, height: '100%', background: C.peachBar, borderRadius: 999, transition: 'width .5s ease' }} />
+        <div style={{ position: 'absolute', left: `${cap}%`, top: -3, bottom: -3, width: 2.5, background: C.ink, borderRadius: 2, opacity: 0.65 }} />
+        <div style={{ position: 'absolute', left: Math.min(cap + 1, 74) + '%', top: -15, fontSize: 10.5, fontWeight: 800, color: C.sub, whiteSpace: 'nowrap' }}>
+          cap = min(100, 40 + 6·Lv) = {cap}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function condStatus(v) {
+  if (v >= 70) return { name: 'Khỏe mạnh',   bg: C.mint,   fg: C.mintDeep,   bar: C.mintBar };
+  if (v >= 30) return { name: 'Bình thường', bg: C.butter, fg: C.butterDeep, bar: C.butterBar };
+  return { name: 'Ốm yếu', bg: C.danger, fg: C.dangerDeep, bar: C.dangerBar };
+}
+
+function CoinChip({ coins }) {
+  return (
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: C.card, border: `1px solid ${C.line}`, borderRadius: 999, padding: '4px 12px 4px 8px', boxShadow: '0 3px 8px rgba(67,56,46,0.06)' }}>
+      <PixelSprite art={SUSHI_ART} palette={SUSHI_PAL} px={2} />
+      <span style={{ fontFamily: F.body, fontWeight: 800, fontSize: 14, color: C.ink }}>× {coins} sushi</span>
+    </div>
+  );
+}
+
+/* ---------- Logo + nút Google ---------- */
+function GoogleG({ size = 18 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" aria-hidden="true">
+      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+    </svg>
+  );
+}
+
+function GoogleButton({ onClick, style }) {
+  return (
+    <button className="pp-btn" onClick={onClick}
+      style={{
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+        background: '#FFFFFF', border: '1.5px solid #DADCE0', borderRadius: 999,
+        padding: '11px 20px', fontFamily: F.body, fontSize: 15, fontWeight: 700,
+        color: '#3C4043', cursor: 'pointer', width: '100%',
+        boxShadow: '0 3px 10px rgba(60,64,67,0.12)', ...style,
+      }}>
+      <GoogleG size={19} />
+      <span>Đăng nhập bằng Google</span>
+    </button>
+  );
+}
+
+/* ---------- Sân khấu pastel: bục tròn dưới pet (motif Finch) ---------- */
+function Stage({ bg, height = 190, children, ring, overlay }) {
+  return (
+    <div style={{ position: 'relative', background: bg, borderRadius: 30, height, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', overflow: 'hidden', paddingTop: 22 }}>
+      <div style={{ position: 'absolute', bottom: 18, left: '50%', transform: 'translateX(-50%)', width: 168, height: 34, background: 'rgba(255,255,255,0.55)', borderRadius: '50%' }} />
+      {ring && <div className="pp-ring" style={{ position: 'absolute', bottom: 6, left: '50%', width: 150, height: 150, borderRadius: '50%', border: '5px solid rgba(255,255,255,0.95)', boxShadow: '0 0 34px rgba(255,255,255,0.9)' }} />}
+      <div style={{ position: 'relative', marginBottom: 30 }}>{children}</div>
+      {overlay}
+    </div>
+  );
+}
+
+/* ---------- Chip sprite màu (thay màn DMG inset — spec §2.5: BỎ khung đơn sắc):
+   pet/chip đặt trên nền pastel theo line, viền mềm — dùng cho header,
+   thẻ pet desktop, cổng tiến hoá, tile sưu tầm. ---------- */
+const SPECIES_BG = { flame: '#FFE9DB', water: '#E3F0FB', grass: '#EAF4DC' };
+function PetChip({ speciesId = 'flame', size = 66, radius = '50%', px, children, style }) {
+  const bg = SPECIES_BG[speciesId] || SPECIES_BG.flame;
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: radius, background: bg,
+      border: `1.5px solid rgba(67,56,46,0.14)`,
+      boxShadow: 'inset 0 -6px 12px rgba(67,56,46,0.07), 0 4px 10px rgba(67,56,46,0.06)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      flexShrink: 0, overflow: 'hidden', lineHeight: 0, ...style,
+    }}>
+      {children}
+    </div>
+  );
+}
+
+/* ---------- HUD battle kiểu Gen-1 (theo ảnh mẫu Pokémon Red):
+   dòng tên đậm + Lv nhỏ, hàng TT + thanh vạch + số. Thanh HP MÀU KIỂU
+   POKEMON (spec §2.5): xanh lá ≥50% · vàng 20–49% · đỏ <20%,
+   nhấp nháy đỏ khi ốm (khớp sprite ốm). ---------- */
+function BattleHUD({ petName, level, condition, sick = false, style }) {
+  const SEGS = 10;
+  const filled = Math.max(sick ? 1 : 0, Math.round((condition / 100) * SEGS));
+  const hpColor = sick || condition < 20 ? '#E5484D' : condition >= 50 ? '#3FA383' : '#E8B93B';
+  return (
+    <div style={{
+      display: 'inline-block', background: '#FFFDF6',
+      border: '2px solid #43382E', borderRadius: 10,
+      boxShadow: 'inset 0 0 0 1.5px #FBF3E4, 0 6px 14px rgba(67,56,46,0.14)',
+      padding: '6px 10px 7px', fontFamily: MONO, color: '#43382E', ...style,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, lineHeight: 1 }}>
+        <span style={{ fontSize: 12.5, fontWeight: 800, letterSpacing: 0.5 }}>{String(petName || '').toUpperCase()}</span>
+        <span style={{ fontSize: 10, fontWeight: 800 }}>Lv.{level}</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 5, lineHeight: 1 }}>
+        <span style={{ fontSize: 9.5, fontWeight: 800 }}>TT</span>
+        <span className={sick ? 'pp-pulse' : ''} style={{ display: 'inline-flex', gap: 1.5 }}>
+          {Array.from({ length: SEGS }).map((_, i) => (
+            <span key={i} style={{
+              width: 7, height: 9,
+              background: i < filled ? hpColor : 'rgba(67,56,46,0.13)',
+            }} />
+          ))}
+        </span>
+        <span style={{ fontSize: 10.5, fontWeight: 800 }}>{condition}/100</span>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Tab icons (stroke SVG nhỏ, sạch) ---------- */
+function TabIcon({ kind }) {
+  const common = { fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' };
+  return (
+    <svg width={21} height={21} viewBox="0 0 24 24" {...common}>
+      {kind === 'egg' && <path d="M12 3.5c3.3 0 6 4.8 6 8.7a6 6 0 11-12 0c0-3.9 2.7-8.7 6-8.7z" />}
+      {kind === 'timer' && (<g><circle cx="12" cy="13" r="7.5" /><path d="M12 9.5V13l2.5 2" /><path d="M9.5 2.5h5" /></g>)}
+      {kind === 'bowl' && (<g><path d="M4 12h16a8 8 0 01-16 0z" /><path d="M8.5 8.5c0-1.5 2-1.5 2-3M14 8.5c0-1.5 2-1.5 2-3" /></g>)}
+      {kind === 'chart' && (<g><path d="M5 20V13M12 20V5M19 20v-9" /></g>)}
+    </svg>
+  );
+}
+
+const TABS = [
+  { id: 'egg', label: 'Trứng', icon: 'egg' },
+  { id: 'focus', label: 'Tập', icon: 'timer' },
+  { id: 'feed', label: 'Ăn', icon: 'bowl' },
+  { id: 'stats', label: 'Stats', icon: 'chart' },
+];
+
+function NavBar({ tab, onTab }) {
+  return (
+    <div style={{ background: C.card, borderTop: `1px solid ${C.line}`, display: 'flex', padding: '6px 10px 10px', borderRadius: '24px 24px 0 0', boxShadow: '0 -6px 18px rgba(67,56,46,0.06)' }}>
+      {TABS.map((t) => {
+        const active = tab === t.id;
+        return (
+          <div key={t.id} className="pp-tab" onClick={() => onTab(t.id)}
+            style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '7px 0 5px', borderRadius: 16, color: active ? C.mintDeep : C.sub, background: active ? C.mint : 'transparent', cursor: 'pointer' }}>
+            <TabIcon kind={t.icon} />
+            <span style={{ fontSize: 12, fontWeight: 800, fontFamily: F.body }}>{t.label}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function AppHeader({ app }) {
+  const st = condStatus(app.core.condition);
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ width: 38, height: 38, borderRadius: '50%', background: SPECIES_BG[app.speciesId] || SPECIES_BG.flame, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '1.5px solid rgba(67,56,46,0.14)', boxShadow: 'inset 0 -5px 9px rgba(67,56,46,0.08)' }}>
+          <StageSprite speciesId={app.speciesId} stageIndex={app.stageIndex} px={1.3} style={{ transform: 'translateY(1px)' }} />
+        </div>
+        <div style={{ fontFamily: F.display, fontWeight: 700, fontSize: 16, color: C.ink, lineHeight: 1.1 }}>
+          {app.petName}
+          <span style={{ fontFamily: F.body, fontSize: 12, color: app.sick ? C.dangerDeep : C.mintDeep, background: app.sick ? C.danger : C.mint, borderRadius: 999, padding: '1px 8px', marginLeft: 6, fontWeight: 800, verticalAlign: 'middle' }}>Lv.{app.core.level}</span>
+          {app.sick && <span style={{ fontFamily: F.body, fontSize: 11, color: C.dangerDeep, marginLeft: 4, fontWeight: 800 }}>{st.name}</span>}
+        </div>
+      </div>
+      <CoinChip coins={app.core.coins} />
+    </div>
+  );
+}
+
+/* ============================================================
+   Registry renderer — hàng điều kiện + thẻ CỬA TIẾN HOÁ
+   (checklist & verdict đọc 100% từ CATALOG + COND)
+   ============================================================ */
+function CondRow({ cond, core }) {
+  const ok = evalCond(core, cond);
+  const cur = Math.min(CUR[cond.key](core), cond.value);
+  const shown = CUR[cond.key](core);
+  const pct = Math.max(0, Math.min(100, (shown / cond.value) * 100));
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ width: 22, height: 22, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, background: ok ? C.mintDeep : C.track, color: ok ? '#fff' : C.sub }}>
+        {ok ? '✓' : '·'}
+      </div>
+      <div style={{ flex: 1 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, fontWeight: 800 }}>
+          <span style={{ color: C.ink }}>{condText(cond)}</span>
+          <span style={{ color: ok ? C.mintDeep : C.sub }}>{shown}/{cond.value}{cond.key === 'level_at_least' ? '' : ''}</span>
+        </div>
+        <div style={{ height: 6, background: C.track, borderRadius: 999, marginTop: 4, overflow: 'hidden' }}>
+          <div style={{ width: `${pct}%`, height: '100%', background: ok ? C.mintBar : C.peachBar, borderRadius: 999, transition: 'width .4s ease' }} />
+        </div>
+        {cond.key === 'level_at_least' && <div style={{ fontSize: 11, fontWeight: 700, color: C.sub, marginTop: 2 }}>hiện tại Lv.{core.level} → cần Lv.{cond.value}</div>}
+      </div>
+    </div>
+  );
+}
+
+function GateCard({ core, speciesId, stageIndex, evolving, onSimulate, onReset, readonly, slim }) {
+  const sp = CATALOG[speciesId];
+  const next = sp.stages[stageIndex + 1];
+  const after = sp.stages[stageIndex + 2];
+  const pass = next ? evalGate(core, next.gate) : false;
+  return (
+    <Card style={{ borderTop: `4px solid ${pass ? C.mintBar : C.dangerBar}`, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ width: 30, height: 30, borderRadius: 12, background: C.mint, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <PixelSprite art={FLAME_ART} palette={FLAME_PAL} px={2} />
+          </div>
+          <div style={{ fontFamily: F.display, fontWeight: 800, fontSize: 16.5, color: C.ink }}>Cửa tiến hoá</div>
+        </div>
+        <Chip bg={C.sky} fg={C.skyDeep}>Stage {stageIndex + 1} → {stageIndex + 2}</Chip>
+      </div>
+
+      {next && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: slim ? 'transparent' : C.cream, borderRadius: 18, padding: slim ? 0 : 10 }}>
+          <div style={{ width: 66, height: 66, borderRadius: '50%', background: SPECIES_BG[speciesId] || SPECIES_BG.flame, border: '1.5px solid rgba(67,56,46,0.14)', boxShadow: 'inset 0 -6px 12px rgba(67,56,46,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+            <div className={evolving ? 'pp-flash' : ''}>
+              <StageSprite speciesId={speciesId} stageIndex={stageIndex + 1} px={2.05} />
+            </div>
+          </div>
+          <div>
+            <div style={{ fontFamily: F.display, fontWeight: 800, fontSize: 15.5, color: C.ink }}>
+              {sp.stages[stageIndex].name} → {next.name}
+            </div>
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: C.sub, marginTop: 1 }}>{next.note} · mở ở Lv.{next.atLevel}</div>
+          </div>
+        </div>
+      )}
+
+      {next && next.gate.of.map((c) => <CondRow key={c.key + c.value} cond={c} core={core} />)}
+
+      {after && (
+        <div style={{ borderTop: `1px dashed ${C.line}`, paddingTop: 10 }}>
+          <div style={{ fontSize: 12.5, fontWeight: 800, color: C.sub, marginBottom: 8 }}>Cửa sau · {after.name} (Stage 3 · Lv.{after.atLevel})</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {after.gate.of.map((c) => <CondRow key={'a' + c.key + c.value} cond={c} core={core} />)}
+          </div>
+        </div>
+      )}
+
+      {stageIndex === 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: C.butter, border: '1px solid #F2DD9B', borderRadius: 14, padding: '8px 12px' }}>
+          <span style={{ fontSize: 15 }}>🤒</span>
+          <span style={{ fontSize: 12.5, fontWeight: 800, color: C.butterDeep }}>
+            Ốm yếu làm chuỗi ngày khỏe ngắt — cổng 「Khỏe mạnh 3 ngày」 đóng lại. Chăm sóc trước, tiến hoá sau!
+          </span>
+        </div>
+      )}
+
+      {next && (
+        <div style={{ textAlign: 'center', fontSize: 14, fontWeight: 800, borderRadius: 999, padding: '10px 14px', background: pass ? C.mint : C.danger, color: pass ? C.mintDeep : C.dangerDeep }}>
+          {pass ? 'Đủ điều kiện tiến hoá! Bấm mô phỏng để lóe sáng…' : 'Chưa đủ điều kiện tiến hoá'}
+        </div>
+      )}
+
+      {stageIndex === 1 && (
+        <div style={{ borderTop: `1px dashed ${C.line}`, paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ fontSize: 12.5, fontWeight: 800, color: C.sub }}>Nhánh Stage 3 — chọn 1 trong 2 (đọc từ registry)</div>
+          {sp.branches.map((b) => {
+            const ok = evalGate(core, b.cond);
+            return (
+              <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: C.cream, borderRadius: 14, padding: '8px 12px' }}>
+                <span style={{ fontSize: 15 }}>{ok ? '✅' : '🔒'}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 800, color: C.ink }}>{b.name}</div>
+                  <div style={{ fontSize: 11.5, fontWeight: 700, color: C.sub }}>{b.note}</div>
+                </div>
+                <span style={{ fontSize: 11.5, fontWeight: 800, color: C.skyDeep, fontFamily: MONO }}>
+                  {b.cond.of.map((c) => condText(c)).join(' ∧ ')}
+                </span>
+              </div>
+            );
+          })}
+          {!readonly && (
+            <div style={{ fontSize: 12, fontWeight: 700, color: C.sub }}>
+              Kịch bản 2 dừng ở Stage 2 — nhánh & form lai xem Kịch bản 1 và 3.
+            </div>
+          )}
+        </div>
+      )}
+
+      {!readonly && (
+        <div style={{ display: 'flex', gap: 10 }}>
+          {stageIndex === 0 ? (
+            <PillButton tone="mint" onClick={onSimulate} disabled={evolving} style={{ flex: 1 }}>
+              {evolving ? 'Đang tiến hoá…' : 'Mô phỏng tiến hoá'}
+            </PillButton>
+          ) : (
+            <PillButton tone="white" disabled style={{ flex: 1 }}>Đã tiến hoá — KB2 dừng ở Stage 2</PillButton>
+          )}
+          <PillButton tone="white" onClick={onReset} style={{ width: 118, flexShrink: 0 }}>↺ Đặt lại</PillButton>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+/* ---------- Màn ①: Chọn trứng ---------- */
+function EggScreen({ app }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div>
+        <div style={{ fontFamily: F.display, fontWeight: 800, fontSize: 25, color: C.ink, lineHeight: 1.15 }}>Chọn quả trứng</div>
+        <div style={{ fontSize: 14, color: C.sub, marginTop: 3, fontWeight: 600 }}>3 line nguyên tố — bé nở ra sẽ cùng bạn luyện tập mỗi ngày.</div>
+      </div>
+
+      {EGGS.map((egg) => {
+        const selected = app.selectedEgg === egg.id;
+        const adoptedThis = app.adopted && app.speciesId === egg.speciesId;
+        return (
+          <div key={egg.id} className="pp-egg" onClick={() => app.selectEgg(egg.id)}
+            style={{
+              background: C.card, borderRadius: 24, padding: '12px 16px',
+              display: 'flex', alignItems: 'center', gap: 14,
+              border: selected ? '2px solid #5FC4A2' : `1px solid ${C.line}`,
+              boxShadow: selected ? '0 10px 22px rgba(19,132,102,0.16)' : '0 5px 14px rgba(67,56,46,0.06)',
+              position: 'relative',
+            }}>
+            <div style={{ width: 86, height: 76, borderRadius: '50%', background: egg.stageBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div className={selected ? 'pp-wiggle' : ''}>
+                <PixelSprite art={egg.art} palette={egg.pal} px={5} />
+              </div>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: F.display, fontWeight: 800, fontSize: 18, color: C.ink }}>{egg.name}</div>
+              <div style={{ fontSize: 13, color: C.sub, marginTop: 2, fontWeight: 700 }}>{egg.desc}</div>
+            </div>
+            {selected && (
+              <div style={{ width: 26, height: 26, borderRadius: '50%', background: C.mintDeep, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800 }}>✓</div>
+            )}
+            {adoptedThis && !selected && (
+              <div style={{ fontSize: 12, fontWeight: 800, color: C.mintDeep, background: C.mint, padding: '3px 10px', borderRadius: 999 }}>Đang nuôi</div>
+            )}
+          </div>
+        );
+      })}
+
+      <PillButton tone={app.selectedEgg ? 'mint' : 'white'} disabled={!app.selectedEgg || app.adopted} onClick={app.adopt}>
+        {app.adopted
+          ? `Đã đón ${app.petName} về nhà ✓`
+          : app.selectedEgg
+            ? `Nhận ${EGGS.find((e) => e.id === app.selectedEgg).starter} về nhà`
+            : 'Chọn 1 quả trứng trước nhé'}
+      </PillButton>
+
+      {app.eggMsg && (
+        <div style={{ textAlign: 'center', fontSize: 13.5, fontWeight: 800, color: C.mintDeep, background: C.mint, borderRadius: 999, padding: '8px 14px' }}>
+          {app.eggMsg}
+        </div>
+      )}
+      <div style={{ fontSize: 12, fontWeight: 700, color: C.sub, textAlign: 'center' }}>
+        Hero của kịch bản này: <b>Line Lửa — Tàn Lửa</b> 🔥
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Màn ②: Tập trung — Sức mạnh là trung tâm ---------- */
+function TrainingCard({ app }) {
+  return (
+    <Card style={{ background: '#FFF8EA', borderColor: '#F2E2C4', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ width: 30, height: 30, borderRadius: 12, background: C.peach, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <PixelSprite art={FLAME_ART} palette={FLAME_PAL} px={2} />
+        </div>
+        <div style={{ fontFamily: F.display, fontWeight: 800, fontSize: 14.5, color: C.ink, lineHeight: 1.25 }}>
+          +8 Sức mạnh khi hoàn thành phiên
+        </div>
+      </div>
+      <div style={{ fontSize: 12.5, fontWeight: 800, color: C.peachDeep }}>Mục tiêu 3 phiên/ngày · mỗi phút tập trung = +1 XP</div>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 800 }}>
+        <span style={{ color: C.sub }}>Tiến độ hôm nay</span>
+        <span style={{ color: C.ink }}>{app.done}/4 phiên</span>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 8 }}>
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} style={{
+            width: i < app.done ? 26 : 10, height: 10, borderRadius: 999,
+            background: i < app.done ? C.mintBar : (i === app.done ? C.peachBar : C.track),
+            transition: 'all .3s ease',
+          }} />
+        ))}
+      </div>
+
+      <div style={{ height: 1, background: '#EFE0C6', margin: '2px 0' }} />
+
+      <div style={{ fontSize: 12.5, fontWeight: 800, color: C.sub }}>Chuỗi ngày luyện · 7 ngày (từ config WEEK)</div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 4 }}>
+        {WEEK.map((w) => (
+          <div key={w.d} style={{ flex: 1, textAlign: 'center' }}>
+            <div style={{
+              width: 16, height: 16, borderRadius: '50%', margin: '0 auto',
+              background: w.goal ? C.mintBar : '#F0DCAC',
+              border: `1.5px solid ${w.goal ? '#3FA383' : '#DDBC74'}`,
+            }} />
+            <div style={{ fontSize: 10.5, fontWeight: 800, color: C.sub, marginTop: 3 }}>{w.d}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ fontSize: 11.5, fontWeight: 700, color: C.sub }}>
+        <span style={{ color: C.mintDeep }}>●</span> đủ 3 phiên &nbsp;·&nbsp; <span style={{ color: '#C79B3E' }}>●</span> luyện nhưng thiếu mục tiêu
+      </div>
+    </Card>
+  );
+}
+
+function FocusScreen({ app }) {
+  const running = !app.paused;
+  const st = condStatus(app.core.condition);
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <AppHeader app={app} />
+
+      <Stage bg={running ? C.mint : C.sky} height={214}
+        overlay={<BattleHUD petName={app.petName} level={app.core.level} condition={app.core.condition} style={{ position: 'absolute', top: 14, left: 14, zIndex: 3 }} />}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div className={running ? 'pp-bounce' : 'pp-breath'}>
+            <StageSprite speciesId={app.speciesId} stageIndex={app.stageIndex} px={4.4} />
+          </div>
+          <div style={{ width: 92, height: 11, borderRadius: '50%', background: 'rgba(67,56,46,0.16)', filter: 'blur(3px)', marginTop: -2 }} />
+        </div>
+      </Stage>
+
+      <Card style={{ textAlign: 'center', padding: '14px 14px 16px' }}>
+        <div style={{ fontFamily: F.display, fontWeight: 800, fontSize: 54, color: C.ink, lineHeight: 1, letterSpacing: 1 }}>24:31</div>
+        <div style={{ fontSize: 13.5, fontWeight: 800, color: running ? C.mintDeep : C.skyDeep, marginTop: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+          {running && <span className="pp-pulse" style={{ width: 9, height: 9, borderRadius: '50%', background: C.peachBar, display: 'inline-block' }} />}
+          {running ? 'Đang tập trung · Phiên ' + (app.done + 1) + '/4' : 'Đã tạm dừng · Phiên ' + (app.done + 1) + '/4'}
+        </div>
+      </Card>
+
+      <TrainingCard app={app} />
+
+      <Card style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 800 }}>
+          <span style={{ color: C.sub }}>Kinh nghiệm</span>
+          <span style={{ color: C.peachDeep }}>Lv.{app.core.level} · {app.core.xp}/{need(app.core.level)} XP</span>
+        </div>
+        <div style={{ height: 12, background: C.track, borderRadius: 999, overflow: 'hidden' }}>
+          <div style={{ width: `${(app.core.xp / need(app.core.level)) * 100}%`, height: '100%', background: C.peachBar, borderRadius: 999 }} />
+        </div>
+        <div style={{ fontSize: 11.5, fontWeight: 700, color: C.sub, marginTop: -4 }}>
+          need(L) = 80 + 30×L → Lv.{app.core.level}→{app.core.level + 1} cần {need(app.core.level)} XP
+        </div>
+        <PowerMeter power={app.core.power} cap={capOf(app.core.level)} level={app.core.level} />
+        <Meter label="Thể trạng" value={app.core.condition} max={100} barColor={st.bar} textColor={st.fg}
+          chip={{ bg: st.bg, fg: st.fg, label: st.name }} />
+      </Card>
+
+      <PillButton tone={running ? 'white' : 'mint'} onClick={app.togglePause}>
+        {running ? 'Tạm dừng' : 'Tiếp tục'}
+      </PillButton>
+      <PillButton tone="peach" onClick={app.completeSession}>Hoàn thành phiên · mô phỏng +8 Sức mạnh</PillButton>
+    </div>
+  );
+}
+
+/* ---------- Màn ③: Ăn + Chăm sóc & Hồi phục ---------- */
+function CareScreen({ app }) {
+  const sick = app.sick;
+  const st = condStatus(app.core.condition);
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <AppHeader app={app} />
+
+      <Stage bg={sick ? '#E9E1D3' : C.peach} height={214}
+        overlay={<BattleHUD petName={app.petName} level={app.core.level} condition={app.core.condition} sick={sick} style={{ position: 'absolute', top: 14, left: 14, zIndex: 3 }} />}>
+        <div style={{ position: 'relative', display: 'inline-block' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div className={sick ? 'pp-shiver' : (app.fedTimes > 0 ? 'pp-bounce' : 'pp-breath')}>
+              <StageSprite speciesId={app.speciesId} stageIndex={app.stageIndex} sick={sick} px={4.4} />
+            </div>
+            <div style={{ width: 92, height: 11, borderRadius: '50%', background: sick ? 'rgba(67,56,46,0.30)' : 'rgba(67,56,46,0.16)', filter: 'blur(3px)', marginTop: -2 }} />
+          </div>
+          {sick && <SickFx />}
+          {!sick && app.fedTimes > 0 && <Hearts />}
+        </div>
+      </Stage>
+
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ fontFamily: F.display, fontWeight: 800, fontSize: 19, color: C.ink }}>
+          {sick ? `${app.petName} rũ xuống, ốm yếu…` : app.fedTimes > 0 ? `${app.petName} thích lắm!` : `${app.petName} đang chờ bé chăm sóc`}
+        </div>
+        <div style={{ fontSize: 13, color: C.sub, marginTop: 3, fontWeight: 700 }}>
+          {sick ? 'ỐM YẾU — cho ăn + 1 phiên/ngày để hồi phục' : 'Thể trạng tốt — nuôi khỏe để mở cổng tiến hoá'}
+        </div>
+      </div>
+
+      <Card style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <Meter label="Thể trạng" value={app.core.condition} max={100} barColor={st.bar} textColor={st.fg}
+          chip={{ bg: st.bg, fg: st.fg, label: st.name }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, fontWeight: 800 }}>
+          <span style={{ color: C.sub }}>Sức mạnh {app.core.power}/{capOf(app.core.level)}</span>
+          <span style={{ color: C.sub }}>Streak {app.core.streak} ngày</span>
+        </div>
+      </Card>
+
+      <Card style={{ background: C.butter, borderColor: '#F2DD9B', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <PixelSprite art={SUSHI_ART} palette={SUSHI_PAL} px={3} />
+        <div style={{ flex: 1 }}>
+          <div style={{ fontFamily: F.display, fontWeight: 800, fontSize: 15.5, color: C.butterDeep }}>Bữa ăn</div>
+          <div style={{ fontSize: 12.5, color: '#8A6A1E', fontWeight: 700 }}>Còn {app.core.coins} sushi · 1 bữa = +15 thể trạng, +5 XP</div>
+        </div>
+      </Card>
+
+      <PillButton tone={app.core.coins > 0 ? 'peach' : 'white'} disabled={app.core.coins <= 0} onClick={app.feed}>
+        {app.core.coins > 0 ? `Cho ăn 1 sushi (còn ${app.core.coins})` : 'Hết sushi — hoàn thành phiên để nhận thêm'}
+      </PillButton>
+
+      {app.feedMsg && (
+        <div style={{ textAlign: 'center', fontSize: 13.5, fontWeight: 800, color: C.peachDeep, background: C.peach, borderRadius: 999, padding: '8px 14px' }}>
+          {app.feedMsg}
+        </div>
+      )}
+
+      <Card style={{ borderColor: '#F6C0B6' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+          <span style={{ fontSize: 16 }}>🥀</span>
+          <div style={{ fontFamily: F.display, fontWeight: 800, fontSize: 15.5, color: C.dangerDeep }}>Kịch bản bỏ bê</div>
+        </div>
+        <div style={{ fontSize: 12.5, fontWeight: 700, color: C.sub, marginBottom: 10 }}>
+          5 ngày không ăn, không phiên: thể trạng −10/ngày, sức mạnh −6/ngày — <b>level GIỮ NGUYÊN</b>.
+        </div>
+        {!sick ? (
+          <PillButton tone="danger" onClick={app.neglect}>Mô phỏng bỏ bê 5 ngày</PillButton>
+        ) : (
+          <PillButton tone="white" onClick={app.resetCare}>↺ Hồi phục tức thì (đặt lại màn này)</PillButton>
+        )}
+      </Card>
+
+      {sick && (
+        <React.Fragment>
+          <div style={{ textAlign: 'center', fontSize: 13.5, fontWeight: 800, color: C.dangerDeep, background: C.danger, borderRadius: 999, padding: '9px 14px' }}>
+            {app.petName} vẫn Lv.{app.core.level} nhưng ốm yếu — ngoại hình rũ xuống
+          </div>
+
+          <Card style={{ background: '#FFF6F3', borderColor: '#F6C0B6', display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ fontFamily: F.display, fontWeight: 800, fontSize: 14.5, color: C.dangerDeep }}>Level giữ nguyên · ngoại hình ốm yếu</div>
+            {[
+              ['Level / XP', `Lv.${FIXTURE.level} giữ nguyên · ${FIXTURE.xp}/${need(FIXTURE.level)} XP không mất`],
+              ['Sức mạnh', `${FIXTURE.power} → ${app.core.power} (−6 × 5 ngày)`],
+              ['Thể trạng', `${FIXTURE.condition} → ${app.core.condition} (−10 × 5 ngày)`],
+              ['Sprite', 'grid vẽ riêng: lưng gù · tai rũ · bụng hóp · khói thay lửa · mắt nhắm'],
+            ].map((r) => (
+              <div key={r[0]} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, fontSize: 12.5, fontWeight: 700 }}>
+                <span style={{ color: C.sub, flexShrink: 0 }}>{r[0]}</span>
+                <span style={{ color: C.ink, textAlign: 'right' }}>{r[1]}</span>
+              </div>
+            ))}
+          </Card>
+
+          <Card style={{ background: '#F4FBF7', borderColor: '#9ADBC2', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ fontFamily: F.display, fontWeight: 800, fontSize: 14.5, color: C.mintDeep }}>Lộ trình hồi phục</div>
+            <div style={{ fontSize: 12.5, fontWeight: 800, color: C.mintDeep }}>Cho ăn + 1 phiên/ngày × 3 ngày → Khỏe lại</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {['Ngày 1 · Cho ăn + 1 phiên', 'Ngày 2 · Cho ăn + 1 phiên', 'Ngày 3 · Cho ăn + 1 phiên → Khỏe'].map((label, i) => {
+                const ok = app.recovery > i;
+                return (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                    <div style={{ width: 20, height: 20, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11.5, fontWeight: 800, background: ok ? C.mintDeep : C.track, color: ok ? '#fff' : C.sub }}>
+                      {ok ? '✓' : i + 1}
+                    </div>
+                    <span style={{ fontSize: 12.5, fontWeight: 700, color: ok ? C.mintDeep : C.sub }}>{label}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ fontSize: 11.5, fontWeight: 700, color: C.sub }}>
+              Tiến độ {app.recovery}/3 · mỗi lần 「Cho ăn」 phía trên = +1 bước hồi phục
+            </div>
+          </Card>
+        </React.Fragment>
+      )}
+
+      {app.recovered && (
+        <div style={{ textAlign: 'center', fontSize: 13.5, fontWeight: 800, color: C.mintDeep, background: C.mint, borderRadius: 999, padding: '9px 14px' }}>
+          {app.petName} đã khỏe lại! Chuỗi ngày khỏe chạy lại — cổng tiến hoá mở. 🎉
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------- Màn ④: Stats + Cửa tiến hoá ---------- */
+function StreakCard({ compact }) {
+  return (
+    <Card>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
+        <span style={{ fontFamily: F.display, fontWeight: 800, fontSize: 16, color: C.ink }}>Streak 7 ngày</span>
+        <span style={{ fontSize: 13, fontWeight: 800, color: C.peachDeep }}>đều đặn!</span>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 6 }}>
+        {WEEK.map((w, i) => (
+          <div key={w.d} style={{ flex: 1, textAlign: 'center' }}>
+            <div style={{ background: i === 6 ? C.peach : '#F6F8F4', border: `1px solid ${i === 6 ? '#F6C7AC' : C.line}`, borderRadius: 14, padding: '8px 0 6px', display: 'flex', justifyContent: 'center' }}>
+              <PixelSprite art={FLAME_ART} palette={FLAME_PAL} px={compact ? 2 : 3} />
+            </div>
+            <div style={{ fontSize: 11.5, fontWeight: 700, color: C.sub, marginTop: 4 }}>{w.d}</div>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+function TodayCard({ compact }) {
+  const max = Math.max(...WEEK.map((w) => w.min));
+  return (
+    <Card>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
+        <span style={{ fontFamily: F.display, fontWeight: 800, fontSize: 16, color: C.ink }}>Hôm nay: 112 phút · 3 phiên</span>
+        <Chip bg={C.mint} fg={C.mintDeep}>+120 XP</Chip>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: compact ? 8 : 12, height: compact ? 64 : 84 }}>
+        {WEEK.map((w, i) => (
+          <div key={w.d} style={{ flex: 1, textAlign: 'center' }}>
+            <div style={{ height: Math.max(6, (compact ? 44 : 60) * w.min / max), background: i === 6 ? C.peachBar : C.mintBar, borderRadius: 8, margin: '0 auto', width: '70%' }} />
+            <div style={{ fontSize: 11.5, fontWeight: 700, color: C.sub, marginTop: 4 }}>{w.d}</div>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+function HistoryCard() {
+  const rows = [
+    { t: '09:04', d: 'Phiên 1 · 25 phút', xp: '+25 XP', tone: C.mint },
+    { t: '10:15', d: 'Phiên 2 · 25 phút', xp: '+25 XP', tone: C.mint },
+    { t: '11:30', d: 'Phiên 3 · 25 phút', xp: '+25 XP', tone: C.mint },
+    { t: '12:02', d: 'Cho ăn · sushi', xp: '+5 XP', tone: C.peach },
+  ];
+  return (
+    <Card>
+      <div style={{ fontFamily: F.display, fontWeight: 800, fontSize: 16, color: C.ink, marginBottom: 10 }}>Lịch sử hôm nay</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {rows.map((r, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 34, height: 34, borderRadius: 12, background: r.tone, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10.5, fontWeight: 800, color: r.tone === C.mint ? C.mintDeep : C.peachDeep }}>{r.t}</div>
+            <div style={{ flex: 1, fontSize: 13.5, fontWeight: 700, color: C.ink }}>{r.d}</div>
+            <div style={{ fontSize: 12.5, fontWeight: 800, color: C.peachDeep }}>{r.xp}</div>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+function SyncCard({ compact }) {
+  const [signed, setSigned] = useState(false);
+  return (
+    <Card>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+        <div style={{ width: 46, height: 46, borderRadius: '50%', background: C.peach, border: '2px solid #F6C7AC', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: F.display, fontWeight: 800, fontSize: 16, color: C.peachDeep }}>MA</div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontFamily: F.display, fontWeight: 800, fontSize: 16, color: C.ink }}>Minh Anh</div>
+          <div style={{ fontSize: 12.5, color: C.sub, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#34A853', display: 'inline-block' }} />
+            Đã đồng bộ · web ↔ Android · 2 phút trước
+          </div>
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+        <Chip bg={C.mint} fg={C.mintDeep}>Nuxt Web</Chip>
+        <Chip bg={C.sky} fg={C.skyDeep}>Android Kotlin</Chip>
+        {compact && <Chip bg={C.butter} fg={C.butterDeep}>Firestore per-system docs</Chip>}
+      </div>
+      {signed ? (
+        <div style={{ textAlign: 'center', fontSize: 14, fontWeight: 800, color: C.mintDeep, background: C.mint, borderRadius: 999, padding: '11px 16px' }}>
+          Đã đăng nhập bằng Google ✓
+        </div>
+      ) : (
+        <GoogleButton onClick={() => setSigned(true)} />
+      )}
+    </Card>
+  );
+}
+
+function StatsScreen({ app }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div>
+        <div style={{ fontFamily: F.display, fontWeight: 800, fontSize: 22, color: C.ink }}>Thống kê &amp; Cửa tiến hoá</div>
+        <div style={{ fontSize: 13.5, color: C.sub, marginTop: 2, fontWeight: 600 }}>
+          Checklist đọc từ registry (COND + CATALOG) — không hard-code.
+        </div>
+      </div>
+
+      <GateCard
+        core={app.core}
+        speciesId={app.speciesId}
+        stageIndex={app.stageIndex}
+        evolving={app.evolving}
+        onSimulate={app.simulateEvolution}
+        onReset={app.resetAll}
+      />
+
+      {app.evoMsg && (
+        <div style={{ textAlign: 'center', fontSize: 13.5, fontWeight: 800, color: C.mintDeep, background: C.mint, borderRadius: 999, padding: '9px 14px' }}>
+          {app.evoMsg}
+        </div>
+      )}
+
+      <StreakCard compact />
+      <TodayCard compact />
+      <HistoryCard />
+      <SyncCard compact />
+    </div>
+  );
+}
+
+/* ============================================================
+   Mini state machine cho mỗi phone — seed khác nhau mỗi slot
+   ============================================================ */
+function PhoneApp({ initialTab = 'egg' }) {
+  const [tab, setTab] = useState(initialTab);
+  const [core, setCore] = useState({ ...FIXTURE });
+  const [speciesId, setSpeciesId] = useState('flame');
+  const [stageIndex, setStageIndex] = useState(0);
+  const [petName, setPetName] = useState('Tàn Lửa');
+  const [selectedEgg, setSelectedEgg] = useState(null);
+  const [adopted, setAdopted] = useState(initialTab !== 'egg');
+  const [eggMsg, setEggMsg] = useState(null);
+  const [paused, setPaused] = useState(false);
+  const [done, setDone] = useState(2);
+  const [fedTimes, setFedTimes] = useState(0);
+  const [feedMsg, setFeedMsg] = useState(null);
+  const [sick, setSick] = useState(false);
+  const [recovery, setRecovery] = useState(0);
+  const [recovered, setRecovered] = useState(false);
+  const [evolving, setEvolving] = useState(false);
+  const [evoMsg, setEvoMsg] = useState(null);
+
+  const app = {
+    tab, core, speciesId, stageIndex, petName, selectedEgg, adopted, eggMsg,
+    paused, done, fedTimes, feedMsg, sick, recovery, recovered, evolving, evoMsg,
+    selectEgg: (id) => { setSelectedEgg(id); setEggMsg(null); },
+    adopt: () => {
+      const egg = EGGS.find((e) => e.id === selectedEgg);
+      if (!egg || adopted) return;
+      setSpeciesId(egg.speciesId);
+      setPetName(egg.starter);
+      setAdopted(true);
+      setEggMsg(`Đã đón ${egg.starter} về nhà! Cho ăn + tập trung để nâng Lv nhé.`);
+    },
+    togglePause: () => setPaused((p) => !p),
+    completeSession: () => {
+      setCore((c) => dispatch(c, 'session_complete', 25));
+      setDone((d) => Math.min(4, d + 1));
+    },
+    feed: () => {
+      if (core.coins <= 0) return;
+      setCore((c) => dispatch(c, 'feed'));
+      setFedTimes((n) => n + 1);
+      setFeedMsg(`${petName} thích lắm! Thể trạng +15 · +5 XP`);
+      if (sick) {
+        const n = recovery + 1;
+        setRecovery(n);
+        if (n >= 3) {
+          setSick(false);
+          setRecovered(true);
+          setCore((c) => ({ ...c, healthyDays: 3 }));
+        }
+      }
+    },
+    neglect: () => {
+      setCore((c) => ({ ...c, condition: 28, power: Math.max(0, c.power - 30), healthyDays: 0 }));
+      setSick(true);
+      setRecovery(0);
+      setRecovered(false);
+      setFeedMsg(null);
+    },
+    resetCare: () => {
+      setCore({ ...FIXTURE });
+      setSick(false);
+      setRecovery(0);
+      setRecovered(false);
+      setFedTimes(0);
+      setFeedMsg(null);
+    },
+    simulateEvolution: () => {
+      if (stageIndex !== 0 || evolving) return;
+      // Đổ đủ điều kiện gate Stage 2 (registry): level ≥ 8 · khỏe mạnh ≥ 3 ngày · (power gate Stage 3 trông thấy)
+      setCore((c) => ({ ...c, level: 8, xp: 40, healthyDays: 3, power: 70 }));
+      setEvolving(true);
+      setTimeout(() => {
+        setStageIndex(1);
+        setEvolving(false);
+        setEvoMsg('Lóe sáng! Tàn Lửa đã tiến hoá thành Bồng Bột — mọc cánh mầm ✨');
+      }, 950);
+    },
+    resetAll: () => {
+      setCore({ ...FIXTURE });
+      setStageIndex(0);
+      setSick(false);
+      setRecovery(0);
+      setRecovered(false);
+      setEvolving(false);
+      setEvoMsg(null);
+      setDone(2);
+      setPaused(false);
+    },
+  };
+
+  const screen =
+    tab === 'egg' ? <EggScreen app={app} />
+    : tab === 'focus' ? <FocusScreen app={app} />
+    : tab === 'feed' ? <CareScreen app={app} />
+    : <StatsScreen app={app} />;
+
+  return (
+    <div style={{ height: '100%', background: C.cream, display: 'flex', flexDirection: 'column', fontFamily: F.body, userSelect: 'none' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px 18px' }}>
+        {screen}
+      </div>
+      <NavBar tab={tab} onTab={setTab} />
+    </div>
+  );
+}
+
+/* ============================================================
+   ⑤ Desktop — Bảng luyện tập tuần (2 cột Finch)
+   ============================================================ */
+function DesktopWeb() {
+  const deskCore = { ...FIXTURE };
+  const st = condStatus(deskCore.condition);
+  const maxMin = Math.max(...WEEK.map((w) => w.min));
+  const powerSys = SYSTEMS.find((s) => s.id === 'power');
+  const condSys = SYSTEMS.find((s) => s.id === 'condition');
+  return (
+    <div style={{ width: '100%', height: '100%', background: C.cream, fontFamily: F.body, display: 'flex', flexDirection: 'column' }}>
+      {/* top bar */}
+      <div style={{ background: C.card, borderBottom: `1px solid ${C.line}`, padding: '14px 28px', display: 'flex', alignItems: 'center', gap: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 30, height: 30, borderRadius: 10, background: SPECIES_BG.flame, border: '1.5px solid rgba(67,56,46,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            <StageSprite speciesId="flame" stageIndex={0} px={0.9} style={{ transform: 'translateY(0.5px)' }} />
+          </div>
+          <span style={{ fontFamily: F.display, fontWeight: 800, fontSize: 19, color: C.ink }}>Pet Pomodoro</span>
+        </div>
+        <div style={{ display: 'flex', gap: 6, marginLeft: 10 }}>
+          {['Tổng quan', 'Luyện tập', 'Sưu tầm'].map((l, i) => (
+            <span key={l} style={{ fontSize: 14, fontWeight: 700, color: i === 1 ? C.mintDeep : C.sub, background: i === 1 ? C.mint : 'transparent', padding: '7px 16px', borderRadius: 999, cursor: 'pointer' }}>{l}</span>
+          ))}
+        </div>
+        <div style={{ flex: 1 }} />
+        <CoinChip coins={deskCore.coins} />
+        <div style={{ width: 38, height: 38, borderRadius: '50%', background: C.peach, border: '2px solid #F6C7AC', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: F.display, fontWeight: 800, fontSize: 13, color: C.peachDeep }}>MA</div>
+      </div>
+
+      {/* body 2 cột */}
+      <div style={{ flex: 1, overflow: 'auto', padding: '22px 28px', display: 'grid', gridTemplateColumns: '1fr 400px', gap: 22, alignItems: 'start' }}>
+        {/* cột trái: biểu đồ tuần */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <div style={{ fontFamily: F.display, fontWeight: 800, fontSize: 26, color: C.ink }}>Bảng luyện tập — tuần này</div>
+            <div style={{ fontSize: 14, color: C.sub, marginTop: 3, fontWeight: 600 }}>
+              Streak 7 ngày · hôm nay 112 phút · 3 phiên (+120 XP) — Tàn Lửa giữ lửa đều tay.
+            </div>
+          </div>
+
+          <Card>
+            <div style={{ fontFamily: F.display, fontWeight: 800, fontSize: 16, color: C.ink, marginBottom: 12 }}>Phút tập trung trong tuần</div>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, height: 96 }}>
+              {WEEK.map((w, i) => (
+                <div key={w.d} style={{ flex: 1, textAlign: 'center' }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: C.sub, marginBottom: 3 }}>{w.min}</div>
+                  <div style={{
+                    height: Math.max(6, 70 * w.min / maxMin),
+                    background: i === 6 ? C.peachBar : (w.goal ? C.mintBar : C.skyBar),
+                    borderRadius: 8, margin: '0 auto', width: '72%',
+                  }} />
+                  <div style={{ fontSize: 12, fontWeight: 700, color: C.sub, marginTop: 4 }}>{w.d}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: C.sub, marginTop: 8 }}>
+              <span style={{ color: C.mintDeep }}>■</span> đủ mục tiêu 3 phiên &nbsp;·&nbsp; <span style={{ color: C.skyDeep }}>■</span> luyện nhưng thiếu &nbsp;·&nbsp; <span style={{ color: C.peachDeep }}>■</span> hôm nay
+            </div>
+          </Card>
+
+          <Card>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
+              <span style={{ fontFamily: F.display, fontWeight: 800, fontSize: 16, color: C.ink }}>Sức mạnh &amp; Thể trạng — decay nhìn thấy được</span>
+              <span style={{ display: 'flex', gap: 10, fontSize: 12, fontWeight: 800, color: C.sub }}>
+                <span><span style={{ color: C.mintBar }}>■</span> Sức mạnh</span>
+                <span><span style={{ color: C.pinkBar }}>■</span> Thể trạng</span>
+              </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, height: 116 }}>
+              {WEEK.map((w, i) => (
+                <div key={w.d} style={{ flex: 1, textAlign: 'center' }}>
+                  {w.power < 58 && i !== 6 && (
+                    <div style={{ fontSize: 10.5, fontWeight: 800, color: C.dangerDeep, background: C.danger, borderRadius: 999, padding: '1px 6px', display: 'inline-block', marginBottom: 3 }}>{powerSys.decay.perIdleDay}</div>
+                  )}
+                  {i === 6 && (
+                    <div style={{ fontSize: 10.5, fontWeight: 800, color: C.mintDeep, background: C.mint, borderRadius: 999, padding: '1px 6px', display: 'inline-block', marginBottom: 3 }}>hôm nay</div>
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', gap: 3, height: 84 }}>
+                    <div style={{ width: 12, height: Math.max(4, 84 * w.power / 100), background: i === 6 ? C.peachBar : (w.goal ? C.mintBar : C.dangerBar), borderRadius: 4 }} />
+                    <div style={{ width: 12, height: Math.max(4, 84 * w.cond / 100), background: C.pinkBar, opacity: 0.85, borderRadius: 4 }} />
+                  </div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: C.sub, marginTop: 4 }}>{w.d}</div>
+                  <div style={{ fontSize: 10.5, fontWeight: 800, color: C.sub }}>{w.power} · {w.cond}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: C.sub, marginTop: 8, fontFamily: MONO }}>
+              decay (từ SYSTEMS): power {powerSys.decay.perIdleDay}/ngày nghỉ · {powerSys.decay.perGoalDay}/ngày đủ — condition {condSys.decay.perIdleDay}/ngày không ăn
+            </div>
+          </Card>
+        </div>
+
+        {/* cột phải: pet + sức khỏe + cửa tiến hoá + sưu tầm */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <Card>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <PetChip speciesId="flame" size={112} radius={24} style={{ flexShrink: 0 }}>
+                <div className="pp-bounce">
+                  <StageSprite speciesId="flame" stageIndex={0} px={3.4} />
+                </div>
+              </PetChip>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 7 }}>
+                <div style={{ fontFamily: F.display, fontWeight: 800, fontSize: 18, color: C.ink }}>
+                  Tàn Lửa <span style={{ fontSize: 12, fontWeight: 800, color: C.mintDeep, background: C.mint, borderRadius: 999, padding: '1px 8px', verticalAlign: 'middle' }}>Lv.{deskCore.level}</span>
+                </div>
+                <div style={{ fontSize: 12.5, fontWeight: 800, color: C.peachDeep }}>{deskCore.xp}/{need(deskCore.level)} XP · Sức mạnh {deskCore.power}/{capOf(deskCore.level)}</div>
+                <Meter label="Thể trạng" value={deskCore.condition} max={100} barColor={st.bar} textColor={st.fg} chip={{ bg: st.bg, fg: st.fg, label: st.name }} />
+              </div>
+            </div>
+          </Card>
+
+          <Card>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 8 }}>
+              <span style={{ fontFamily: F.display, fontWeight: 800, fontSize: 16, color: C.ink }}>Thẻ sức khỏe</span>
+              <Chip bg={st.bg} fg={st.fg}>{st.name}</Chip>
+            </div>
+            <div style={{ fontFamily: F.display, fontWeight: 800, fontSize: 34, color: C.ink, lineHeight: 1 }}>
+              {deskCore.condition}<span style={{ fontSize: 15, color: C.sub }}> /100 thể trạng</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 10 }}>
+              {[
+                ['≥ 70', 'Khỏe mạnh — sprite tươi, luyện đầy sức', C.mintBar],
+                ['30–69', 'Bình thường — nhắc bé ăn và tập', C.butterBar],
+                ['< 30', 'Ốm yếu — sprite rũ, cổng tiến hoá đóng', C.dangerBar],
+              ].map((r) => (
+                <div key={r[0]} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, fontWeight: 700, color: C.sub }}>
+                  <span style={{ width: 12, height: 12, borderRadius: 4, background: r[2], flexShrink: 0 }} />
+                  <span style={{ fontFamily: MONO, fontWeight: 800, width: 44 }}>{r[0]}</span>
+                  <span>{r[1]}</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <GateCard core={deskCore} speciesId="flame" stageIndex={0} readonly slim />
+
+          <Card>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <span style={{ fontFamily: F.display, fontWeight: 800, fontSize: 16, color: C.ink }}>Sưu tầm — 3 line starter</span>
+              <Chip bg={C.sky} fg={C.skyDeep}>hệ collection · slot desktop</Chip>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-around', gap: 8 }}>
+              <div style={{ textAlign: 'center' }}>
+                <PetChip speciesId="flame" size={74} radius={18}>
+                  <StageSprite speciesId="flame" stageIndex={0} px={2.3} />
+                </PetChip>
+                <div style={{ fontSize: 12, fontWeight: 800, color: C.ink, marginTop: 4 }}>Tàn Lửa</div>
+                <Chip bg={C.mint} fg={C.mintDeep}>đang nuôi</Chip>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <PetChip speciesId="water" size={74} radius={18} style={{ background: C.track }}>
+                  <Silhouette speciesId="water" stageIndex={0} px={2.3} />
+                </PetChip>
+                <div style={{ fontSize: 12, fontWeight: 800, color: C.sub, marginTop: 4 }}>???</div>
+                <Chip bg={C.track} fg={C.sub}>Line Thủy</Chip>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <PetChip speciesId="grass" size={74} radius={18} style={{ background: C.track }}>
+                  <Silhouette speciesId="grass" stageIndex={0} px={2.3} />
+                </PetChip>
+                <div style={{ fontSize: 12, fontWeight: 800, color: C.sub, marginTop: 4 }}>???</div>
+                <Chip bg={C.track} fg={C.sub}>Line Thảo</Chip>
+              </div>
+            </div>
+            <div style={{ borderTop: `1px dashed ${C.line}`, marginTop: 12, paddingTop: 9, fontSize: 11.5, fontWeight: 700, color: C.sub }}>
+              Form lai (điều kiện kép từ registry): {HYBRIDS.map((h) => `${h.name} — ${h.cond.of.map((c) => condText(c)).join(' ∧ ')}`).join(' · ')}
+            </div>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   Trang demo — header + kiến trúc + 4 phone + desktop
+   ============================================================ */
+const pageStyles = {
+  page: { maxWidth: 1780, margin: '0 auto', padding: '36px 36px 64px' },
+  header: {
+    background: C.card, borderRadius: 28, padding: '26px 32px', marginBottom: 20,
+    boxShadow: '0 10px 28px rgba(67,56,46,0.08)', border: `1px solid ${C.line}`,
+  },
+  headerTitle: { fontFamily: F.display, fontWeight: 800, fontSize: 30, color: C.ink, lineHeight: 1.2 },
+  headerDesc: { fontSize: 16, color: C.sub, marginTop: 8, lineHeight: 1.55, maxWidth: 1240, fontWeight: 600 },
+  chipsRow: { display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 14 },
+  board: { display: 'flex', flexWrap: 'wrap', gap: 24, alignItems: 'flex-start', justifyContent: 'center', marginTop: 26 },
+  slot: { display: 'flex', flexDirection: 'column' },
+  slotLabel: { fontStyle: 'italic', fontSize: 14, color: C.sub, marginBottom: 8, fontWeight: 600 },
+  deskWrap: { display: 'flex', justifyContent: 'center', marginTop: 30 },
+};
+
+function ArchitectureCard() {
+  const cellHead = { fontSize: 11.5, fontWeight: 800, color: C.sub, textTransform: 'uppercase', letterSpacing: 0.4 };
+  return (
+    <Card style={{ margin: '0 0 6px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+        <span style={{ fontSize: 18 }}>🧩</span>
+        <span style={{ fontFamily: F.display, fontWeight: 800, fontSize: 17, color: C.ink }}>Kiến trúc mở (spec §1) — mọi checklist/meter/verdict render từ config, không hard-code</span>
+      </div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
+        <Chip bg={C.mint} fg={C.mintDeep}>CATALOG · {Object.keys(CATALOG).length} line nguyên tố</Chip>
+        <Chip bg={C.sky} fg={C.skyDeep}>COND · {Object.keys(COND).length} loại điều kiện (and/or)</Chip>
+        <Chip bg={C.peach} fg={C.peachDeep}>SYSTEMS · {SYSTEMS.length} hệ module</Chip>
+        <Chip bg={C.butter} fg={C.butterDeep}>HYBRIDS · {HYBRIDS.length} form lai</Chip>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr 1fr 1.3fr', gap: '6px 14px', alignItems: 'center' }}>
+        <div style={cellHead}>Hệ</div>
+        <div style={cellHead}>Lắng nghe (event bus)</div>
+        <div style={cellHead}>Decay</div>
+        <div style={cellHead}>UI slot</div>
+        {SYSTEMS.map((sys) => (
+          <React.Fragment key={sys.id}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: C.ink }}>{sys.name}</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: C.sub, fontFamily: MONO }}>
+              {sys.on ? Object.keys(sys.on).join(' · ') : '—'}{sys.emits ? ` → ${sys.emits.join(',')}` : ''}
+            </div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: C.dangerDeep, fontFamily: MONO }}>
+              {sys.decay ? Object.entries(sys.decay).map(([k, v]) => `${k}:${v}`).join(' · ') : '—'}
+            </div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: C.mintDeep }}>
+              {sys.ui.length ? sys.ui.map((u) => `${u.slot}→${u.type}`).join(' · ') : '—'}
+            </div>
+          </React.Fragment>
+        ))}
+      </div>
+      <div style={{ marginTop: 12, background: '#F7F1E4', border: `1px dashed ${C.line}`, borderRadius: 14, padding: '10px 14px', fontFamily: MONO, fontSize: 11.5, fontWeight: 600, color: C.sub, lineHeight: 1.6 }}>
+        // Thêm hệ mới ngày mai — KHÔNG đụng core (spec §1.6):<br />
+        // registerSystem({'{'} id:'daily_quests', on:{'{'} session_complete: quests.check {'}'}, ui:[{'{'} slot:'home_bottom', type:'quest_list' {'}'} ] {'}'});<br />
+        // registerConditionType('total_sessions_at_least', (s,v) =&gt; s.stats.totalSessions &gt;= v);
+      </div>
+    </Card>
+  );
+}
+
+function Demo() {
+  return (
+    <div style={pageStyles.page}>
+      <div style={pageStyles.header}>
+        <div style={pageStyles.headerTitle}>Kịch bản 2 · 🏋️ Huấn luyện viên — gameplay v2 (style Finch pastel)</div>
+        <div style={pageStyles.headerDesc}>
+          Demo gameplay v2 theo ngôn ngữ <b>Finch</b>: pastel kem–mint, card trắng bo tròn, pet pixel đứng trên bục tròn.
+          Hero là line <b>Lửa — Tàn Lửa</b> 🔥. Điểm nhấn kịch bản: <b>Sức mạnh là trung tâm</b> (thẻ +8/phiên, vạch cap theo level, decay mỗi ngày bỏ bê)
+          và <b>cổng Ốm yếu chặn tiến hoá</b> — bỏ bê 5 ngày thì level giữ nguyên nhưng ngoại hình rũ xuống, chuỗi ngày khỏe đứt, checklist tiến hoá đóng lại cho đến khi hồi phục.
+        </div>
+        <div style={pageStyles.chipsRow}>
+          <Chip bg={C.mint} fg={C.mintDeep}>Fixture: Lv.4 · 120/200 XP · Sức mạnh 62/64 · Thể trạng 78</Chip>
+          <Chip bg={C.peach} fg={C.peachDeep}>12 sushi · Streak 7 ngày · 112 phút / 3 phiên</Chip>
+          <Chip bg={C.sky} fg={C.skyDeep}>Phiên đang chạy 24:31 · tiến độ 2/4 phiên</Chip>
+          <Chip bg={C.butter} fg={C.butterDeep}>cap(L) = min(100, 40+6·L) → Lv.4 = 64</Chip>
+        </div>
+      </div>
+
+      <ArchitectureCard />
+
+      <div style={pageStyles.board}>
+        <div style={pageStyles.slot}>
+          <div style={pageStyles.slotLabel}>① Chọn trứng</div>
+          <AndroidFrame width={368} height={820} time="9:41" battery={85}>
+            <PhoneApp initialTab="egg" />
+          </AndroidFrame>
+        </div>
+
+        <div style={pageStyles.slot}>
+          <div style={pageStyles.slotLabel}>② Đang tập trung — Sức mạnh là trung tâm</div>
+          <AndroidFrame width={368} height={820} time="9:41" battery={85}>
+            <PhoneApp initialTab="focus" />
+          </AndroidFrame>
+        </div>
+
+        <div style={pageStyles.slot}>
+          <div style={pageStyles.slotLabel}>③ Chăm sóc &amp; Hồi phục — bỏ bê → ốm yếu</div>
+          <AndroidFrame width={368} height={820} time="9:41" battery={85}>
+            <PhoneApp initialTab="feed" />
+          </AndroidFrame>
+        </div>
+
+        <div style={pageStyles.slot}>
+          <div style={pageStyles.slotLabel}>④ Cửa tiến hoá &amp; Thống kê — checklist từ registry</div>
+          <AndroidFrame width={368} height={820} time="9:41" battery={85}>
+            <PhoneApp initialTab="stats" />
+          </AndroidFrame>
+        </div>
+      </div>
+
+      <div style={pageStyles.deskWrap}>
+        <div style={pageStyles.slot}>
+          <div style={pageStyles.slotLabel}>⑤ Desktop — Bảng luyện tập tuần (decay nhìn thấy được + cửa tiến hoá)</div>
+          <BrowserWindow title="Pet Pomodoro — Bảng luyện tập" url="petpomodoro.app/training" width={1180} height={900}>
+            <DesktopWeb />
+          </BrowserWindow>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo />);
+</script>
+</body>
+</html>

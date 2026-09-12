@@ -1,0 +1,2398 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kịch bản 1 · Hành trình Tiến hoá — Memphis Maximalism · Pet Pomodoro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=DM+Serif+Display:ital@0;1&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  :root{
+    --cream:#F2E9D8; --cream2:#E7DCC3; --paper:#FBF5E9; --ink:#26201D;
+    --red:#BC3A28;   --red2:#9A2F20;
+    --mustard:#E3A72F; --mustard2:#C98F1D; --mustardInk:#8A6210;
+    --blue:#2B54A3;  --blue2:#1F3F7E;
+    --purple:#6B4C9A; --purple2:#553A7E;
+    --olive:#5F6B2F; --olive2:#4C5624;
+    --pink:#E89BB0;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--cream);color:var(--ink);font-family:'Space Mono',monospace;}
+  button{font:inherit;color:inherit;}
+  .f-serif{font-family:'DM Serif Display',serif;}
+  .f-bungee{font-family:'Bungee',cursive;}
+  .f-mono{font-family:'Space Mono',monospace;}
+
+  /* ---- nút arcade: viền 3px + bóng cứng lệch, hover nhấc lên ---- */
+  .rbtn{border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink);padding:11px 16px;
+        font-size:14.5px;font-weight:700;cursor:pointer;letter-spacing:.3px;
+        transition:transform .12s,box-shadow .12s,background-color .12s,color .12s;
+        background:var(--cream);color:var(--ink);}
+  .rbtn:hover:not(:disabled){transform:translate(-2px,-2px);box-shadow:7px 7px 0 var(--ink);}
+  .rbtn:active:not(:disabled){transform:translate(3px,3px);box-shadow:0 0 0 var(--ink);}
+  .rbtn:disabled{opacity:.45;cursor:not-allowed;box-shadow:2px 2px 0 var(--ink);}
+  .rbtn-red{background:var(--red);color:var(--paper);}
+  .rbtn-red:hover:not(:disabled){background:var(--mustard);color:var(--ink);}
+  .rbtn-purple{background:var(--purple);color:var(--paper);}
+  .rbtn-purple:hover:not(:disabled){background:var(--mustard);color:var(--ink);}
+  .rbtn-olive{background:var(--olive);color:var(--paper);}
+  .rbtn-olive:hover:not(:disabled){background:var(--red);color:var(--paper);}
+  .rbtn-ghost{background:transparent;color:var(--ink);}
+  .rbtn-ghost:hover:not(:disabled){background:var(--ink);color:var(--paper);}
+  .gbtn{display:inline-flex;align-items:center;gap:9px;background:#FFFDF6;color:var(--ink);padding:9px 14px;font-size:14px;}
+  .gbtn:hover:not(:disabled){background:#FFFFFF;}
+
+  /* ---- thẻ trứng: sticker nghiêng, hover đứng thẳng ---- */
+  .eggcard{display:flex;gap:14px;align-items:center;border:3px solid var(--ink);
+           box-shadow:4px 4px 0 var(--ink);padding:10px 14px;cursor:pointer;
+           transform:rotate(var(--rot,0deg));position:relative;
+           transition:transform .15s,box-shadow .15s,background-color .15s;background:var(--paper);}
+  .eggcard:hover{transform:rotate(0deg) translate(-2px,-2px);box-shadow:7px 7px 0 var(--ink);}
+  .eggcard.picked{--rot:0deg;border-color:var(--red);box-shadow:6px 6px 0 var(--red2);background:#FBF0D2 !important;}
+  .pickbadge{position:absolute;top:-10px;right:10px;background:var(--red);color:var(--paper);
+             font-size:12px;font-weight:700;border:2.5px solid var(--ink);padding:2px 7px;transform:rotate(3deg);}
+
+  /* ---- tab bar trong phone ---- */
+  .ptab{flex:1;border:3px solid var(--ink);background:var(--cream2);color:var(--ink);
+        padding:9px 2px;font-size:12.5px;font-weight:700;cursor:pointer;
+        box-shadow:3px 3px 0 var(--ink);transform:rotate(var(--tr,0deg));
+        transition:transform .15s,box-shadow .15s,background-color .15s;
+        font-family:'Space Mono',monospace;}
+  .ptab:hover{background:var(--mustard);}
+  .ptab.on{transform:translateY(-5px) rotate(0deg);box-shadow:4px 6px 0 var(--ink);}
+
+  /* ---- animation ---- */
+  @keyframes petBounce{
+    0%,100%{transform:translateY(0);}
+    28%{transform:translateY(-13px);}
+    44%{transform:translateY(0) scaleY(.97);}
+    60%{transform:translateY(-6px);}
+    74%{transform:translateY(0);}
+  }
+  .pet-bounce{animation:petBounce 1.7s ease-in-out infinite;}
+  /* §2.4 ốm yếu: shiver rung ±1px, ~400ms/lần (steps → giật pixel, không lượn) */
+  @keyframes petShiver{
+    0%,100%{transform:translate(0,0);}
+    25%{transform:translate(-1px,1px);}
+    50%{transform:translate(1px,0);}
+    75%{transform:translate(-1px,-1px);}
+  }
+  .pet-sick{animation:petShiver .4s steps(1,end) infinite;}
+  /* §2.4: 2 giọt mồ hôi darkest bay quanh đầu + bubble "…" nhấp nhô */
+  @keyframes sweatFly{
+    0%{opacity:0;transform:translate(0,6px) scale(.5);}
+    25%{opacity:1;}
+    70%{opacity:1;transform:translate(-9px,-14px) scale(1);}
+    100%{opacity:0;transform:translate(-15px,-26px) scale(.75);}
+  }
+  @keyframes sweatFlyR{
+    0%{opacity:0;transform:translate(0,6px) scale(.5);}
+    25%{opacity:1;}
+    70%{opacity:1;transform:translate(9px,-14px) scale(1);}
+    100%{opacity:0;transform:translate(15px,-26px) scale(.75);}
+  }
+  .sick-sweat{position:absolute;width:8px;height:11px;background:#26201D;border-radius:50% 50% 50% 50%/62% 62% 40% 40%;animation:sweatFly 1.5s ease-in infinite;z-index:5;}
+  .sick-sweat.r{animation-name:sweatFlyR;}
+  @keyframes bubbleBob{
+    0%,100%{transform:translateY(0) rotate(6deg);}
+    50%{transform:translateY(-4px) rotate(6deg);}
+  }
+  .sick-bubble{position:absolute;animation:bubbleBob 2.4s ease-in-out infinite;z-index:6;}
+  @keyframes evoWiggle{
+    0%,100%{transform:rotate(0deg) scale(1);}
+    15%{transform:rotate(-9deg) scale(1.1);}
+    30%{transform:rotate(8deg) scale(1.18);}
+    45%{transform:rotate(-7deg) scale(1.26);}
+    62%{transform:rotate(6deg) scale(1.34);}
+    80%{transform:rotate(-3deg) scale(1.15);}
+  }
+  .evo-wiggle{animation:evoWiggle .95s ease-in-out both;transform-origin:50% 80%;}
+  @keyframes evoFlash{
+    0%{opacity:0;transform:scale(.55);}
+    28%{opacity:1;transform:scale(1.02);}
+    100%{opacity:0;transform:scale(1.4);}
+  }
+  .evo-flash{animation:evoFlash .95s ease-out both;}
+  @keyframes petPop{
+    0%{transform:scale(.25);}
+    55%{transform:scale(1.22);}
+    78%{transform:scale(.94);}
+    100%{transform:scale(1);}
+  }
+  .pet-pop{animation:petPop .55s cubic-bezier(.34,1.56,.64,1) both;transform-origin:50% 100%;}
+  @keyframes zfloat{
+    0%{opacity:0;transform:translate(0,8px) rotate(-8deg);}
+    22%{opacity:1;}
+    100%{opacity:0;transform:translate(16px,-40px) rotate(14deg);}
+  }
+  .zzz{position:absolute;animation:zfloat 3s linear infinite;}
+  /* §2.5 HUD battle: thanh TT nhấp nháy mẫu vạch dày nhất palette khi <30% */
+  @keyframes hudBlink{
+    0%,54%{opacity:1;}
+    55%,100%{opacity:.4;}
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState } = React;
+
+/* ============================================================
+   AndroidFrame — copy nguyên từ assets/android_frame.jsx
+   ============================================================ */
+const androidFrameStyles = {
+  wrapper: {
+    display: 'inline-block',
+    padding: 10,
+    background: '#1a1a1a',
+    borderRadius: 44,
+    boxShadow: '0 0 0 2px #2a2a2a, 0 20px 60px rgba(0,0,0,0.3)',
+    position: 'relative',
+  },
+  screen: {
+    position: 'relative',
+    borderRadius: 36,
+    overflow: 'hidden',
+    background: '#fff',
+  },
+  statusBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 32,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '0 24px',
+    fontSize: 14,
+    fontWeight: 500,
+    fontFamily: 'Roboto, -apple-system, sans-serif',
+    zIndex: 20,
+    pointerEvents: 'none',
+  },
+  punchHole: {
+    position: 'absolute',
+    top: 10,
+    left: '50%',
+    transform: 'translateX(-50%)',
+    width: 14,
+    height: 14,
+    background: '#000',
+    borderRadius: '50%',
+    zIndex: 30,
+  },
+  statusIcons: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+  },
+  batteryText: {
+    fontSize: 11,
+    fontWeight: 600,
+    marginLeft: 2,
+  },
+  content: {
+    position: 'absolute',
+    top: 32,
+    left: 0,
+    right: 0,
+    bottom: 24,
+    overflow: 'auto',
+  },
+  navBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 24,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 60,
+    zIndex: 10,
+  },
+  navButton: {
+    width: 36,
+    height: 4,
+    background: 'rgba(0,0,0,0.3)',
+    borderRadius: 999,
+  },
+};
+
+function AndroidFrame({
+  children,
+  width = 412,
+  height = 892,
+  time = '9:41',
+  battery = 100,
+  darkMode = false,
+  navStyle = 'gesture',
+}) {
+  const textColor = darkMode ? '#fff' : '#1a1a1a';
+
+  return (
+    <div style={androidFrameStyles.wrapper}>
+      <div style={{
+        ...androidFrameStyles.screen,
+        width,
+        height,
+        background: darkMode ? '#000' : '#fff',
+      }}>
+        <div style={{ ...androidFrameStyles.statusBar, color: textColor }}>
+          <span>{time}</span>
+          <div style={androidFrameStyles.statusIcons}>
+            <svg width="14" height="10" viewBox="0 0 14 10" fill="currentColor">
+              <rect x="0" y="6" width="2" height="4" rx="0.5" />
+              <rect x="4" y="4" width="2" height="6" rx="0.5" />
+              <rect x="8" y="2" width="2" height="8" rx="0.5" />
+              <rect x="12" y="0" width="2" height="10" rx="0.5" />
+            </svg>
+            <svg width="14" height="10" viewBox="0 0 14 10" fill="none">
+              <path d="M7 9a1 1 0 100-2 1 1 0 000 2z" fill="currentColor" />
+              <path d="M3 6a5 5 0 018 0" stroke="currentColor" strokeWidth="1.2" />
+              <path d="M0.5 3.5a11 11 0 0113 0" stroke="currentColor" strokeWidth="1.2" opacity="0.6" />
+            </svg>
+            <div style={{
+              width: 22,
+              height: 10,
+              border: '1.5px solid currentColor',
+              borderRadius: 2,
+              padding: 1,
+              position: 'relative',
+            }}>
+              <div style={{
+                width: `${battery}%`,
+                height: '100%',
+                background: 'currentColor',
+                borderRadius: 1,
+              }} />
+            </div>
+            <span style={androidFrameStyles.batteryText}>{battery}%</span>
+          </div>
+        </div>
+
+        <div style={androidFrameStyles.punchHole} />
+
+        <div style={androidFrameStyles.content}>
+          {children}
+        </div>
+
+        {navStyle === 'gesture' && (
+          <div style={androidFrameStyles.navBar}>
+            <div style={{
+              ...androidFrameStyles.navButton,
+              width: 100,
+              height: 4,
+              background: darkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)',
+            }} />
+          </div>
+        )}
+
+        {navStyle === 'buttons' && (
+          <div style={androidFrameStyles.navBar}>
+            <span style={{ color: textColor, fontSize: 20 }}>◁</span>
+            <span style={{ color: textColor, fontSize: 16 }}>○</span>
+            <span style={{ color: textColor, fontSize: 16 }}>□</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   BrowserWindow — copy nguyên từ assets/browser_window.jsx
+   ============================================================ */
+const browserWindowStyles = {
+  window: {
+    display: 'inline-block',
+    background: '#fff',
+    borderRadius: 10,
+    overflow: 'hidden',
+    boxShadow: '0 30px 80px rgba(0,0,0,0.25), 0 0 0 0.5px rgba(0,0,0,0.15)',
+  },
+  chrome: {
+    background: '#dee1e6',
+    paddingTop: 10,
+    paddingLeft: 10,
+    paddingRight: 10,
+    userSelect: 'none',
+  },
+  tabRow: {
+    display: 'flex',
+    alignItems: 'flex-end',
+    gap: 6,
+    position: 'relative',
+  },
+  trafficLights: {
+    display: 'flex',
+    gap: 8,
+    alignItems: 'center',
+    paddingBottom: 10,
+    marginRight: 8,
+  },
+  light: {
+    width: 12,
+    height: 12,
+    borderRadius: '50%',
+    border: '0.5px solid rgba(0,0,0,0.15)',
+  },
+  close: { background: '#ff5f57' },
+  minimize: { background: '#febc2e' },
+  maximize: { background: '#28c840' },
+  tab: {
+    background: '#fff',
+    padding: '8px 30px 8px 14px',
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+    fontSize: 12,
+    color: '#222',
+    fontFamily: '-apple-system, sans-serif',
+    maxWidth: 220,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    position: 'relative',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  },
+  favicon: {
+    width: 14,
+    height: 14,
+    borderRadius: 2,
+    background: '#999',
+    flexShrink: 0,
+  },
+  navBar: {
+    background: '#fff',
+    padding: '8px 14px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    borderBottom: '1px solid #e5e7eb',
+  },
+  navButtons: {
+    display: 'flex',
+    gap: 4,
+    color: '#5f6368',
+    fontSize: 16,
+  },
+  navButton: {
+    width: 28,
+    height: 28,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: '50%',
+    cursor: 'pointer',
+  },
+  urlBar: {
+    flex: 1,
+    background: '#f1f3f4',
+    borderRadius: 999,
+    padding: '7px 14px',
+    fontSize: 13,
+    color: '#333',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    fontFamily: '-apple-system, sans-serif',
+  },
+  lockIcon: {
+    color: '#5f6368',
+    fontSize: 12,
+  },
+  content: {
+    position: 'relative',
+    overflow: 'auto',
+    background: '#fff',
+  },
+};
+
+function BrowserWindow({
+  title = 'New Tab',
+  url = 'https://example.com',
+  width = 1200,
+  height = 800,
+  showTrafficLights = true,
+  children,
+}) {
+  return (
+    <div style={browserWindowStyles.window}>
+      <div style={browserWindowStyles.chrome}>
+        <div style={browserWindowStyles.tabRow}>
+          {showTrafficLights && (
+            <div style={browserWindowStyles.trafficLights}>
+              <div style={{ ...browserWindowStyles.light, ...browserWindowStyles.close }} />
+              <div style={{ ...browserWindowStyles.light, ...browserWindowStyles.minimize }} />
+              <div style={{ ...browserWindowStyles.light, ...browserWindowStyles.maximize }} />
+            </div>
+          )}
+          <div style={browserWindowStyles.tab}>
+            <div style={browserWindowStyles.favicon} />
+            <span>{title}</span>
+          </div>
+        </div>
+      </div>
+
+      <div style={browserWindowStyles.navBar}>
+        <div style={browserWindowStyles.navButtons}>
+          <div style={browserWindowStyles.navButton}>←</div>
+          <div style={browserWindowStyles.navButton}>→</div>
+          <div style={browserWindowStyles.navButton}>↻</div>
+        </div>
+        <div style={browserWindowStyles.urlBar}>
+          <span style={browserWindowStyles.lockIcon}>🔒</span>
+          <span>{url}</span>
+        </div>
+      </div>
+
+      <div style={{ ...browserWindowStyles.content, width, height }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   PIXEL ART — kỹ thuật box-shadow (copy từ demo Memphis cũ)
+   ============================================================ */
+function PixelArt({ grid, palette, scale = 6, style }){
+  const shadows = [];
+  grid.forEach((row, y) => {
+    row.split('').forEach((ch, x) => {
+      if (ch !== '.' && palette[ch]) shadows.push(`${x*scale}px ${y*scale}px 0 ${palette[ch]}`);
+    });
+  });
+  const w = grid[0].length * scale, h = grid.length * scale;
+  return (
+    <div style={{ width:w, height:h, position:'relative', flexShrink:0, ...style }}>
+      <div style={{ position:'absolute', top:0, left:0, width:scale, height:scale, boxShadow:shadows.join(',') }} />
+    </div>
+  );
+}
+
+/* ============================================================
+   §2.5 PET TILE — sân khấu Memphis cho sprite MÀU (thay màn DMG):
+   thẻ giấy kem viền mực + bóng cứng lệch + xoay nhẹ theo chất Memphis.
+   lite = bản mỏng cho sprite nhỏ (timeline, cây, hero strip).
+   ============================================================ */
+function PetTile({ scale = 8, rotate = 0, lite = false, style, children }){
+  return (
+    <div style={{
+      background:'var(--paper)',
+      border: lite ? '2.5px solid var(--ink)' : '3px solid var(--ink)',
+      boxShadow: lite ? '3px 3px 0 var(--ink)' : '6px 6px 0 var(--ink)',
+      padding: lite ? Math.max(4, Math.round(scale / 2)) : scale,
+      lineHeight: 0,
+      display:'inline-block',
+      transform: rotate ? `rotate(${rotate}deg)` : undefined,
+      ...style,
+    }}>{children}</div>
+  );
+}
+
+/* ============================================================
+   §2.5 HUD BATTLE GEN-1 (cấu trúc giữ nguyên: tên + Lv + TT + 78/100)
+   nhưng thanh HP MÀU KIỂU POKÉMON: xanh lá ≥50% · vàng 20–49% ·
+   đỏ <20%; ốm yếu (critical) → đỏ + nhấp nháy. Box = thẻ giấy Memphis.
+   ============================================================ */
+function BattleHUD({ name, level, value, max = 100, critical = false, style }){
+  const SEGS = 10;
+  const pct = value / max * 100;
+  const filled = Math.max(0, Math.min(SEGS, Math.round(pct / 100 * SEGS)));
+  const hpColor = critical ? '#D84028' : (pct >= 50 ? '#4CA83D' : (pct >= 20 ? '#E8B830' : '#D84028'));
+  return (
+    <div style={{ background:'var(--paper)', border:'3px solid var(--ink)', boxShadow:'4px 4px 0 var(--ink)', padding:'4px 9px 5px', minWidth:172, display:'inline-block', ...style }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', gap:10 }}>
+        <span className="f-mono" style={{ fontSize:13.5, fontWeight:700, letterSpacing:1, color:'var(--ink)' }}>{name}</span>
+        <span className="f-mono" style={{ fontSize:11, fontWeight:700, color:'var(--ink)' }}>Lv.{level}</span>
+      </div>
+      <div style={{ display:'flex', alignItems:'center', gap:6, marginTop:4 }}>
+        <span className="f-mono" title="TT = Thể trạng" style={{ fontSize:11, fontWeight:700, color:'var(--ink)' }}>TT</span>
+        <div style={{ display:'flex', gap:2, flex:1, border:'2px solid var(--ink)', padding:2, background:'var(--cream2)' }}>
+          {Array.from({ length:SEGS }, (_, i) => (
+            <div key={i} style={{
+              flex:1, height:8,
+              background: i < filled ? hpColor : 'rgba(38,32,29,.12)',
+              ...(critical && i < filled ? { animation:'hudBlink .8s steps(1,end) infinite' } : null),
+            }} />
+          ))}
+        </div>
+      </div>
+      <div className="f-mono" style={{ fontSize:10.5, fontWeight:700, textAlign:'right', color:'var(--ink)', marginTop:3 }}>{value}/{max}</div>
+    </div>
+  );
+}
+
+/* ============================================================
+   §2.5 SPRITE PIXEL-ART — CHUẨN HIỆN TẠI v3: POKÉMON MÀU,
+   PHỨC TẠP TĂNG THEO STAGE (bỏ chuẩn đơn sắc DMG theo feedback).
+   · Tham chiếu bộ starter thật: Charmander → Charmeleon → Charizard
+     (Lửa) · Squirtle → Wartortle → Blastoise (Thủy) ·
+     Bulbasaur → Ivysaur → Venusaur (Thảo) — GIỮ tên sinh vật Việt.
+   · Nguồn dáng + màu: sprite chuẩn tách ảnh mẫu user duyệt
+     (direction-approved.md · sprites/ref/*.png) qua game-grid 32/40/48
+     (scripts/gen-grids-from-ref.py) — embed data ở khối dưới.
+   · CÓ MÀU: outline tối gần đen ("o"), thân 2–3 tông + highlight,
+     grid ≥24×24 (stage 1: 32 · stage 2: 40 · stage 3: 48).
+   · ĐỘ PHỨC TẠP TĂNG: stage 1 tròn nhỏ ngố (1 đặc trưng nguyên tố) →
+     stage 2 cao + chi tiết hơn (bờm/vây/nụ, lửa to hơn, mắt dữ) →
+     stage 3 ĐỔI HẲN DÁNG (rồng / thuồng luồng / cổ thụ + đặc trưng
+     huyền thoại: bờm lửa, vây gai, tán cây nở).
+   Ký tự theo palette từng hệ (FIRE/WATER/GRASS_PAL): "o" outline,
+   d/f/l/h thân 4 tông, c/C bụng kem, y/Y nguyên tố sáng, a/e khói (ốm).
+   ============================================================ */
+const INK = '#26201D';
+
+/* ================= PALETTE 3 HỆ (đồng bộ gen-grids-from-ref.py) =================
+   Outline "o" = nâu-đen gần đen · thân 2–3 tông + highlight · bụng kem ·
+   ký tự khói a/e cho biến thể ốm (nguyên tố tắt theo §2.4). */
+const FIRE_PAL  = {"o": "#4A1410", "d": "#7E1F16", "f": "#B5382A", "l": "#E06038", "h": "#F5A05A", "c": "#F2E5C8", "C": "#D9BE9A", "v": "#5A1810", "r": "#D9452B", "y": "#F28C28", "Y": "#F7C948", "W": "#FFF6D8", "k": "#143C3C", "t": "#3FA8A0", "w": "#FFFFFF"};
+const WATER_PAL = {"o": "#16283E", "d": "#24365C", "f": "#35507E", "l": "#5B7CB0", "h": "#8FA8CE", "c": "#C7D8EE", "C": "#9FB4D0", "a": "#E8C860", "A": "#B89030", "b": "#A8D8F0", "B": "#5FA8CC", "k": "#101820", "t": "#F0C040", "w": "#FFFFFF"};
+const GRASS_PAL = {"o": "#1E3A1C", "d": "#3E7A34", "f": "#5FA84A", "l": "#93D06E", "h": "#B8E88A", "c": "#D8EFC0", "C": "#A8C888", "u": "#4E8A5E", "U": "#37634A", "p": "#F0A0B8", "P": "#D06890", "m": "#8A6242", "M": "#63452E", "k": "#142014", "w": "#FFFFFF"};
+const FIRE_SICK_PAL = {"o": "#3A322C", "d": "#8A7364", "f": "#B49B85", "l": "#CBB8A4", "h": "#DECDB8", "c": "#EFE7D6", "C": "#D6C8B2", "v": "#463A31", "r": "#A98F7A", "y": "#C9BBA6", "Y": "#DDD3C0", "W": "#F7F3EA", "k": "#2E2823", "t": "#9FB3AC", "w": "#FFFFFF", "a": "#B8AFA2", "e": "#8E8578"};
+
+/* ================= GRID SPRITE — GAME-READY 32/40/48 =================
+   Nguồn: downscale từ sprite chuẩn tách ảnh mẫu user duyệt (direction-approved.md,
+   sprites/ref/*.png qua scripts/gen-grids-from-ref.py) — THAM CHIẾU Pokemon thật:
+   Lửa Charmander→Charmeleon→Charizard · Thủy Squirtle→Wartortle→Blastoise ·
+   Thảo Bulbasaur→Ivysaur→Venusaur. Giữ tên sinh vật Việt (spec §2.1).
+   ĐỘ PHỨC TẠP TĂNG THEO STAGE: 32 (tròn nhỏ ngố) → 40 (cao, chi tiết hơn, mắt dữ)
+   → 48 (đổi hẳn dáng huyền thoại: rồng / thuồng luồng / cổ thụ). */
+const TAN_LUA = [ // 24→32×32 — tròn nhỏ, ngố, tai to, đuôi lửa nhỏ (sprite mẫu: Petyre)
+  "ddf..............d.............",
+  "drfd............fff.......ll...",
+  "drlfd.........dfrrfv.....yyf...",
+  "dvfrdd.......dfrddfv....lyy....",
+  "dddrrd......frrddodv...fyYyl...",
+  "dfddrdvddd.drrddfodv...dyYYyl..",
+  "dffvddfdfrddrddflodv....lYYYyf.",
+  "dfldvdrlrrfffdfllvdv....fYYYyf.",
+  "odldfrrlrrrrddlhfdd....fyYYYl..",
+  "vdffllllrrrrrdfhddv..flyYYYYyf.",
+  ".vdrrllrrrrrrrddfv..fyYYYYyYyr.",
+  ".vfrrrrrrrrrrrfddv..fyyYYyyYYyd",
+  ".dddrrrrrfdfrrrdo..oryyYyyyYYyv",
+  ".dftdrrrrfkkfrrfo..drryyyyyYyyv",
+  "dffkvrrrftktlrrfdd.drrrrryYYryv",
+  "dftkfrrrfoktllrfdo.dfrrrryYlrro",
+  "klCffflhhftChChlooovfrrrrlrrrd.",
+  "vdhhodChhhhhhhCfvddddffrrrfffv.",
+  "..dlhhhhhhhhhfvvfrrrfdffffffd..",
+  "...vflllhhldddfrrrrrrddfffddd..",
+  ".....ooffllfdfrrrrrrrfvoovo....",
+  "......lhhhlhrrrrrrrrffo........",
+  ".....olChhhhrrrrrfffffo........",
+  "......dhCCClrrrffldfffdv.......",
+  "......vdlChfrrrdllodffdv.......",
+  "......vdfdldrrrvvooodfdv.......",
+  ".......drdoofrrvdv..ofdv.......",
+  ".......vfdv.drfodo..ofdd.......",
+  "......ddfv..dfdov..vdfo........",
+  "......vddo.vfrv.....ooo........",
+  "......ooo..vffo................",
+  "...........dvv.................",
+];
+
+const BONG_BOT = [ // 40×40 — cao + gấu gầy, bờm lửa, mắt dữ, lửa to (sprite mẫu: Fyreox)
+  "........ff...........v.........",
+  "...dd...flf.........ff.........",
+  "...rf....flf.f.....ffd.........",
+  "..vlyd...rrrrld..dflrfv........",
+  "..dfyyd.ryyryr..dllrrfo........",
+  "..fdfyrryYyyl.dfyfvdrv.........",
+  "..dddyyyYYyyrvlYfvdffv.........",
+  "..vfdlyyYYYyrfYldfflf.....ff...",
+  "..ofddlyYYylyYyvfrfyf.....drf..",
+  "..vfdfYyyyyyYyyfdffyd......rrf.",
+  "...dfyyyyyyyyyyYrdlf......frrf.",
+  "...oyYyyyyyyYYyyyylv......fyyr.",
+  "...fdyyyyyyYydfyYlo.......lyyld",
+  ".vfyCoyYyyyddCfyyylfd..f.fyyYl.",
+  ".vyYhffyyyfftcyyyyYl..llfryYyf.",
+  "..vlYyYyyyYyyYYYYydd.rlrryyYyff",
+  "..ohfvdyYYYYYYYYYYhddryyyyYyyrf",
+  "..dlddlYYYhfYYYYhdo.frYyyYYlrd.",
+  "....vlhlfflYYhldflv.fryYYYyrd..",
+  ".....ddlhhhYhllhhfd.flyYyYyr...",
+  "....vlYhfffyyhYhyyfdryYyYYyrd..",
+  "....dlYYYhhhYYYYYYYldyyryyyyf..",
+  "....ddlYYYYYYYYylYyYyflryYyyrd.",
+  "...dlyyYYYYYYhYlfddlyfdryYyyld.",
+  "..dfrldllYYYhflyyvdrldfrYyyyyd.",
+  "dfrlrfvvylYYfyyyfdrrfdryYyyYld.",
+  "dfrfdo.oYylhlyYydrrrdrryyryYf..",
+  "dvvd...dYYlfyyYfdrrdfrrrryyyd..",
+  "......fyyyyyyyyydoddrrrrryyfd..",
+  ".....vdyyyYyyyyyydyldrrrrrrv...",
+  ".....dfyYyyYYYyyYYrydrrrrfd....",
+  ".....drylyyyyyYyyyrrdrrrfv.....",
+  ".....dlrryydkvlYrrrrvdddv......",
+  ".....drryyv...odrrrrd..........",
+  "......ofrrdv...ovfrrfv.........",
+  ".......drrd......odrfd.........",
+  ".....vdrrfo.......vfrd.........",
+  "....vfrrfv........orrro........",
+  "....vddfv..........frfo........",
+  ".....kkk...........ooo.........",
+];
+
+const DIEM_LONG = [ // 48×48 — rồng lửa oai, bờm lửa, dáng rồng (sprite mẫu: Infernyx)
+  "...........f................................",
+  "...........lf...............................",
+  ".......fd.lyf.fr............................",
+  ".....d.ll.yy..yl............................",
+  "....vd.fyfll.lyhvo..........................",
+  "....dfvfylylryfdfdlr....................frf.",
+  "....dffYyryyyfdrdyyrd....dd............drf..",
+  "....dryYyyYyfddddlrd...flyrf...........drf..",
+  "...vdrYYYYydfoovfyrf..fyyrrrfdd.........frf.",
+  "...vfdyYyyffvovvlYylrryyrfddfffv........ryf.",
+  "...vddryrffvovddyyyyyyyrfd...d.....f.dfryyr.",
+  "...vfyrrfffoovvlyrfrrrrfd.........rylyyyyyrv",
+  "...fyYrrlrrdovdyrrrfdddv.........dryyyyyyrd.",
+  "..dryyrylfrrdvrrryrf...d......f..lyyyyyrfd..",
+  "..frrllfvrrlldddfrrrddfdd....fl.dyyyyyrfd...",
+  "..dfrfdhflYYYhddfdfrrrfd....drf.fyyyyrfd...f",
+  ".dfrrrffyYYyfvvdv.vddfd...ffryrdfyyyrrdv..fd",
+  "koryhYYYYYYlfddv...vvo...fyyyyrfyyyyrrrd..fd",
+  "kfYhyhhYYyydddv.........fyyyyrryyyryyrrfo.ff",
+  "..ovddffyyyfdv.........dryyryyyyyyryyrrfdfrf",
+  "......ofyyyddv.........fyyrryyyyylryyrffrrrd",
+  "......dlyylddv.........fyyryyyyyyrryyrrylrfd",
+  "......lYyYfdfdv........drrryrrrrrrryrryrffdv",
+  ".....fYYYYhfffdv.......drrrrrrrrrryyryrffdv.",
+  "....dYYYYYYlfffdo...oooofrrrrrrrryyyryffd...",
+  "....fYYYYYYyfrrrfdvvflrfdvfrrrrryyyrryrfdv..",
+  "...fYYYYYyYYfrrrrrlyyyrrrddrrrrryyrryyyrddd.",
+  "...fYYYYylyYyfrrrrrrrrrrrrddrrrrrrrryyyfvdd.",
+  "..vlyYYYyldyYfrrrrrrrrrrrrfvrrrrrryyyyrdvfd.",
+  "..dyfyYYyffdyfrrrrrrfrrrrrfddrryyyyyyrddffv.",
+  "..ffofyYyfrrdfrffrrrfrrrrrfdvfryyyrrrrfrrd..",
+  "..dv.dyyyffrfrrdfyyyffrrrrfdodfrrrrfffrfd...",
+  ".....oflyffrrrffyyfvodrrrrfdovddffffffdd....",
+  ".....ovvlldrrrffdvvvvofrrrfdo..vdfffdvo.....",
+  "......vooyfrrrdooodddoofrfffd...ovvvo.......",
+  "......vdvffrrrdd.ovddvvdfffddd..............",
+  ".......vddlrrllfv.ovddv.vddffdo.............",
+  ".......vvflfrylf...vddv..vdddfd.............",
+  "........oydlyyfv...odvv....vdfd.............",
+  "........olfyYyf....odvv....vdfd.............",
+  ".........ffyylv....vdv......dfd.............",
+  ".........ffyyd....odvo......vfd.............",
+  ".........dfYyv...ovdo.......vfd.............",
+  "........vdyYf...ovddo......fffd.............",
+  ".......vddYYo....ooo......vhYld.............",
+  ".......ofYYyo.............vfffd.............",
+  ".......flyyd...............vvv..............",
+  ".......oodv.................................",
+];
+
+const GIOT = [ // 32×32 — cá nước con tròn ngố (sprite mẫu: Shock-Fringe)
+  "................................",
+  "................................",
+  "................................",
+  ".............daaaaAo............",
+  ".............aahlCo.............",
+  "............hahlllo.............",
+  "..........ffClfffffd............",
+  ".......ffflllllllffdd...........",
+  ".....dflllllllllllllfd.......ff.",
+  ".....flhhhBllllllllllfd....flhhd",
+  "....fhChhhhllllhCCChllfd..dhhhhd",
+  "...lBCbbhhBlllllhhCaChlfd.fhlCAd",
+  "..flhhbhhBlllllllllhaaahddllhCf.",
+  "..fBhhhhBlllllllllllllhCAdllhld.",
+  ".fllBhBlllhllllhlllllllllfllhlo.",
+  ".lfllllllCaahllClhllCCClllllhd..",
+  "olflllllhCdAallhClCllhCChlllhd..",
+  "okdlllllhfdkahllClCllCllllflhd..",
+  "ddllllllhdkfalllChhlllllfoflllo.",
+  "dllllllllhAahllhhlllllfldkfllfo.",
+  "ddlllBlflllllllhlllllfffdddflhf.",
+  ".dfffffllfflllllllfffflf..ddfld.",
+  ".dflllhhhlllllllfflfflfd...dood.",
+  "..ddlhhhhhlllfffllllff..........",
+  "..fddflBBlllllfflllllf..........",
+  ".oflfddfflllllldolhhCld.........",
+  "..fdd..ddfffffdoodlaaad.........",
+  "..................ddddd.........",
+  "................................",
+  "................................",
+  "................................",
+  "................................",
+];
+
+const SUOI_VOT = [ // 40×40 — cá nha dữ hơn, vây vàng phát triển (sprite mẫu: Volt-Tide)
+  "........................................",
+  "........................................",
+  "........................................",
+  "........................................",
+  "........................................",
+  ".....................ffd................",
+  "..................faacl.................",
+  "................dAaCChd.................",
+  "...............faClhCA...............ffd",
+  "..............AahlCCCd.............ofChd",
+  ".............AallChCCf......d.....dlCad.",
+  ".............aCflllaCf....flf....dlCaA..",
+  "............aaflflhlhAo..dhCd...dfChad..",
+  "..........oAalffffddddo.dlCA....dllCao..",
+  "........dddaadddddffdffdoflf...ofllaA...",
+  ".......dffAAodfflffflhCllfdoo..dfllaf...",
+  ".....odflfddffffhlfhClllllllfdodffaA....",
+  "....ddllllfffffAllCCalffffflffffdlaA....",
+  "...ddBbBlfffffaAlhlfllffChfffllfdfaA....",
+  "...olhhlffffdCaffffffffhwcCaAfdffdAao...",
+  "..AflllflfffhahllllcCflclfhfffoodfdaf...",
+  ".AdfllflffaaaldhfllhCCclffdffd..odlAA...",
+  ".AoffffdlaaoAhdlflAdflldddlloo..ddfAad..",
+  ".ddfffffwAaoAlffllAdfddddlldad...dodAA..",
+  ".offfffaaAAflffflfddfdffhldlaA....ooodo.",
+  "fhfdddfdffflCfdldoodflhhlddflhd.....oooo",
+  "dhChhlfffdfdllffoofddllfo..oddd.........",
+  ".dfhhhhhllhhCChldfffdddod...............",
+  "..fffflllhhhChhClfffllllld..............",
+  "...doflhhhhhhhhlfdAfflhhCl..............",
+  "..dlffdddddddddd..fAflhCCCf.............",
+  ".daAfd.............faChlCccld...........",
+  ".odd................dAAAccCcCf..........",
+  "......................ooAfffff..........",
+  "........................................",
+  "........................................",
+  "........................................",
+  "........................................",
+  "........................................",
+  "........................................",
+];
+
+const TRIEU_LONG = [ // 48×48 — thuồng luồng sóng, vây lưng gai (sprite mẫu: Tide-Striker)
+  "..............l.......................",
+  ".............ld.......f...............",
+  "............lAd.....flf...............",
+  ".......llf..Alhfldflhlf...............",
+  ".....fll...fAhChlCChAlCl..f...........",
+  "...........AlChhlCCllhCCBhl...........",
+  "...........AlClllCBllCChhlf...........",
+  "..........AllhlflhlAfhhlAlC...........",
+  "..........AflllfhllflhllfhCld.........",
+  ".........lAfhlAfhlAfhllflChllf........",
+  ".......A.AllllfflffflfAdlhlAl.........",
+  "......a..afllffffAffflfflfffCf........",
+  "........ladlflffdddddfdddfflCCf.......",
+  "........aAflffodffffffffdddflllf......",
+  "........aAffodfffffflffflffdfffd......",
+  ".......fafddffflfflflAfflffffdff....f.",
+  ".......laodfffffllflflaalfffdfff...Bl.",
+  "......daAdfffflfhahfffaahfffllffd..b..",
+  "..f..fffdffAhfflCflalCfflllChlffd..h..",
+  "ld..dllfllllhllllfflaAfffaaflhfff.lf..",
+  "hlldfCallffflllalffAflAfaflfflffffB...",
+  "lllfChCllffllfffAAllfffafffAfAAllf....",
+  "lffAhlhhlflaflflffAdfffAffdAfddlffd.AA",
+  "AlfCBlahflalfflfldAAddffffffddflflf.f.",
+  ".ffhhalllaAfldffdffdflllllllfdfffdd...",
+  ".dfahlfhadffffffdfflBlfflfllllffdfffd.",
+  ".dfAflfaAfAllAdofdfldhcwwCdlllfddflllf",
+  ".ffffffAAAffffddfdddflcwwhdfllldfdflhh",
+  ".fhlBhlffffdfffdAffllllccffofllfdfofff",
+  ".dlffffBCaAlfflCAAfflhhhcdfhfllfffd.l.",
+  "...lfAAAlCcldCwwcAahlBlllhcwlllffd..C.",
+  "...flaaAhBCacwccwcCAaCCChhwCllldfd..Cl",
+  "....llhllbcwacwccwwcCAAllfClllffd...Ah",
+  ".....dd.BcwwcacwwwcwwcchhCllhfffd....l",
+  ".......lbcwClCChCcwwcwhffdfBldfd.....l",
+  "......lbcwwCflChllhcwwwldlBfddd......l",
+  "......CbcwcwclBhClllCChlflfddo........",
+  "......lbcwcwC..fflllfoflfddff.........",
+  ".......lbcwC....dfffdffddddffo........",
+  "........lbh......dffddod...fd.........",
+  "..............fA..dffdd....d..........",
+  ".................flffd........l.......",
+  ".................ohld.........l....f..",
+  ".................fBhd..hl....f...lB...",
+  ".................lllllflbhl.flfllB....",
+  "................dffd.....lBllf........",
+  "................ffd...................",
+  "...............ddd....................",
+];
+
+const MAM = [ // 32×32 — mầm lá tròn nhỏ (sprite mẫu: Sproutling)
+  "..ddddd..............",
+  ".Uflflfoo............",
+  ".UflfffldU...UdfffdU.",
+  "..dllfddfd..ufffflffu",
+  "..UfllfdddUudffffflfU",
+  "...UdffffdodffllllfUU",
+  "....oooodddfdfflfdU..",
+  "........oofoooooU....",
+  "........kddo.........",
+  "........oudo.........",
+  "......UddddkU........",
+  "....uufllfddUU.......",
+  "....fhhhhlllld.......",
+  "...fhhhhhlllllM......",
+  "..fllhhhhlllllfU.....",
+  ".UflllllllllllluU....",
+  ".llllllllllllllfU....",
+  "olhdllllllfdlllfU....",
+  "dfUolllllfCollllMU...",
+  "UloollllldoollllMU...",
+  "UflflllllfodllffMU...",
+  "UdllfffdfllllfffUU...",
+  "uoflfddlllllfffmU....",
+  ".Udllllllllffffou....",
+  "..UodfffffffdddU.....",
+  "...okUdddddddofuU....",
+  "....ddddddddffffuU...",
+  "...olfdfdfllddffdU...",
+  "...olfMoofllfkdfdU...",
+  "...ofdo.kflfo.UoU....",
+  "....UU..ooffU........",
+  ".........UUu.........",
+];
+
+const BUP_XANH = [ // 40×40 — hươu lá nụ hồng (sprite mẫu: Florasaur)
+  ".............MmmmmM....................",
+  "...........mmPpppPPmm..mmmmmm..........",
+  "..........PPmmPPPPmCCmmmPpppPm.........",
+  ".........mmmmPmmmmCmmmmCmPppppPM.......",
+  "........mmPpppPPPmChhlClMMmmPPPmM......",
+  ".......MPPppPPpPPPMmllmmmPPPPmmmm......",
+  "......MmPPPPPpPmMMmmMmmmPPPPppPmM......",
+  "......MMMmPPmMMMMoMPPPPPmmPPPPppmM.....",
+  "...uuudfMmPmMmmmmMomPPPppmMPPPPpPm.....",
+  "..UuffdooMmUUoMmMMMmppPPPPmmPppPPmM....",
+  "..UUdodfdoddddooMMMmPPPPPPmpPPPPmMo....",
+  "...uUdfddfffffdokokMPPPPPPPMuMPPMo.....",
+  "..uudfddfffdddouuukmPPmPPPPMooMmoUUU...",
+  "..uudfdffdfUkUlluuomPmomPmmMUUoodddUU..",
+  "..UdffflfoUUuuuUMMoooooMmMkoUoUddddfdUU",
+  "..UoflfdoUullluUMModUUUoooUddddddffffuU",
+  ".UuudUUUuuuuuUuuUUoooddUododdddudodfdo.",
+  ".uClluulluuUmCuluuUoddfddddooUkko.ok...",
+  ".mmuCluluuumPwuuuuUkdffffddfuU.........",
+  "uuuCCluulUMmCcuuuuUkofddffdffdk........",
+  "ullllluuuuuuCuuuuuuUoUoffffdffUk..uu...",
+  "uullluuullluuuuuuuuuUkUffdfddfUU.uuU...",
+  ".UuuluuluuuuUUUuuuuuuuUofdffffdUuuuU...",
+  "..UUuuUUUUUuuuuuuuuuuuuUodffffdouuuU...",
+  "...UoUUUuuuuuuUUuuuuuuuuuUdodfoUuuuU...",
+  "....UUuuuuuUUUUuuluuuluuluUUoouUUuUo...",
+  ".....UoooooUUUuuuuuuuuuuuuuuUuuuoUU....",
+  "......koUUUUuuuuuuuuuuuuuuUuuuuuuoU....",
+  "......koUuuuuuuuuuuuuluulluluUuuuU.....",
+  "......kUUUulluuuuuuuuuuUuuuuUUuuuU.....",
+  "......kUuUUuuuuuUuuuuuuUuuuuUuuuuUU....",
+  "......ouuuUoUuuuUuuuuuuuUuuUUuuuuUU....",
+  ".......UuuuUoUUUUuluuluuoUUUuuuuuUU....",
+  ".......ouuuuUooUoUluuuUuoooUuuuuuUU....",
+  ".......ouuuuUU.UuUuuuuuuo..uUuuuuUU....",
+  "......oUuuuuUU..ukUuuuuuu.UUuuuuuU.....",
+  "......UCuCuuU....UUuuuuU...uuUuUu......",
+  "......UuUuUU.....uuuuuuU....UUUU.......",
+  ".......UUUU......uCuCuCo...............",
+  ".................uUUUUuU...............",
+];
+
+const CO_THU_LINH = [ // 48×48 — linh thú cây cổ thụ nở tán (sprite mẫu: Ancient-Oak)
+  "..........o....UUduU..................",
+  ".........UuuUuuuffdUU.................",
+  "....UUU.Uffffddfffffuu.uuu............",
+  "..UuuddUdfffffduffffdUodfdU...........",
+  ".uudfffddffdfddffffdUUdfffduu.........",
+  ".uffffffddddddffffddUUdfffduUU........",
+  ".ddfffffuddffffffffdUUUdddUUUU........",
+  "UuudffffdffffddffffdUUUddUUUUU........",
+  ".uuddffddufddUUddfddUUdffdUUUU........",
+  "udfdfffdUUddUUoUddUUUdffffdddo........",
+  "UfffddfuoooUUUooUoooUdfdfdfffUU.......",
+  "UdfdUUdUoMMooUUokMoooUdUoouddoU.......",
+  ".UdUoooUoMMooUooMooUooMMUUUUoo........",
+  "..UoUoMoooMMoooMMkUooMMoUUUUoU........",
+  "...oooMMokMmMMMmMoooMmkoUUoUUUU.......",
+  "...UUUoMMoMmMMmmMoMmMokooMUUUUUU......",
+  "..oUUUUoMmmmMmmmMMmMooMMkoooUUu.......",
+  "...UUUUokmmmmmmmmMMMMMokoooUoU........",
+  "....ookUoMmmmmmmMMMMMooooooU..........",
+  ".......koommmMmMkkmMMkoUUUU...........",
+  ".........UoMmMkMkMmMMUUU.......UUUUuU.",
+  ".........UMMmmMMMmmMMM........UdduddUU",
+  ".........UMmmmmmmMmMMMu.......udfdfdo.",
+  "........UoMMmmMmMMmmmmMU..U..UdddddUU.",
+  "......UMMMkkMokMkomMmmmmoMM..UUUUddUUU",
+  ".....UMmMokkkkkkkkMMoMMmMMM...UUooUUoU",
+  "...UmmmmMoMMokmoMMMMMkMMMmMM...UokooU.",
+  "..UmmmmMMoMmMMmMMmmMMokMmMMM...UMo....",
+  ".UmmmmMMMkmmmmmmmmmMMoMmmmMoo..MMo....",
+  ".mmMmMMouuMmmmmmmmmoommmmmMkMMMMo.....",
+  "UMmMMMMoummmmmmmmmMMmmmmmMMoMMooo.....",
+  "MMMoMMM..MmmmmmmmmoMoMMmmMMoMMkM......",
+  "oMMokMM..MmmmmmmmmMoMoMmMMoMMMMM......",
+  "oMMMoMU..MmmmmMmMmMMMMmMMMoMMMMo......",
+  "ooMMUU..UMMMmmMMMmMMoMMkoMkMMMMM......",
+  "ooo.....MMMMMmMMMMmMokooMoMMMMMM......",
+  "........MmMMMMMMMMmmMMMooMMMMMMMo.....",
+  ".......MmmMoMMMMMMmmmMMMMMoMMMMMo.....",
+  "......UmmmMMoooMMMmmmMMMoUuMMMMMMo....",
+  "......MmmmmMMoUMMMmmmmMMM..UMMMMMo....",
+  "......MMmmMMo...UMmmmmMMMU..ooMooM....",
+  ".....UMmmMMMM....oMmmMoMMU.UoMMMMMU...",
+  ".....MMMmmMMM....oMmmMMMMU.UoMMMMMM...",
+  "....UMMommMMoU...MmMmMMMMk.MooMMoMkU..",
+  "...UMMoMMMoMoU..UMMMMmMMMoUUoUMM.UU...",
+  "......oooU..U...kMMMMmMoMoM...........",
+  "................UU.oMmMooo............",
+  "....................kM................",
+];
+
+/* ================= ỐM YẾU — Tàn Lửa (silhouette riêng §2.4) =================
+   Suy ra từ grid khỏe bởi scripts/make-sick-grid.py: đầu cúi +3px, tai gập rũ,
+   mắt nhắm hẳn (cong xuống) + lông mày chéo buồn + miệng wavy, bụng hóp,
+   chân co ngắn, đuôi lửa TẮT → đuôi trụi rủ + vệt khói chekered rung (a/e). */
+const TAN_LUA_SICK = [
+  "..............................",
+  "..............................",
+  "..............................",
+  "..............................",
+  "..............................",
+  "..............................",
+  "..............................",
+  "..............................",
+  "drlfd.........dfrrf...........",
+  "dvfrdd.......dfrddf...........",
+  "dddrrd......frrddod...........",
+  "dfddrdvddd.drrddfod...........",
+  "dffvddfdfrddrddflod...........",
+  "dfldvdrlrrfffdfllvd...........",
+  "odldfrrlrrrrddlhfdd...........",
+  "vdffllllrrrrrdfhddv.........ae",
+  ".vdrrllrrrrrrrddfv..........e.",
+  ".vfrrrrrrrrrrrfddv.........ae.",
+  ".kkfrrrrrffkkrrdo..........e..",
+  "kffkfrrrrfkffrrfofd.......ae..",
+  "dkffkrrrkffflkrfddfd......e...",
+  "dfkkfrrrfkkkklrfdorfd....ae...",
+  "klCkfklkhffChChlooo.fd...e....",
+  "vfhhkfkhhhhhhhCfvdd..fd.ae....",
+  "......lhhhlhrrrrrrr...do......",
+  ".....olChhhhrrrrrff...........",
+  "......dhCCClrrrffld...........",
+  "......vdlChfrrrdllo...........",
+  "......vdfdldrrrvvoo...........",
+  ".......drdoofrrvdv............",
+  ".......vfdv.drfodo............",
+  "......ddfv..dfdov.............",
+];
+
+/* PALS — map palette theo form (CATALOG tham chiếu qua key này) */
+const PALS = {
+  TAN_LUA: { o:'#4A1410', d:'#7E1F16', f:'#B5382A', l:'#E06038', h:'#F5A05A', c:'#F2E5C8', C:'#D9BE9A', v:'#5A1810', r:'#D9452B', y:'#F28C28', Y:'#F7C948', W:'#FFF6D8', k:'#143C3C', t:'#3FA8A0', w:'#FFFFFF' }, // Lửa s1
+  BONG_BOT: { o:'#4A1410', d:'#7E1F16', f:'#B5382A', l:'#E06038', h:'#F5A05A', c:'#F2E5C8', C:'#D9BE9A', v:'#5A1810', r:'#D9452B', y:'#F28C28', Y:'#F7C948', W:'#FFF6D8', k:'#143C3C', t:'#3FA8A0', w:'#FFFFFF' }, // Lửa s2
+  DIEM_LONG: { o:'#4A1410', d:'#7E1F16', f:'#B5382A', l:'#E06038', h:'#F5A05A', c:'#F2E5C8', C:'#D9BE9A', v:'#5A1810', r:'#D9452B', y:'#F28C28', Y:'#F7C948', W:'#FFF6D8', k:'#143C3C', t:'#3FA8A0', w:'#FFFFFF' }, // Lửa s3
+  TAN_LUA_SICK: { o:'#3A322C', d:'#8A7364', f:'#B49B85', l:'#CBB8A4', h:'#DECDB8', c:'#EFE7D6', C:'#D6C8B2', v:'#463A31', r:'#A98F7A', y:'#C9BBA6', Y:'#DDD3C0', W:'#F7F3EA', k:'#2E2823', t:'#9FB3AC', w:'#FFFFFF', a:'#B8AFA2', e:'#8E8578' }, // ốm: nhợt/desaturate, outline giữ đậm
+  GIOT: { o:'#16283E', d:'#24365C', f:'#35507E', l:'#5B7CB0', h:'#8FA8CE', c:'#C7D8EE', C:'#9FB4D0', a:'#E8C860', A:'#B89030', b:'#A8D8F0', B:'#5FA8CC', k:'#101820', t:'#F0C040', w:'#FFFFFF' }, // Thủy s1
+  SUOI_VOT: { o:'#16283E', d:'#24365C', f:'#35507E', l:'#5B7CB0', h:'#8FA8CE', c:'#C7D8EE', C:'#9FB4D0', a:'#E8C860', A:'#B89030', b:'#A8D8F0', B:'#5FA8CC', k:'#101820', t:'#F0C040', w:'#FFFFFF' }, // Thủy s2
+  TRIEU_LONG: { o:'#16283E', d:'#24365C', f:'#35507E', l:'#5B7CB0', h:'#8FA8CE', c:'#C7D8EE', C:'#9FB4D0', a:'#E8C860', A:'#B89030', b:'#A8D8F0', B:'#5FA8CC', k:'#101820', t:'#F0C040', w:'#FFFFFF' }, // Thủy s3
+  MAM: { o:'#1E3A1C', d:'#3E7A34', f:'#5FA84A', l:'#93D06E', h:'#B8E88A', c:'#D8EFC0', C:'#A8C888', u:'#4E8A5E', U:'#37634A', p:'#F0A0B8', P:'#D06890', m:'#8A6242', M:'#63452E', k:'#142014', w:'#FFFFFF' }, // Thảo s1
+  BUP_XANH: { o:'#1E3A1C', d:'#3E7A34', f:'#5FA84A', l:'#93D06E', h:'#B8E88A', c:'#D8EFC0', C:'#A8C888', u:'#4E8A5E', U:'#37634A', p:'#F0A0B8', P:'#D06890', m:'#8A6242', M:'#63452E', k:'#142014', w:'#FFFFFF' }, // Thảo s2
+  CO_THU_LINH: { o:'#1E3A1C', d:'#3E7A34', f:'#5FA84A', l:'#93D06E', h:'#B8E88A', c:'#D8EFC0', C:'#A8C888', u:'#4E8A5E', U:'#37634A', p:'#F0A0B8', P:'#D06890', m:'#8A6242', M:'#63452E', k:'#142014', w:'#FFFFFF' }, // Thảo s3
+};
+
+/* §2.4 điểm 4: biến thể ốm = palette NHỢT/desaturate — fallback cho form
+   KHÔNG có grid ốm riêng (outline K vẫn giữ đậm để không biến mất).
+   Demo này Tàn Lửa có grid ốm vẽ riêng (TAN_LUA_SICK + PALS.TAN_LUA_SICK). */
+function paleHex(hex){
+  const n = parseInt(hex.slice(1), 16);
+  const r = n >> 16 & 255, g2 = n >> 8 & 255, b = n & 255;
+  const lum = 0.2126 * r + 0.7152 * g2 + 0.0722 * b;
+  const mix = (c) => Math.round(c * 0.3 + lum * 0.42 + 255 * 0.28);
+  return 'rgb(' + mix(r) + ',' + mix(g2) + ',' + mix(b) + ')';
+}
+function palePal(pal){
+  const out = {};
+  Object.keys(pal).forEach((k) => { out[k] = k === 'K' ? pal.K : paleHex(pal[k]); });
+  return out;
+}
+
+/* ---- Trứng nguyên tố (12×14) — vỏ kem 1 nền chung + hoạ tiết MÀU theo line,
+   giữ chất Memphis: outline mực đậm + bóng D trung tính + đốm P nguyên tố ---- */
+const EGG_BASE = [
+  "....KKKK....",
+  "...KMMMMK...",
+  "..KMMHHMMK..",
+  ".KMMHHMMMMK.",
+  ".KMHHMMMMMK.",
+  "KMHHMMMMMMMK",
+  "KMHMMMMMMMMK",
+  "KMMMMMMMMDDK",
+  "KMMMMMMMDDDK",
+  "KMMMMMMDDDDK",
+  ".KMMMMMDDDK.",
+  ".KMMDDDDDDK.",
+  "..KDDDDDDK..",
+  "...KKKKKK...",
+];
+const EGG_PAT = {
+  flame: [[5,6],[5,7],[6,5],[6,8],[7,4],[7,9],[8,5],[8,8],[9,6],[9,7]], // lửa uốn
+  water: [[4,7],[5,8],[6,3],[7,6],[8,4],[9,8],[10,6]],                  // bong bóng
+  grass: [[4,6],[5,6],[6,5],[6,7],[7,6],[8,6],[9,5],[9,7]],             // chồi lá
+};
+const EGG_PAL = {
+  flame: { K:INK, M:'#F7E8CB', H:'#FFFBF0', D:'#E3C9A2', P:'#E4572E' },
+  water: { K:INK, M:'#D9E9F7', H:'#F1F8FE', D:'#B7CEDF', P:'#2B54A3' },
+  grass: { K:INK, M:'#E2EFD2', H:'#F4FAE9', D:'#C4D8AC', P:'#5F8F3E' },
+};
+function eggGridFor(line){
+  const pat = EGG_PAT[line.eggPat] || [];
+  return EGG_BASE.map((row, y) => row.split('').map((ch, x) =>
+    (ch !== '.' && pat.some(([py, px]) => py === y && px === x)) ? 'P' : ch).join(''));
+}
+
+/* Ngọn lửa mini cho ô streak */
+const FLAME_GRID = [
+  "...o...",
+  "..oo...",
+  "..oro..",
+  ".ooroo.",
+  ".orryo.",
+  "oryyyo.",
+  "oryyyyo",
+  ".ooooo.",
+];
+const FLAME_PAL = { o:'#E0702A', r:'#BC3A28', y:'#F2C338' };
+
+/* ============================================================
+   §1.3 REGISTRY ĐIỀU KIỆN (dùng chung, combo AND/OR)
+   Thêm loại điều kiện mới = đăng ký 1 key, KHÔNG sửa hệ cũ.
+   ============================================================ */
+const COND = {
+  level_at_least:          (s, v) => s.level  >= v,
+  power_at_least:          (s, v) => s.power  >= v,
+  streak_at_least:         (s, v) => s.streak >= v,
+  healthy_days_at_least:   (s, v) => s.healthyDays >= v,
+  sessions_today_at_least: (s, v) => s.todaySessions >= v,
+  and: (s, of) => of.every((c) => evalCond(s, c)),
+  or:  (s, of) => of.some((c) => evalCond(s, c)),
+};
+function evalCond(s, c){
+  if (c.op) return COND[c.op](s, c.of);
+  return COND[c.key](s, c.value);
+}
+const COND_LABEL = {
+  level_at_least:          ['Lv',                (v) => '≥ ' + v],
+  power_at_least:          ['Sức mạnh',          (v) => '≥ ' + v],
+  streak_at_least:         ['streak',            (v) => '≥ ' + v + ' ngày'],
+  healthy_days_at_least:   ['Khỏe mạnh liên tục',(v) => '≥ ' + v + ' ngày'],
+  sessions_today_at_least: ['phiên hôm nay',     (v) => '≥ ' + v],
+};
+function describeCond(c){
+  if (c.op === 'and') return c.of.map(describeCond).join(' ∧ ');
+  if (c.op === 'or')  return c.of.map(describeCond).join(' ∨ ');
+  const L = COND_LABEL[c.key];
+  return L[0] + ' ' + L[1](c.value);
+}
+const LEAF_VALUE = {
+  level_at_least:          (s) => s.level,
+  power_at_least:          (s) => s.power,
+  streak_at_least:         (s) => s.streak,
+  healthy_days_at_least:   (s) => s.healthyDays,
+  sessions_today_at_least: (s) => s.todaySessions,
+};
+
+/* ============================================================
+   §3 CÔNG THỨC SỐ (chung mọi kịch bản)
+   ============================================================ */
+const FORMULAS = {
+  xpNeed:   (L) => 80 + 30 * L,                    // Lv.4→5 cần 200 XP
+  powerCap: (L) => Math.min(100, 40 + 6 * L),      // Lv.4 → cap 64
+};
+function condStatus(c){
+  return c >= 70 ? 'Khỏe mạnh' : (c >= 30 ? 'Bình thường' : 'Ốm yếu');
+}
+
+/* ============================================================
+   §1.4 CATALOG SINH VẬT (data-driven — thêm loài = thêm entry)
+   Tên 100% khớp spec §2.1–2.3.
+   ============================================================ */
+const CATALOG = {
+  lines: [
+    {
+      id:'flame', element:'🔥', name:'Lửa', elementBg:'var(--red)',
+      eggPat:'flame', // trứng 12×14 + hoạ tiết lửa màu
+      stages:[ // §2.5: tham chiếu Charmander → Charmeleon → Charizard
+        { atLevel:1,  id:'tan-lua',   name:'Tàn Lửa',   desc:'hổ lửa con',                    grid:TAN_LUA,   sickGrid:TAN_LUA_SICK, sickPal:PALS.TAN_LUA_SICK, pal:PALS.TAN_LUA },
+        { atLevel:8,  id:'bong-bot',  name:'Bồng Bột',  desc:'thiếu niên lửa · mọc cánh mầm', grid:BONG_BOT,  pal:PALS.BONG_BOT },
+        { atLevel:16, id:'diem-long', name:'Diễm Long', desc:'rồng lửa nhỏ',                  grid:DIEM_LONG, pal:PALS.DIEM_LONG },
+      ],
+      branches:[
+        { id:'hien', name:'Hiền', short:'streak ≥ 7', form:'Diễm Long Hiền',
+          meaning:'aura dịu — phần thưởng thói quen đều đặn',
+          cond:{ op:'and', of:[ { key:'level_at_least', value:16 }, { key:'streak_at_least', value:7 } ] } },
+        { id:'chien-binh', name:'Chiến Binh', short:'Sức mạnh ≥ 80', form:'Diễm Long Chiến Binh',
+          meaning:'giáp, uy phong — phần thưởng sức mạnh cao',
+          cond:{ op:'and', of:[ { key:'level_at_least', value:16 }, { key:'power_at_least', value:80 } ] } },
+      ],
+      hybridsWith:['water','grass'],
+    },
+    {
+      id:'water', element:'💧', name:'Thủy', elementBg:'var(--blue)',
+      eggPat:'water',
+      stages:[ // §2.5: tham chiếu Squirtle → Wartortle → Blastoise (màu tham chiếu)
+        { atLevel:1,  id:'giot',       name:'Giọt',       desc:'gấu nước',             grid:GIOT,       pal:PALS.GIOT },
+        { atLevel:8,  id:'suoi-vot',   name:'Suối Vọt',   desc:'cá heo nước ngọt',     grid:SUOI_VOT,   pal:PALS.SUOI_VOT },
+        { atLevel:16, id:'trieu-long', name:'Triều Long', desc:'rồng sóng',            grid:TRIEU_LONG, pal:PALS.TRIEU_LONG },
+      ],
+      branches:[
+        { id:'hien', name:'Hiền', short:'streak ≥ 7', form:'Triều Long Hiền', meaning:'thói quen đều đặn',
+          cond:{ op:'and', of:[ { key:'level_at_least', value:16 }, { key:'streak_at_least', value:7 } ] } },
+        { id:'chien-binh', name:'Chiến Binh', short:'Sức mạnh ≥ 80', form:'Triều Long Chiến Binh', meaning:'sức mạnh cao',
+          cond:{ op:'and', of:[ { key:'level_at_least', value:16 }, { key:'power_at_least', value:80 } ] } },
+      ],
+      hybridsWith:['flame','grass'],
+    },
+    {
+      id:'grass', element:'🌿', name:'Thảo', elementBg:'var(--olive)',
+      eggPat:'grass',
+      stages:[ // §2.5: tham chiếu Bulbasaur → Ivysaur → Venusaur (màu tham chiếu)
+        { atLevel:1,  id:'mam',        name:'Mầm',        desc:'hạt nảy mầm',            grid:MAM,         pal:PALS.MAM },
+        { atLevel:8,  id:'bup-xanh',   name:'Búp Xanh',   desc:'hươu lá',                grid:BUP_XANH,    pal:PALS.BUP_XANH },
+        { atLevel:16, id:'co-thu-linh',name:'Cổ Thụ Linh',desc:'linh thú cây cổ tích',   grid:CO_THU_LINH, pal:PALS.CO_THU_LINH },
+      ],
+      branches:[
+        { id:'hien', name:'Hiền', short:'streak ≥ 7', form:'Cổ Thụ Linh Hiền', meaning:'thói quen đều đặn',
+          cond:{ op:'and', of:[ { key:'level_at_least', value:16 }, { key:'streak_at_least', value:7 } ] } },
+        { id:'chien-binh', name:'Chiến Binh', short:'Sức mạnh ≥ 80', form:'Cổ Thụ Linh Chiến Binh', meaning:'sức mạnh cao',
+          cond:{ op:'and', of:[ { key:'level_at_least', value:16 }, { key:'power_at_least', value:80 } ] } },
+      ],
+      hybridsWith:['flame','water'],
+    },
+  ],
+  hybrids: [ // §2.3 form lai hiếm — điều kiện KÉP
+    { id:'hoi-nuoc-boc', name:'Hơi Nước Bốc', from:['flame','water'],
+      cond:{ op:'and', of:[ { key:'power_at_least', value:85 }, { key:'streak_at_least', value:10 } ] } },
+    { id:'diem-hoa', name:'Diễm Hoa', from:['grass','flame'],
+      cond:{ op:'and', of:[ { key:'power_at_least', value:85 }, { key:'streak_at_least', value:10 } ] } },
+    { id:'sen-mua', name:'Sen Mưa', from:['water','grass'],
+      cond:{ op:'and', of:[ { key:'power_at_least', value:85 }, { key:'streak_at_least', value:10 } ] } },
+  ],
+};
+const lineById = (id) => CATALOG.lines.find((l) => l.id === id);
+
+/* ============================================================
+   §1.2 MODULE HỆ — UI component đọc SYSTEMS[].ui để biết vẽ gì ở slot nào.
+   Mọi meter/timeline/cây trên màn hình đều map từ config này.
+   ============================================================ */
+const SYSTEMS = [
+  { id:'level', name:'Level & XP',
+    on:{ session_complete:'+1 XP mỗi phút focus', feed:'+5 XP' }, emits:['level_up'],
+    ui:[{ slot:'focus', type:'xpbar', label:'XP' }] },
+  { id:'power', name:'Sức mạnh',
+    on:{ session_complete:'+8 sức mạnh / phiên hoàn thành' },
+    decay:{ perIdleDay:-6, perGoalDay:-2 },
+    ui:[{ slot:'focus', type:'meter', label:'Sức mạnh', c1:'var(--red)', c2:'var(--red2)' }] },
+  { id:'evolution', name:'Tiến hoá',
+    on:{ level_up:'checkEvolution' },
+    rules:['egg → s1 (Lv.1) → s2 (Lv.8) → s3 (Lv.16)', 'Stage 3 chọn nhánh: Hiền ∨ Chiến Binh ∨ thường'],
+    ui:[{ slot:'evolve', type:'evo_timeline', line:'flame' }, { slot:'desktop', type:'evo_tree' }] },
+  { id:'collection', name:'Sưu tầm',
+    ui:[{ slot:'desktop', type:'hybrid_panel' }] },
+];
+function systemsUi(slot){
+  const out = [];
+  SYSTEMS.forEach((sy) => (sy.ui || []).forEach((u) => { if (u.slot === slot) out.push({ system:sy, ui:u }); }));
+  return out;
+}
+
+/* ─── §1.6 VÍ DỤ MỞ RỘNG — ngày mai thêm hệ Nhiệm vụ hằng ngày, KHÔNG đụng core:
+   registerSystem({ id:'daily_quests', on:{ session_complete: quests.check, feed: quests.check },
+                    ui:[{ slot:'home_bottom', type:'quest_list' }] });
+   registerConditionType('total_sessions_at_least', (s,v) => s.stats.totalSessions >= v);
+   Hệ Đấu trường: cond 'power_at_least' có sẵn → chỉ thêm config đối thủ. ─── */
+
+/* ============================================================
+   MEMPHIS UI KIT — block撞色 lệch phanh, chip, meter sọc in, deco
+   ============================================================ */
+function Block({ bg='var(--paper)', rotate=0, pad=14, style, children, tape }){
+  return (
+    <div style={{
+      background:bg, border:'3px solid var(--ink)', boxShadow:'5px 5px 0 var(--ink)',
+      transform: rotate ? `rotate(${rotate}deg)` : undefined,
+      padding:pad, position:'relative', ...style,
+    }}>
+      {tape && <div style={{ position:'absolute', top:-9, left:14, width:52, height:15, background:tape, border:'2.5px solid var(--ink)', transform:'rotate(-5deg)' }} />}
+      {children}
+    </div>
+  );
+}
+
+function Chip({ bg='var(--cream2)', color='var(--ink)', rotate=0, style, children }){
+  return (
+    <span className="f-mono" style={{
+      display:'inline-block', background:bg, color, fontSize:12.5, fontWeight:700,
+      border:'3px solid var(--ink)', padding:'4px 10px', boxShadow:'3px 3px 0 var(--ink)',
+      transform: rotate ? `rotate(${rotate}deg)` : undefined, ...style,
+    }}>{children}</span>
+  );
+}
+
+function CoinChip({ n }){
+  return <Chip bg="var(--paper)">🍣 × {n} sushi</Chip>;
+}
+
+function RetroBtn({ variant='red', onClick, disabled, style, children }){
+  return (
+    <button className={`rbtn rbtn-${variant} f-mono`} onClick={onClick} disabled={disabled} style={style}>
+      {children}
+    </button>
+  );
+}
+
+function Meter({ label, value, max=100, c1, c2 }){
+  const pct = Math.max(0, Math.min(100, Math.round(value / max * 100)));
+  return (
+    <div>
+      <div className="f-mono" style={{ display:'flex', justifyContent:'space-between', fontSize:12.5, fontWeight:700, marginBottom:5 }}>
+        <span>{label}</span><span>{value}/{max}</span>
+      </div>
+      <div style={{ height:14, border:'3px solid var(--ink)', background:'var(--paper)' }}>
+        <div style={{ width:pct+'%', height:'100%', background:`repeating-linear-gradient(45deg, ${c1} 0 7px, ${c2} 7px 14px)`, transition:'width .5s' }} />
+      </div>
+    </div>
+  );
+}
+
+/* Meter có VẠCH CAP theo level (§3): thang 0–100, vạch đứng tại cap(L) */
+function CapMeter({ label, value, cap, level, c1, c2 }){
+  const pct = Math.max(0, Math.min(100, value));
+  return (
+    <div>
+      <div className="f-mono" style={{ display:'flex', justifyContent:'space-between', fontSize:12.5, fontWeight:700, marginBottom:5 }}>
+        <span>{label}</span><span>{value}/{cap}</span>
+      </div>
+      <div style={{ position:'relative', height:15, border:'3px solid var(--ink)', background:'var(--paper)' }}>
+        <div style={{ width:pct+'%', height:'100%', background:`repeating-linear-gradient(45deg, ${c1} 0 7px, ${c2} 7px 14px)`, transition:'width .5s' }} />
+        <div style={{ position:'absolute', left:`calc(${cap}% - 2px)`, top:-5, bottom:-5, width:4, background:'var(--ink)' }} />
+      </div>
+      <div className="f-mono" style={{ fontSize:11, marginTop:4, opacity:.75 }}>
+        vạch cap: cap(L) = min(100, 40 + 6×L) → Lv.{level} → {cap}
+      </div>
+    </div>
+  );
+}
+
+function GoogleBtn(){
+  return (
+    <button className="rbtn gbtn f-mono">
+      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+        <path fill="#4285F4" d="M17.64 9.2045c0-.6381-.0573-1.2518-.1636-1.8409H9v3.4814h4.8436c-.2086 1.125-.8427 2.0782-1.7959 2.7164v2.2581h2.9087c1.7018-1.5668 2.6836-3.874 2.6836-6.615z"/>
+        <path fill="#34A853" d="M9 18c2.43 0 4.4673-.806 5.9564-2.1805l-2.9087-2.2581c-.8059.54-1.8368.859-3.0477.859-2.344 0-4.3282-1.5831-5.036-3.7104H.9573v2.3318C2.4382 15.9832 5.4818 18 9 18z"/>
+        <path fill="#FBBC05" d="M3.9641 10.71c-.18-.54-.2823-1.1168-.2823-1.71s.1023-1.17.2823-1.71V4.9582H.9573C.3477 6.1732 0 7.5477 0 9s.3477 2.8268.9573 4.0418L3.9641 10.71z"/>
+        <path fill="#EA4335" d="M9 3.5795c1.3214 0 2.5077.4541 3.4405 1.346l2.5713-2.5714C13.4632.8918 11.426 0 9 0 5.4818 0 2.4382 2.0168.9573 4.9582L3.9641 7.5864C4.6718 5.4623 6.6559 3.5795 9 3.5795z"/>
+      </svg>
+      <span>Đăng nhập bằng Google</span>
+    </button>
+  );
+}
+
+function NameTag({ name }){
+  return (
+    <span className="f-bungee" style={{
+      position:'absolute', top:-2, left:-4, background:'var(--red)', color:'var(--paper)',
+      fontSize:13, border:'3px solid var(--ink)', padding:'2px 9px',
+      boxShadow:'3px 3px 0 var(--ink)', transform:'rotate(-6deg)', zIndex:3,
+    }}>{name}</span>
+  );
+}
+
+/* Pet sprite MÀU — ỐM YẾU theo §2.4/§2.5 khi condition < 30:
+   form có sickGrid riêng (Tàn Lửa) → silhouette vẽ riêng + pale palette;
+   ngược lại rơi về fallback palePal (palette nhợt, outline giữ đậm). */
+function PetSprite({ stage, sick, scale=8, style }){
+  return (
+    <PixelArt
+      grid={sick ? (stage.sickGrid || stage.grid) : stage.grid}
+      palette={sick ? (stage.sickGrid ? stage.sickPal : palePal(stage.pal)) : stage.pal}
+      scale={scale} style={style} />
+  );
+}
+
+/* Sân khấu pet lớn §2.5: thẻ PetTile Memphis (giấy kem, viền mực, bóng cứng)
+   + HUD battle Gen-1 cạnh pet — KHÔNG còn màn DMG đơn sắc.
+   hud = { name, level, value } (value = Thể trạng) → critical khi sick.
+   §2.4 khi sick: sprite shiver (CSS .pet-sick) + vũng bóng tối dưới chân +
+   2 giọt mồ hôi mực bay quanh đầu + bubble "…" phía trên đầu. */
+function PetStage({ stage, sick, scale=8, bounce=false, name, hud, rotate=-0.7, style }){
+  return (
+    <div style={{ position:'relative', marginTop:14, ...style }}>
+      <div style={{ display:'flex', justifyContent:'center' }}>
+        <div style={{ position:'relative' }}>
+          {name && <NameTag name={(sick ? name + ' · ốm' : name).toUpperCase()} />}
+          {sick && (
+            <div className="sick-bubble f-mono" style={{ top:-16, right:-18, fontSize:15, fontWeight:700,
+              background:'var(--paper)', color:'var(--ink)', border:'2.5px solid var(--ink)',
+              borderRadius:'50%', padding:'3px 8px 5px', boxShadow:'2.5px 2.5px 0 var(--ink)', lineHeight:1 }}>
+              …
+            </div>
+          )}
+          {sick && (
+            <>
+              <div className="sick-sweat" style={{ top:'26%', left:'10%' }} />
+              <div className="sick-sweat r" style={{ top:'40%', right:'10%', animationDelay:'.75s' }} />
+            </>
+          )}
+          <PetTile scale={scale} rotate={rotate}>
+            <div className={sick ? 'pet-sick' : (bounce ? 'pet-bounce' : '')} style={{ display:'flex', position:'relative' }}>
+              {sick && (
+                <div style={{ position:'absolute', left:'50%', bottom:scale*2.1, transform:'translateX(-50%)',
+                  width:13*scale, height:Math.max(4, Math.round(scale*.8)), background:'rgba(38,32,29,.82)',
+                  borderRadius:'50%', opacity:.82 }} />
+              )}
+              {!sick && (
+                <div style={{ position:'absolute', left:'50%', bottom:Math.round(scale*0.4), transform:'translateX(-50%)',
+                  width:12*scale, height:Math.max(3, Math.round(scale*.5)), background:'rgba(38,32,29,.16)',
+                  borderRadius:'50%' }} />
+              )}
+              <PetSprite stage={stage} sick={sick} scale={scale} />
+            </div>
+          </PetTile>
+        </div>
+      </div>
+      {hud && (
+        <div style={{ display:'flex', justifyContent:'flex-end', marginTop:-16, paddingRight:4, position:'relative', zIndex:3 }}>
+          <div style={{ transform:'rotate(1.2deg)' }}>
+            <BattleHUD name={hud.name} level={hud.level} value={hud.value} critical={sick} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Deco({ t, color, size=44, rotate=0, style }){
+  const common = { position:'absolute', width:size, height:size, transform:`rotate(${rotate}deg)`, ...style };
+  if (t === 'squiggle') return <svg style={common} viewBox="0 0 44 16"><path d="M2 12 Q 8 2 14 12 T 26 12 T 38 12" fill="none" stroke={color} strokeWidth="3.5" strokeLinecap="round"/></svg>;
+  if (t === 'zigzag')   return <svg style={common} viewBox="0 0 44 14"><polyline points="2,12 9,2 16,12 23,2 30,12 37,2 42,10" fill="none" stroke={color} strokeWidth="3.5" strokeLinejoin="round"/></svg>;
+  if (t === 'dots')     return <svg style={common} viewBox="0 0 44 44">{[0,1,2].map(r => [0,1,2].map(c => <circle key={`${r}${c}`} cx={8+c*14} cy={8+r*14} r="4" fill={color} />))}</svg>;
+  if (t === 'tri')      return <svg style={common} viewBox="0 0 44 44"><polygon points="22,4 40,40 4,40" fill="none" stroke={color} strokeWidth="3.5" strokeLinejoin="round"/></svg>;
+  if (t === 'ring')     return <svg style={common} viewBox="0 0 44 44"><circle cx="22" cy="22" r="17" fill="none" stroke={color} strokeWidth="4"/></svg>;
+  if (t === 'plus')     return <svg style={common} viewBox="0 0 44 44"><path d="M22 6v32M6 22h32" stroke={color} strokeWidth="4" strokeLinecap="round"/></svg>;
+  if (t === 'half')     return <svg style={common} viewBox="0 0 44 24"><path d="M4 20a18 18 0 0136 0" fill="none" stroke={color} strokeWidth="4" strokeLinecap="round"/></svg>;
+  return null;
+}
+
+function ScreenDeco(){
+  return (
+    <>
+      <Deco t="dots" color="var(--mustard)" size={46} style={{ top:12, right:8 }} />
+      <Deco t="ring" color="var(--olive)" size={34} style={{ top:170, right:-4 }} />
+      <Deco t="squiggle" color="var(--red)" size={64} style={{ top:340, left:0 }} />
+    </>
+  );
+}
+
+function ScreenBody({ children }){
+  return (
+    <div style={{ minHeight:'100%', background:'var(--cream)', position:'relative' }}>
+      <ScreenDeco />
+      <div style={{ position:'relative', padding:'10px 14px 12px' }}>{children}</div>
+    </div>
+  );
+}
+
+const DAYS = ['T2','T3','T4','T5','T6','T7','CN'];
+const DAY_ROT = ['-1.5','1.2','-0.8','1.6','-1.2','0.9','-1.6'];
+
+function DayCells({ today='T6', scale=3 }){
+  return (
+    <div style={{ display:'flex', gap:6, marginTop:12 }}>
+      {DAYS.map((d,i) => {
+        const on = d === today;
+        return (
+          <div key={d} style={{
+            flex:1, textAlign:'center', border:'3px solid var(--ink)',
+            background: on ? 'var(--blue)' : 'var(--paper)',
+            padding:'7px 0 5px', boxShadow:'3px 3px 0 var(--ink)',
+            transform:`rotate(${DAY_ROT[i]}deg)`,
+          }}>
+            <PixelArt grid={FLAME_GRID} palette={FLAME_PAL} scale={scale} style={{ margin:'0 auto' }} />
+            <div className="f-mono" style={{ fontSize:12, fontWeight:700, marginTop:3, color: on ? 'var(--paper)' : 'var(--ink)' }}>{on ? 'nay' : d}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+const HISTORY = [
+  ['06:58','Tập trung','32 phút','+32 XP'],
+  ['07:31','Cho Tàn Lửa ăn','1 sushi','+5 XP · −1 🍣'],
+  ['08:02','Tập trung','40 phút','+40 XP'],
+  ['09:47','Tập trung','40 phút','+40 XP'],
+];
+
+function SyncPanel(){
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap:12, flexWrap:'wrap' }}>
+      <div style={{
+        width:44, height:44, borderRadius:'50%', border:'3px solid var(--ink)',
+        background:'var(--purple)', color:'var(--paper)', display:'flex', alignItems:'center', justifyContent:'center',
+        fontFamily:"'Bungee',cursive", fontSize:14, boxShadow:'3px 3px 0 var(--ink)', flexShrink:0,
+      }}>MA</div>
+      <div style={{ flex:1, minWidth:150 }}>
+        <div className="f-serif" style={{ fontSize:18, color:'var(--paper)' }}>Minh Anh</div>
+        <div className="f-mono" style={{ fontSize:12, color:'var(--paper)', marginTop:2 }}>Đã đồng bộ · web ↔ Android · 2 phút trước</div>
+      </div>
+      <GoogleBtn />
+    </div>
+  );
+}
+
+/* ============================================================
+   THANH THỐNG KÊ TRONG PHONE — render từ SYSTEMS[].ui (slot 'focus')
+   (thể trạng thuộc core §1.1 nên không phải module hệ)
+   ============================================================ */
+function SystemFocusPanel({ pet }){
+  const need = FORMULAS.xpNeed(pet.level);
+  const cap = FORMULAS.powerCap(pet.level);
+  const rows = systemsUi('focus');
+  return (
+    <Block bg="var(--paper)" rotate={-0.7} pad={12} style={{ marginTop:14 }}>
+      {rows.map(({ system, ui }) => ui.type === 'xpbar'
+        ? (
+          <div key={system.id}>
+            <div className="f-mono" style={{ display:'flex', justifyContent:'space-between', fontSize:12.5, fontWeight:700, marginBottom:5 }}>
+              <span>{ui.label} · Lv.{pet.level} · {pet.xp}/{need}</span>
+              <span>{Math.round(pet.xp/need*100)}%</span>
+            </div>
+            <div style={{ height:15, border:'3px solid var(--ink)', background:'var(--paper)' }}>
+              <div style={{ width:Math.round(pet.xp/need*100)+'%', height:'100%', background:'repeating-linear-gradient(45deg, var(--mustard) 0 7px, var(--mustard2) 7px 14px)' }} />
+            </div>
+            <div className="f-mono" style={{ fontSize:11, marginTop:4, opacity:.75 }}>
+              need(L) = 80 + 30×L → lên Lv.{pet.level+1} cần {need} XP
+            </div>
+          </div>
+        )
+        : (
+          <div key={system.id} style={{ marginTop:12 }}>
+            <CapMeter label={ui.label} value={pet.power} cap={cap} level={pet.level} c1={ui.c1} c2={ui.c2} />
+          </div>
+        )
+      )}
+      <div style={{ marginTop:12 }}>
+        <Meter label={`Thể trạng · ${condStatus(pet.condition)}`} value={pet.condition} max={100} c1="var(--purple)" c2="var(--purple2)" />
+      </div>
+      <div className="f-mono" style={{ fontSize:11, marginTop:6, opacity:.75 }}>
+        condition nằm trong core (§1.1) — không phải module hệ
+      </div>
+    </Block>
+  );
+}
+
+/* ============================================================
+   MÀN ① — CHỌN TRỨNG (render 3 trứng nguyên tố từ CATALOG)
+   ============================================================ */
+function EggScreen({ picked, onPick, msg, onAdopt }){
+  const chosen = lineById(picked);
+  const nextStage = chosen.stages[1];
+  return (
+    <ScreenBody>
+      <Block bg="var(--mustard)" rotate={-1.2} pad={14} tape="var(--blue)">
+        <h2 className="f-serif" style={{ margin:0, fontSize:28, lineHeight:1.1 }}>Chọn quả trứng</h2>
+        <div className="f-mono" style={{ fontSize:12.5, marginTop:4 }}>3 line nguyên tố · mỗi trứng nở thành một người bạn pixel</div>
+      </Block>
+
+      <div style={{ marginTop:20, display:'flex', flexDirection:'column', gap:16 }}>
+        {CATALOG.lines.map((line,i) => (
+          <div key={line.id} className={`eggcard${picked===line.id ? ' picked' : ''}`}
+               style={{ '--rot':`${[-1.6,1.3,-0.9][i]}deg` }}
+               onClick={() => onPick(line.id)}>
+            <PetTile lite scale={5}><PixelArt grid={eggGridFor(line)} palette={EGG_PAL[line.eggPat]} scale={5} /></PetTile>
+            <div style={{ flex:1 }}>
+              <div className="f-bungee" style={{ fontSize:15.5 }}>{line.element} Trứng {line.name}</div>
+              <div className="f-mono" style={{ fontSize:12, marginTop:3 }}>
+                nở thành <b>{line.stages[0].name}</b> · {line.stages[0].desc}
+              </div>
+            </div>
+            {picked===line.id && <span className="f-mono pickbadge">ĐÃ CHỌN</span>}
+          </div>
+        ))}
+      </div>
+
+      <RetroBtn variant="red" style={{ width:'100%', marginTop:20 }} onClick={onAdopt}>
+        Nhận {chosen.stages[0].name} về nhà
+      </RetroBtn>
+
+      {msg && (
+        <Block bg="var(--olive)" rotate={-0.8} pad={12} style={{ marginTop:16, color:'var(--paper)' }}>
+          <div className="f-bungee" style={{ fontSize:13 }}>CHÀO ĐÓN THÀNH VIÊN MỚI!</div>
+          <div className="f-serif" style={{ fontSize:16.5, marginTop:3 }}>{msg}</div>
+          <div className="f-mono" style={{ fontSize:11.5, marginTop:5, opacity:.9 }}>
+            mốc kế: Lv.{nextStage.atLevel} → {nextStage.name} (đọc từ CATALOG)
+          </div>
+        </Block>
+      )}
+    </ScreenBody>
+  );
+}
+
+/* ============================================================
+   MÀN ② — ĐANG TẬP TRUNG (24:31 · Sức mạnh 62/64 · Thể trạng 78)
+   ============================================================ */
+function FocusScreen({ pet, paused, sick, stage, onTogglePause, onShowEvolve }){
+  return (
+    <ScreenBody>
+      <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+        <Chip bg={sick ? 'var(--red)' : (paused ? 'var(--mustard)' : 'var(--olive)')}
+              color={sick || !paused ? 'var(--paper)' : 'var(--ink)'} rotate={-1}>
+          {sick ? 'Ốm yếu vẫn tập chậm · ' : ''}{paused ? 'Đã tạm dừng' : 'Đang tập trung'} · phiên 2/4
+        </Chip>
+        <Chip bg="var(--blue)" color="var(--paper)" rotate={1}>Lv.{pet.level}</Chip>
+        <CoinChip n={pet.coins} />
+      </div>
+
+      <Block bg="var(--blue)" rotate={-1} pad="14px 16px" style={{ marginTop:14, textAlign:'center' }}>
+        <div className="f-bungee" style={{ fontSize:58, color:'var(--paper)', lineHeight:1.02 }}>24:31</div>
+        <div className="f-mono" style={{ fontSize:12.5, color:'var(--paper)', marginTop:5, letterSpacing:1 }}>
+          POMODORO 25 PHÚT · LƯỢT 2/4 · MỤC TIÊU NGÀY ≥ 3 PHIÊN
+        </div>
+      </Block>
+
+      <PetStage stage={stage} sick={sick} scale={6} name="Tàn Lửa" bounce={!paused && !sick}
+                hud={{ name:'TÀN LỬA', level:pet.level, value:pet.condition }} />
+
+      <SystemFocusPanel pet={pet} />
+
+      <div className="f-mono" style={{ fontSize:11.5, textAlign:'center', marginTop:12, opacity:.8 }}>
+        hoàn thành phiên: +1 XP/phút · +8 sức mạnh — cho ăn: +5 XP
+      </div>
+
+      <div style={{ display:'flex', gap:12, marginTop:14 }}>
+        <RetroBtn variant="purple" style={{ flex:1 }} onClick={onTogglePause}>
+          {paused ? 'Tiếp tục' : 'Tạm dừng'}
+        </RetroBtn>
+        <RetroBtn variant="red" style={{ flex:1.2 }} onClick={onShowEvolve}>
+          Xem tiến hoá →
+        </RetroBtn>
+      </div>
+    </ScreenBody>
+  );
+}
+
+/* ============================================================
+   MÀN ③ — KHOẢNH KHẮC TIẾN HOÁ (phone ③ mở thẳng vào đây)
+   · timeline line Lửa render từ CATALOG (slot 'evolve' của hệ evolution)
+   · "Mô phỏng tiến hoá": lóe sáng + rung → đổi form
+   · panel nhánh Stage 3 render từ registry COND
+   ============================================================ */
+function BranchCard({ b, pet, rotate }){
+  const ok = evalCond(pet, b.cond);
+  const c1 = ok ? 'var(--olive)' : 'var(--red)';
+  const c2 = ok ? 'var(--olive2)' : 'var(--red2)';
+  return (
+    <div style={{
+      flex:1, minWidth:0, background: ok ? '#EAF0DC' : 'var(--paper)',
+      border:'3px solid var(--ink)', boxShadow:'4px 4px 0 var(--ink)',
+      padding:'10px 11px', transform:`rotate(${rotate}deg)`, position:'relative',
+    }}>
+      {ok && <span className="f-mono pickbadge" style={{ background:'var(--olive)' }}>ĐẠT</span>}
+      <div className="f-bungee" style={{ fontSize:15 }}>{b.name}</div>
+      <div className="f-mono" style={{ fontSize:12, fontWeight:700, marginTop:3, color:'var(--red)' }}>
+        {b.name} — {b.short}
+      </div>
+      <div className="f-mono" style={{ fontSize:11, marginTop:2, opacity:.8 }}>
+        điều kiện registry: {describeCond(b.cond)}
+      </div>
+      {b.cond.of.map((leaf, j) => {
+        const cur = LEAF_VALUE[leaf.key](pet);
+        const pct = Math.max(0, Math.min(100, Math.round(cur / leaf.value * 100)));
+        return (
+          <div key={j} style={{ marginTop:7 }}>
+            <div className="f-mono" style={{ display:'flex', justifyContent:'space-between', fontSize:11.5, fontWeight:700 }}>
+              <span>{describeCond(leaf)}</span><span>{cur}/{leaf.value}</span>
+            </div>
+            <div style={{ height:10, border:'2.5px solid var(--ink)', background:'var(--paper)', marginTop:3 }}>
+              <div style={{ width:pct+'%', height:'100%', background:`repeating-linear-gradient(45deg, ${c1} 0 6px, ${c2} 6px 12px)`, transition:'width .5s' }} />
+            </div>
+          </div>
+        );
+      })}
+      <div className="f-mono" style={{ fontSize:11, marginTop:7, opacity:.85 }}>form: {b.form}</div>
+    </div>
+  );
+}
+
+function EvolveScreen({ pet, sick, onBack }){
+  // slot 'evolve' của hệ evolution chỉ định line nào được mô phỏng
+  const evoUi = systemsUi('evolve').find((x) => x.ui.type === 'evo_timeline');
+  const line = lineById(evoUi.ui.line);
+  const stages = line.stages;
+  const [idx, setIdx] = useState(0);        // 0=Tàn Lửa → 1=Bồng Bột → 2=Diễm Long
+  const [flashing, setFlashing] = useState(false);
+  const [msg, setMsg] = useState(null);
+  const cur = stages[idx];
+  const final = idx >= stages.length - 1;
+  // §2.5: grid game-ready 32/40/48 — scale theo canvas để hero ~190px mỗi form
+  const heroScale = cur.grid.length >= 48 ? 4 : (cur.grid.length >= 40 ? 5 : 6);
+
+  const simulateEvo = () => {
+    if (flashing || final) return;
+    setFlashing(true);
+    setTimeout(() => {
+      setMsg(stages[idx].name + ' đã tiến hoá thành ' + stages[idx+1].name + ' — dáng hẳn đổi, level giữ nguyên!');
+      setIdx(idx + 1);
+      setFlashing(false);
+    }, 950);
+  };
+  const resetEvo = () => { setIdx(0); setMsg(null); };
+
+  return (
+    <ScreenBody>
+      <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+        <Chip bg="var(--purple)" color="var(--paper)" rotate={-1.2}>KHOẢNH KHẮC TIẾN HOÁ</Chip>
+        <Chip rotate={0.8}>Lv.{pet.level} · mốc kế Lv.{stages[Math.min(idx+1, stages.length-1)].atLevel}</Chip>
+      </div>
+
+      {/* Sân khấu sprite — thẻ PetTile Memphis + lóe sáng + rung rồi pop sang form mới */}
+      <Block bg="var(--mustard)" rotate={-1} pad="18px 14px 12px" style={{ marginTop:16 }}>
+        <div style={{ display:'flex', justifyContent:'center' }}>
+          <div style={{ position:'relative' }}>
+            <NameTag name={cur.name.toUpperCase()} />
+            <PetTile scale={heroScale} rotate={-0.6}>
+              <div className={flashing ? 'evo-wiggle' : ''} style={{ display:'flex', position:'relative' }}>
+                <div key={cur.id + (sick ? '-sick' : '')} className="pet-pop">
+                  <PetSprite stage={cur} sick={sick} scale={heroScale} />
+                </div>
+                {flashing && (
+                  <div className="evo-flash" style={{
+                    position:'absolute', inset:-36, pointerEvents:'none',
+                    background:'radial-gradient(circle, rgba(255,253,246,.97) 14%, rgba(227,167,47,.8) 44%, rgba(251,245,233,0) 70%)',
+                  }} />
+                )}
+              </div>
+            </PetTile>
+          </div>
+        </div>
+        <div style={{ display:'flex', justifyContent:'flex-end', marginTop:-14, paddingRight:4, position:'relative', zIndex:3 }}>
+          <div style={{ transform:'rotate(1.1deg)' }}>
+            <BattleHUD name={cur.name.toUpperCase()} level={pet.level} value={pet.condition} critical={sick} />
+          </div>
+        </div>
+        <div className="f-mono" style={{ fontSize:12.5, fontWeight:700, marginTop:10, textAlign:'center' }}>
+          {cur.desc} · mở tại Lv.≥{cur.atLevel}
+        </div>
+      </Block>
+
+      {msg && (
+        <Block bg="var(--red)" rotate={0.8} pad={10} style={{ marginTop:14 }}>
+          <div className="f-bungee" style={{ fontSize:13.5, color:'var(--paper)' }}>✨ TIẾN HOÁ THÀNH CÔNG!</div>
+          <div className="f-serif" style={{ fontSize:17, color:'var(--paper)', marginTop:2 }}>{msg}</div>
+        </Block>
+      )}
+
+      {/* Timeline tiến hoá — render từ CATALOG (trứng + 3 stage) */}
+      <Block bg="var(--cream2)" rotate={0.6} pad={10} style={{ marginTop:16 }}>
+        <div className="f-bungee" style={{ fontSize:12.5 }}>TIMELINE LINE LỬA — ĐỌC TỪ CATALOG</div>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:10 }}>
+          <div style={{ textAlign:'center', opacity:.7 }}>
+            <PetTile lite scale={4}><PixelArt grid={eggGridFor(line)} palette={EGG_PAL[line.eggPat]} scale={4} /></PetTile>
+            <div className="f-mono" style={{ fontSize:10.5, fontWeight:700, marginTop:3 }}>Trứng</div>
+          </div>
+          <svg width="18" height="16" viewBox="0 0 22 18" style={{ flexShrink:0 }}>
+            <path d="M2 9h14M12 3l6 6-6 6" fill="none" stroke="var(--ink)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          {stages.map((st, i) => (
+            <React.Fragment key={st.id}>
+              <div style={{
+                textAlign:'center', padding:'5px 4px 3px',
+                border: i === idx ? '3px solid var(--red)' : '3px solid transparent',
+                background: i === idx ? '#FBF0D2' : 'transparent',
+                boxShadow: i === idx ? '3px 3px 0 var(--red2)' : 'none',
+                opacity: i === idx ? 1 : .45,
+                transform: i === idx ? 'translateY(-3px)' : 'none',
+              }}>
+                <PetTile lite scale={2}><PixelArt grid={st.grid} palette={st.pal} scale={2} /></PetTile>
+                <div className="f-mono" style={{ fontSize:10.5, fontWeight:700, marginTop:3 }}>{st.name}</div>
+              </div>
+              {i < stages.length - 1 && (
+                <svg width="16" height="16" viewBox="0 0 22 18" style={{ flexShrink:0 }}>
+                  <path d="M2 9h14M12 3l6 6-6 6" fill="none" stroke="var(--ink)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+        <div className="f-mono" style={{ fontSize:10.5, marginTop:8, opacity:.75 }}>
+          {line.stages.map((st) => `Lv.${st.atLevel} ${st.name}`).join(' → ')}
+        </div>
+      </Block>
+
+      <div style={{ display:'flex', gap:12, marginTop:14 }}>
+        <RetroBtn variant="red" style={{ flex:1.6 }} disabled={final || flashing} onClick={simulateEvo}>
+          {flashing ? 'Đang lóe sáng…' : (final ? 'Đã ở form cuối' : 'Mô phỏng tiến hoá')}
+        </RetroBtn>
+        <RetroBtn variant="ghost" style={{ flex:1 }} disabled={flashing} onClick={resetEvo}>
+          ↺ Về Tàn Lửa
+        </RetroBtn>
+      </div>
+      <RetroBtn variant="ghost" style={{ width:'100%', marginTop:10 }} onClick={onBack}>
+        ← Về phiên tập trung
+      </RetroBtn>
+
+      {/* Panel nhánh Stage 3 — 2 thẻ điều kiện đọc từ registry COND */}
+      <Block bg="var(--purple)" rotate={1} pad={12} style={{ marginTop:18 }}>
+        <div className="f-bungee" style={{ fontSize:13, color:'var(--paper)' }}>NHÁNH STAGE 3 — CHỌN 1 TRONG 2 (REGISTRY COND)</div>
+        <div style={{ display:'flex', gap:10, marginTop:10, alignItems:'stretch' }}>
+          {line.branches.map((b, i) => (
+            <BranchCard key={b.id} b={b} pet={pet} rotate={i === 0 ? -1.2 : 1.1} />
+          ))}
+        </div>
+        <div className="f-mono" style={{ fontSize:11.5, color:'var(--paper)', marginTop:10, opacity:.9 }}>
+          mặc định: chỉ Lv ≥ 16 → {stages[2].name} form thường · form lai xem ở desktop
+        </div>
+      </Block>
+    </ScreenBody>
+  );
+}
+
+/* ============================================================
+   MÀN ĂN — cho ăn: −1 sushi · +5 XP · +15 thể trạng → "thích lắm!"
+   ============================================================ */
+function FeedScreen({ pet, fed, sick, stage, onFeed }){
+  return (
+    <ScreenBody>
+      <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+        <Chip bg="var(--olive)" color="var(--paper)" rotate={-1}>PHÒNG ĂN · BỮA SUSHI</Chip>
+        <CoinChip n={pet.coins} />
+      </div>
+
+      <div style={{ position:'relative' }}>
+        <PetStage stage={stage} sick={sick} scale={6} name="Tàn Lửa" bounce={fed && !sick} rotate={0.8}
+                  hud={{ name:'TÀN LỬA', level:pet.level, value:pet.condition }} />
+        {fed && (
+          <div style={{ position:'absolute', top:26, right:'16%', width:56, height:74, pointerEvents:'none', zIndex:3 }}>
+            {[0,1].map(i => (
+              <span key={i} className="zzz f-bungee" style={{
+                left:i*16, top:38-i*15, fontSize:21-i*5,
+                color: i===1 ? 'var(--purple)' : 'var(--red)', animationDelay:`${i*0.9}s`,
+              }}>♥</span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {fed ? (
+        <Block bg="var(--mustard)" rotate={-1.2} pad={12} tape="var(--red)" style={{ textAlign:'center' }}>
+          <div className="f-bungee" style={{ fontSize:17 }}>Tàn Lửa thích lắm!</div>
+          <div className="f-mono" style={{ fontSize:12.5, marginTop:4 }}>
+            +5 XP · +15 thể trạng · đã ăn 1 sushi (túi còn {pet.coins})
+          </div>
+        </Block>
+      ) : (
+        <div className="f-serif" style={{ fontStyle:'italic', fontSize:20, textAlign:'center' }}>
+          Bé Tàn Lửa đang đói bụng…
+        </div>
+      )}
+
+      <Block bg="var(--paper)" rotate={0.8} pad={12} style={{ marginTop:16 }}>
+        <Meter label={`Thể trạng · ${condStatus(pet.condition)}`} value={pet.condition} max={100} c1="var(--purple)" c2="var(--purple2)" />
+        <div className="f-mono" style={{ fontSize:11.5, marginTop:8, opacity:.85 }}>
+          cho ăn = +5 XP (hệ level) · +15 thể trạng (core) · −1 sushi coin
+        </div>
+      </Block>
+
+      <RetroBtn variant="red" style={{ width:'100%', marginTop:16 }} onClick={onFeed} disabled={pet.coins === 0}>
+        Cho ăn 1 sushi (còn {pet.coins})
+      </RetroBtn>
+      <div className="f-mono" style={{ fontSize:12, textAlign:'center', marginTop:8 }}>
+        XP cho ăn cũng giúp bé lên level — đường lên Lv.8 nhanh hơn
+      </div>
+    </ScreenBody>
+  );
+}
+
+/* ============================================================
+   MÀN ④ — THỐNG KÊ & ĐỒNG BỘ (+ nút Mô phỏng bỏ bê 5 ngày)
+   ============================================================ */
+function StatsScreen({ pet, sick, stage, onNeglect }){
+  const flame = lineById('flame');
+  const nextStage = flame.stages.find((st) => st.atLevel > pet.level);
+  return (
+    <ScreenBody>
+      <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+        <Chip bg="var(--blue)" color="var(--paper)" rotate={-1}>SỔ TAY NUÔI BÉ</Chip>
+        <CoinChip n={pet.coins} />
+      </div>
+
+      <Block bg="var(--red)" rotate={-0.9} pad={12} style={{ marginTop:12 }}>
+        <div className="f-bungee" style={{ fontSize:20, color:'var(--paper)' }}>Streak 7 ngày 🔥</div>
+        <div className="f-mono" style={{ fontSize:12.5, color:'var(--paper)', marginTop:2 }}>
+          7 ngày liên tiếp · đủ mục tiêu ≥ 3 phiên/ngày
+        </div>
+        <DayCells />
+      </Block>
+
+      <Block bg="var(--mustard)" rotate={0.9} pad={12} style={{ marginTop:16 }}>
+        <div className="f-mono" style={{ fontSize:12.5, fontWeight:700 }}>HÔM NAY</div>
+        <div style={{ display:'flex', alignItems:'baseline', gap:8, marginTop:2, flexWrap:'wrap' }}>
+          <span className="f-bungee" style={{ fontSize:34 }}>{pet.todayMinutes}</span>
+          <span className="f-serif" style={{ fontSize:19 }}>phút</span>
+          <span className="f-bungee" style={{ fontSize:24, color:'var(--red)' }}>· {pet.todaySessions}</span>
+          <span className="f-serif" style={{ fontSize:19 }}>phiên</span>
+          <span className="f-mono" style={{ fontSize:12.5, fontWeight:700, marginLeft:'auto' }}>+120 XP</span>
+        </div>
+      </Block>
+
+      {/* Thẻ pet: sprite đổi sang biến thể ỐM YẾU theo §2.4 khi condition < 30 */}
+      <Block bg="var(--cream2)" rotate={-0.6} pad={12} tape="var(--blue)" style={{ marginTop:16 }}>
+        <div style={{ display:'flex', gap:12, alignItems:'center' }}>
+          <div className={sick ? 'pet-sick' : 'pet-bounce'} style={{ flexShrink:0 }}>
+            <PetTile lite scale={3} rotate={-1.5}>
+              <PetSprite stage={stage} sick={sick} scale={3} />
+            </PetTile>
+          </div>
+          <div style={{ flex:1, minWidth:0 }}>
+            <div className="f-serif" style={{ fontStyle:'italic', fontSize:16 }}>Tàn Lửa · Lv.{pet.level} · 120/200 XP</div>
+            <div style={{ marginTop:6 }}>
+              <Meter label="Sức mạnh" value={pet.power} max={FORMULAS.powerCap(pet.level)} c1="var(--red)" c2="var(--red2)" />
+            </div>
+            <div style={{ marginTop:6 }}>
+              <Meter label={`Thể trạng · ${condStatus(pet.condition)}`} value={pet.condition} max={100} c1="var(--purple)" c2="var(--purple2)" />
+            </div>
+          </div>
+        </div>
+        <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginTop:10 }}>
+          <Chip bg="var(--blue)" color="var(--paper)" rotate={-1.2}>Sắp tiến hoá: Lv.{nextStage.atLevel} → {nextStage.name}</Chip>
+          <Chip rotate={1}>{sick ? 'TRẠNG THÁI: ỐM YẾU' : 'TRẠNG THÁI: ' + condStatus(pet.condition).toUpperCase()}</Chip>
+        </div>
+
+        {sick && (
+          <Block bg="var(--red)" rotate={0.6} pad={10} style={{ marginTop:10 }}>
+            <div className="f-bungee" style={{ fontSize:13.5, color:'var(--paper)' }}>⚠ LEVEL GIỮ NGUYÊN — NGOẠI HÌNH ỐM YẾU</div>
+            <div className="f-mono" style={{ fontSize:12, color:'var(--paper)', marginTop:4 }}>
+              Sức mạnh 62 → {pet.power} (−6/ngày bỏ bê) · Thể trạng 78 → {pet.condition} (−10/ngày) · XP & Lv không mất
+            </div>
+            <div className="f-serif" style={{ fontStyle:'italic', fontSize:15.5, color:'var(--paper)', marginTop:5 }}>
+              Phục hồi: cho ăn mỗi ngày (+15 thể trạng/lần) + duy trì ≥ 1 phiên/ngày × 3 ngày → Khỏe lại (≥ 70)
+            </div>
+          </Block>
+        )}
+
+        <RetroBtn variant={sick ? 'ghost' : 'olive'} style={{ width:'100%', marginTop:10 }} disabled={sick} onClick={onNeglect}>
+          {sick ? 'Đã bỏ bê 5 ngày — bé đang ốm' : 'Mô phỏng bỏ bê 5 ngày'}
+        </RetroBtn>
+        <div className="f-mono" style={{ fontSize:11, textAlign:'center', marginTop:5, opacity:.8 }}>
+          áp decay §3: sức mạnh −6/ngày · thể trạng −10/ngày → sprite rũ xuống theo patch §2.4
+        </div>
+      </Block>
+
+      <Block bg="var(--blue)" rotate={-0.8} pad={12} style={{ marginTop:16 }}>
+        <div className="f-bungee" style={{ fontSize:13, color:'var(--paper)', marginBottom:8 }}>ĐỒNG BỘ THIẾT BỊ</div>
+        <SyncPanel />
+      </Block>
+
+      <Block bg="var(--paper)" rotate={0.7} pad={12} style={{ marginTop:16 }}>
+        <div className="f-bungee" style={{ fontSize:13 }}>LỊCH SỬ PHIÊN · HÔM NAY</div>
+        <div style={{ marginTop:4 }}>
+          {HISTORY.map((h,i) => (
+            <div key={i} className="f-mono" style={{
+              display:'flex', justifyContent:'space-between', gap:8, fontSize:12.5,
+              padding:'5px 2px', borderBottom: i < HISTORY.length-1 ? '2px dashed rgba(38,32,29,.35)' : 'none',
+            }}>
+              <span style={{ fontWeight:700 }}>{h[0]}</span>
+              <span>{h[1]} · {h[2]}</span>
+              <span style={{ fontWeight:700, color: h[3].startsWith('+') ? 'var(--olive)' : 'var(--red)' }}>{h[3]}</span>
+            </div>
+          ))}
+        </div>
+      </Block>
+    </ScreenBody>
+  );
+}
+
+/* ============================================================
+   PHONE = state-machine mini độc lập (4 tab + màn evolve trong tab Tập)
+   ============================================================ */
+const TABS = [
+  { id:'egg',   label:'Trứng', on:'var(--mustard)', tx:'var(--ink)' },
+  { id:'train', label:'Tập',   on:'var(--red)',     tx:'var(--paper)' },
+  { id:'feed',  label:'Ăn',    on:'var(--olive)',   tx:'var(--paper)' },
+  { id:'stats', label:'Stats', on:'var(--blue)',    tx:'var(--paper)' },
+];
+const TAB_ROT = ['-1.6','1.2','-1','1.6'];
+
+function TabBar({ tab, setTab }){
+  return (
+    <div style={{ padding:'10px 12px 14px', background:'var(--cream)', borderTop:'3px solid var(--ink)', display:'flex', gap:8 }}>
+      {TABS.map((t,i) => {
+        const on = tab === t.id;
+        return (
+          <button key={t.id} className={`ptab${on ? ' on' : ''}`}
+                  style={{ '--tr':`${TAB_ROT[i]}deg`, ...(on ? { background:t.on, color:t.tx } : null) }}
+                  onClick={() => setTab(t.id)}>
+            {t.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* §3 State fixture dùng chung — mỗi phone clone một bản riêng */
+const FIXTURE = {
+  level:4, xp:120, power:62, condition:78, coins:12,
+  streak:7, todaySessions:3, todayMinutes:112, healthyDays:3,
+};
+
+function PhoneApp({ initialTab='egg', initialScreen='focus' }){
+  const [tab, setTab] = useState(initialTab);
+  const [screen, setScreen] = useState(initialScreen); // trong tab Tập: 'focus' | 'evolve'
+  const [pet, setPet] = useState({ ...FIXTURE });
+  const [paused, setPaused] = useState(false);
+  const [fed, setFed] = useState(false);
+  const [picked, setPicked] = useState('flame');
+  const [adoptMsg, setAdoptMsg] = useState(null);
+
+  const flame = lineById('flame');
+  const stage = flame.stages[0];          // hero: Tàn Lửa
+  const sick = pet.condition < 30;        // §3: <30 → Ốm yếu (sprite ốm)
+
+  const feed = () => {
+    if (pet.coins > 0){
+      setPet((p) => ({ ...p, coins:p.coins - 1, xp:p.xp + 5, condition:Math.min(100, p.condition + 15) }));
+      setFed(true);
+    }
+  };
+  const neglect5 = () => {
+    // decay §3 đọc từ SYSTEMS[].decay — 5 ngày không phiên
+    const perIdle = SYSTEMS.find((s) => s.id === 'power').decay.perIdleDay;
+    setPet((p) => ({ ...p, power:Math.max(0, p.power + perIdle * 5), condition:Math.max(0, p.condition - 10 * 5) }));
+  };
+
+  let screenEl;
+  if (tab === 'egg'){
+    screenEl = (
+      <EggScreen picked={picked} onPick={setPicked} msg={adoptMsg}
+        onAdopt={() => setAdoptMsg(
+          picked === 'flame'
+            ? 'Tàn Lửa đã theo bạn về nhà — cho ăn và tập focus để tiến hoá nhé!'
+            : lineById(picked).stages[0].name + ' cũng đáng yêu lắm — nhưng demo này bám số liệu của line Lửa!'
+        )} />
+    );
+  } else if (tab === 'train'){
+    screenEl = screen === 'evolve'
+      ? <EvolveScreen pet={pet} sick={sick} onBack={() => setScreen('focus')} />
+      : <FocusScreen pet={pet} paused={paused} sick={sick} stage={stage}
+          onTogglePause={() => setPaused((p) => !p)} onShowEvolve={() => setScreen('evolve')} />;
+  } else if (tab === 'feed'){
+    screenEl = <FeedScreen pet={pet} fed={fed} sick={sick} stage={stage} onFeed={feed} />;
+  } else {
+    screenEl = <StatsScreen pet={pet} sick={sick} stage={stage} onNeglect={neglect5} />;
+  }
+
+  return (
+    <div style={{ height:'100%', display:'flex', flexDirection:'column', background:'var(--cream)' }}>
+      <div style={{ flex:1, overflow:'hidden' }}>
+        <div style={{ height:'100%', overflowY:'auto' }}>{screenEl}</div>
+      </div>
+      <TabBar tab={tab} setTab={setTab} />
+    </div>
+  );
+}
+
+/* ============================================================
+   MÀN ⑤ WEB DESKTOP — CÂY TIẾN HOÁ 3 LINE (render từ CATALOG
+   qua ui slot 'desktop' của hệ evolution) + panel nhánh/lai + stats 2 cột
+   ============================================================ */
+function TreeArrow(){
+  return (
+    <svg width="18" height="16" viewBox="0 0 22 18" style={{ flexShrink:0 }}>
+      <path d="M2 9h14M12 3l6 6-6 6" fill="none" stroke="var(--ink)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
+function TreeNode({ grid, palette, name, sub, scale=4, rotate=0 }){
+  return (
+    <div style={{
+      textAlign:'center', padding:'8px 8px 6px',
+      border:'3px solid var(--ink)', boxShadow:'3px 3px 0 var(--ink)',
+      background:'var(--paper)',
+      transform:`rotate(${rotate}deg)`, flexShrink:0,
+    }}>
+      <PetTile lite scale={scale}><PixelArt grid={grid} palette={palette} scale={scale} /></PetTile>
+      <div className="f-bungee" style={{ fontSize:12.5, marginTop:4, color:'var(--ink)' }}>{name}</div>
+      <div className="f-mono" style={{ fontSize:10.5, opacity:.8 }}>{sub}</div>
+    </div>
+  );
+}
+
+function TreeLine({ line, known, first }){
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap', marginTop: first ? 0 : 18 }}>
+      <div style={{ width:92, flexShrink:0 }}>
+        <Chip bg={line.elementBg} color="var(--paper)" rotate={-2}>{line.element} {line.name}</Chip>
+        <div className="f-mono" style={{ fontSize:11, marginTop:6, opacity:.8 }}>
+          {known ? 'line của bạn — mở đầy đủ màu' : 'đã khảo sát — màu tham chiếu'}
+        </div>
+      </div>
+      <TreeNode grid={eggGridFor(line)} palette={EGG_PAL[line.eggPat]} name="Trứng" sub="bắt đầu" scale={4} rotate={-1.4} />
+      <TreeArrow />
+      {line.stages.map((st, i) => (
+        <React.Fragment key={st.id}>
+          <TreeNode grid={st.grid} palette={st.pal}
+                    name={st.name} sub={'Lv ≥ ' + st.atLevel}
+                    scale={2} rotate={[-1, 0.8, -0.7][i]} />
+          {i < line.stages.length - 1 && <TreeArrow />}
+        </React.Fragment>
+      ))}
+      <div className="f-mono" style={{ fontSize:11.5, opacity:.85, flexBasis:'100%', paddingLeft:102, marginTop:6 }}>
+        nhánh Stage 3: {line.branches.map((b) => b.name + ' (' + b.short + ')').join(' · ')} · hoặc form thường
+      </div>
+    </div>
+  );
+}
+
+function HybridCard({ h, pet, rotate }){
+  const names = h.from.map((id) => lineById(id).name).join(' × ');
+  return (
+    <div style={{
+      flex:1, minWidth:150, background:'var(--paper)', border:'3px solid var(--ink)',
+      boxShadow:'4px 4px 0 var(--ink)', padding:'10px 11px', transform:`rotate(${rotate}deg)`, position:'relative',
+    }}>
+      <span className="f-mono pickbadge" style={{ background:'var(--purple)' }}>HIẾM</span>
+      <div className="f-bungee" style={{ fontSize:14.5 }}>{h.name}</div>
+      <div className="f-mono" style={{ fontSize:11.5, marginTop:2, opacity:.85 }}>nguyên tố: {names}</div>
+      <div className="f-mono" style={{ fontSize:11.5, fontWeight:700, marginTop:3, color:'var(--red)' }}>
+        {describeCond(h.cond)}
+      </div>
+      {h.cond.of.map((leaf, j) => {
+        const cur = LEAF_VALUE[leaf.key](pet);
+        const pct = Math.max(0, Math.min(100, Math.round(cur / leaf.value * 100)));
+        return (
+          <div key={j} style={{ marginTop:6 }}>
+            <div className="f-mono" style={{ display:'flex', justifyContent:'space-between', fontSize:11, fontWeight:700 }}>
+              <span>{describeCond(leaf)}</span><span>{cur}/{leaf.value}</span>
+            </div>
+            <div style={{ height:9, border:'2.5px solid var(--ink)', background:'var(--cream2)', marginTop:2 }}>
+              <div style={{ width:pct+'%', height:'100%', background:'repeating-linear-gradient(45deg, var(--purple) 0 6px, var(--purple2) 6px 12px)' }} />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function DesktopHome(){
+  const evoUi = systemsUi('desktop').find((x) => x.ui.type === 'evo_tree');
+  const hybridUi = systemsUi('desktop').find((x) => x.ui.type === 'hybrid_panel');
+  const flame = lineById('flame');
+  const pet = { ...FIXTURE };
+  const stage = flame.stages[0];
+
+  return (
+    <div style={{ height:'100%', background:'var(--cream)', display:'flex', flexDirection:'column', position:'relative', overflow:'hidden', fontFamily:"'Space Mono',monospace", color:'var(--ink)' }}>
+      <Deco t="dots" color="var(--mustard)" size={52} style={{ top:70, right:14 }} />
+      <Deco t="squiggle" color="var(--red)" size={90} style={{ bottom:16, left:8 }} />
+      <Deco t="tri" color="var(--purple)" size={48} style={{ bottom:60, right:230 }} />
+
+      <div style={{ padding:'13px 26px', borderBottom:'3px solid var(--ink)', background:'var(--cream2)', display:'flex', alignItems:'center', gap:16, flexWrap:'wrap', position:'relative', zIndex:1 }}>
+        <div className="f-bungee" style={{ fontSize:23, color:'var(--red)' }}>PET POMODORO</div>
+        <div className="f-serif" style={{ fontStyle:'italic', fontSize:17 }}>cây tiến hoá — xem bé lớn từng mốc</div>
+        <div style={{ marginLeft:'auto', display:'flex', gap:10, flexWrap:'wrap' }}>
+          <Chip>Lv.4 · 120/200 XP</Chip>
+          <Chip bg="var(--mustard)">🍣 × 12 sushi</Chip>
+          <Chip bg="var(--blue)" color="var(--paper)">Minh Anh</Chip>
+        </div>
+      </div>
+
+      <div style={{ flex:1, display:'flex', gap:24, padding:'22px 26px', alignItems:'flex-start', position:'relative', zIndex:1, overflow:'auto' }}>
+        {/* CỘT TRÁI — cây tiến hoá + panel nhánh + form lai */}
+        <div style={{ flex:1.55, display:'flex', flexDirection:'column', gap:22, minWidth:0 }}>
+          <Block bg="var(--paper)" rotate={-0.5} pad={16} tape="var(--red)">
+            <div className="f-bungee" style={{ fontSize:16 }}>CÂY TIẾN HOÁ — {CATALOG.lines.length} LINE · {CATALOG.lines.reduce((n,l)=>n+l.stages.length,0)} FORM</div>
+            <div className="f-mono" style={{ fontSize:12, marginTop:2, opacity:.8 }}>
+              render từ CATALOG qua hệ <b>evolution</b> · ui slot <b>{evoUi.ui.slot}</b> — cả 3 line mở màu, độ phức tạp sprite tăng theo stage (§2.5)
+            </div>
+            <div style={{ marginTop:14 }}>
+              {CATALOG.lines.map((line, i) => (
+                <TreeLine key={line.id} line={line} known={line.id === 'flame'} first={i === 0} />
+              ))}
+            </div>
+          </Block>
+
+          <Block bg="var(--purple)" rotate={0.6} pad={14}>
+            <div className="f-bungee" style={{ fontSize:13.5, color:'var(--paper)' }}>NHÁNH STAGE 3 — ĐIỀU KIỆN TỪ REGISTRY COND</div>
+            <div style={{ display:'flex', gap:12, marginTop:10, flexWrap:'wrap' }}>
+              {flame.branches.map((b, i) => <BranchCard key={b.id} b={b} pet={pet} rotate={i === 0 ? -1 : 0.9} />)}
+            </div>
+          </Block>
+
+          <Block bg="var(--cream2)" rotate={-0.7} pad={14} tape="var(--blue)">
+            <div className="f-bungee" style={{ fontSize:13.5 }}>FORM LAI HIẾM — ĐIỀU KIỆN KÉP (hệ {hybridUi.system.id})</div>
+            <div style={{ display:'flex', gap:12, marginTop:10, flexWrap:'wrap' }}>
+              {CATALOG.hybrids.map((h, i) => <HybridCard key={h.id} h={h} pet={pet} rotate={[-0.8, 0.9, -0.6][i]} />)}
+            </div>
+          </Block>
+        </div>
+
+        {/* CỘT PHẢI — stats + pet mini + đồng bộ + kiến trúc mở */}
+        <div style={{ flex:1, display:'flex', flexDirection:'column', gap:22, minWidth:280 }}>
+          <Block bg="var(--red)" rotate={0.8} pad={16} tape="var(--mustard)">
+            <div className="f-bungee" style={{ fontSize:20, color:'var(--paper)' }}>STREAK 7 NGÀY 🔥</div>
+            <div className="f-mono" style={{ fontSize:12.5, color:'var(--paper)', marginTop:2 }}>7 ngày liên tiếp · không đứt đoạn</div>
+            <DayCells scale={4} />
+          </Block>
+
+          <Block bg="var(--mustard)" rotate={-0.7} pad={16}>
+            <div className="f-mono" style={{ fontSize:12.5, fontWeight:700 }}>HÔM NAY</div>
+            <div style={{ display:'flex', alignItems:'baseline', gap:10, marginTop:2, flexWrap:'wrap' }}>
+              <span className="f-bungee" style={{ fontSize:44 }}>112</span>
+              <span className="f-serif" style={{ fontSize:21 }}>phút</span>
+              <span className="f-bungee" style={{ fontSize:28, color:'var(--red)' }}>· 3</span>
+              <span className="f-serif" style={{ fontSize:21 }}>phiên</span>
+              <span className="f-mono" style={{ fontSize:13, fontWeight:700, marginLeft:'auto' }}>+120 XP</span>
+            </div>
+          </Block>
+
+          <Block bg="var(--cream2)" rotate={0.9} pad={16} tape="var(--red)">
+            <div style={{ display:'flex', gap:16, alignItems:'center' }}>
+              <div style={{ position:'relative', flexShrink:0 }}>
+                <div className="pet-bounce">
+                  <PetTile lite scale={4} rotate={1.2}>
+                    <PetSprite stage={stage} scale={4} />
+                  </PetTile>
+                </div>
+                <NameTag name="TÀN LỬA" />
+              </div>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div className="f-serif" style={{ fontStyle:'italic', fontSize:17 }}>hổ lửa con · Lv.4</div>
+                <div className="f-mono" style={{ fontSize:12.5, fontWeight:700, margin:'10px 0 5px' }}>120/200 XP</div>
+                <div style={{ height:13, border:'3px solid var(--ink)', background:'var(--paper)' }}>
+                  <div style={{ width:'60%', height:'100%', background:'repeating-linear-gradient(45deg, var(--red) 0 7px, var(--red2) 7px 14px)' }} />
+                </div>
+                <div style={{ marginTop:10 }}>
+                  <CapMeter label="Sức mạnh" value={pet.power} cap={FORMULAS.powerCap(pet.level)} level={pet.level} c1="var(--red)" c2="var(--red2)" />
+                </div>
+                <div style={{ marginTop:10 }}>
+                  <Meter label={`Thể trạng · ${condStatus(pet.condition)}`} value={pet.condition} max={100} c1="var(--purple)" c2="var(--purple2)" />
+                </div>
+              </div>
+            </div>
+          </Block>
+
+          <Block bg="var(--blue)" rotate={-0.9} pad={16}>
+            <div className="f-bungee" style={{ fontSize:14, color:'var(--paper)', marginBottom:12 }}>ĐỒNG BỘ · WEB ↔ ANDROID</div>
+            <SyncPanel />
+            <div className="f-mono" style={{ fontSize:12.5, color:'var(--paper)', marginTop:12 }}>
+              Streak, pet và cây tiến hoá theo bạn đi khắp mọi màn hình — đăng nhập một lần.
+            </div>
+          </Block>
+
+          <Block bg="var(--paper)" rotate={0.7} pad={14} tape="var(--olive)">
+            <div className="f-bungee" style={{ fontSize:13 }}>KIẾN TRÚC MỞ — UI ĐỌC TỪ SYSTEMS[].UI</div>
+            <div style={{ marginTop:8 }}>
+              {SYSTEMS.map((sy) => (
+                <div key={sy.id} className="f-mono" style={{ display:'flex', justifyContent:'space-between', gap:10, fontSize:12, padding:'6px 0', borderBottom:'2px dashed rgba(38,32,29,.3)' }}>
+                  <span style={{ fontWeight:700 }}>{sy.id}</span>
+                  <span style={{ textAlign:'right', opacity:.85 }}>
+                    {(sy.ui || []).map((u) => u.slot + ':' + u.type).join(' · ') || '—'}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="f-mono" style={{ fontSize:11, marginTop:8, opacity:.8 }}>
+              thêm hệ mới = thêm 1 entry (xem comment §1.6 trong source) — core không đổi
+            </div>
+          </Block>
+
+          <Block bg="var(--paper)" rotate={1.2} pad={14} tape="var(--blue)">
+            <div className="f-serif" style={{ fontStyle:'italic', fontSize:19, lineHeight:1.35 }}>
+              "Tàn Lửa hôm nay là than hồng — trò focused enough, mai thành Bồng Bột."
+            </div>
+            <div className="f-mono" style={{ fontSize:12, marginTop:6 }}>— sổ tay nuôi bé, trang 7</div>
+          </Block>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   TRANG DEMO
+   ============================================================ */
+function Confetti(){
+  const items = [
+    ['tri','var(--purple)',70,-14,'1.5%','2%'],
+    ['ring','var(--red)',96,10,'88%','3%'],
+    ['zigzag','var(--mustard)',120,-6,'76%','12%'],
+    ['dots','var(--olive)',80,8,'1%','20%'],
+    ['plus','var(--blue)',44,18,'93%','25%'],
+    ['squiggle','var(--red)',90,-10,'2.5%','36%'],
+    ['half','var(--purple)',70,12,'91%','42%'],
+    ['dots','var(--red)',70,-6,'86%','56%'],
+    ['tri','var(--olive)',56,20,'0.5%','54%'],
+    ['ring','var(--mustard)',64,-8,'94%','70%'],
+    ['squiggle','var(--blue)',100,8,'1%','72%'],
+    ['plus','var(--red)',40,-15,'46%','2.5%'],
+    ['zigzag','var(--purple)',90,10,'44%','95%'],
+    ['dots','var(--mustard)',64,0,'28%','88%'],
+  ];
+  return (
+    <div style={{ position:'absolute', inset:0, pointerEvents:'none', zIndex:0 }}>
+      {items.map((it,i) => <Deco key={i} t={it[0]} color={it[1]} size={it[2]} rotate={it[3]} style={{ top:it[4], left:it[5] }} />)}
+    </div>
+  );
+}
+
+function HeroStrip(){
+  const flame = lineById('flame');
+  return (
+    <div style={{ position:'relative', marginTop:26, display:'inline-block' }}>
+      <div style={{ position:'absolute', inset:'0 -14px', background:'var(--mustard)', border:'3px solid var(--ink)', boxShadow:'7px 7px 0 var(--ink)', transform:'rotate(-1deg)' }} />
+      <div style={{ position:'relative', display:'flex', alignItems:'center', gap:16, padding:'16px 30px 12px', flexWrap:'wrap' }}>
+        <PetTile lite scale={4} rotate={-2}><PixelArt grid={eggGridFor(flame)} palette={EGG_PAL[flame.eggPat]} scale={4} /></PetTile>
+        <svg width="22" height="18" viewBox="0 0 22 18"><path d="M2 9h14M12 3l6 6-6 6" fill="none" stroke="var(--ink)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        {flame.stages.map((st, i) => (
+          <React.Fragment key={st.id}>
+            <div style={{ textAlign:'center' }}>
+              <div className="pet-bounce" style={{ animationDelay:`${i*0.25}s`, display:'inline-block' }}>
+                <PetTile lite scale={2} rotate={i === 1 ? 1.5 : -1.5}>
+                  <PixelArt grid={st.grid} palette={st.pal} scale={2} />
+                </PetTile>
+              </div>
+              <div className="f-bungee" style={{ fontSize:12.5, marginTop:2 }}>{st.name}</div>
+              <div className="f-mono" style={{ fontSize:10.5, opacity:.8 }}>Lv ≥ {st.atLevel}</div>
+            </div>
+            {i < flame.stages.length - 1 && (
+              <svg width="22" height="18" viewBox="0 0 22 18"><path d="M2 9h14M12 3l6 6-6 6" fill="none" stroke="var(--ink)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            )}
+          </React.Fragment>
+        ))}
+        <div className="f-mono" style={{ fontSize:11.5, maxWidth:230, marginLeft:10, opacity:.85 }}>
+          hero của kịch bản này: line <b>Lửa</b> — nhánh Stage 3 + biến thể ốm yếu đều demo được
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PageHeader(){
+  return (
+    <header style={{ padding:'52px 40px 24px', maxWidth:1660, margin:'0 auto', position:'relative', zIndex:1 }}>
+      <div style={{ display:'flex', gap:12, flexWrap:'wrap', marginBottom:24 }}>
+        <Chip bg="var(--red)" color="var(--paper)" rotate={-2}>PET POMODORO · GAMEPLAY V2 · KỊCH BẢN 1/3</Chip>
+        <Chip rotate={1.4}>STYLE: MEMPHIS MAXIMALISM (KẾ THỪA DNA HƯỚNG 1)</Chip>
+        <Chip bg="var(--mustard)" rotate={-1}>HERO: LINE LỬA — TÀN LỬA</Chip>
+        <Chip bg="var(--olive)" color="var(--paper)" rotate={0.8}>CATALOG · REGISTRY COND · SYSTEMS — RENDER 100% TỪ CONFIG</Chip>
+      </div>
+
+      <div style={{ position:'relative' }}>
+        <div style={{ position:'absolute', left:-10, top:30, width:640, height:78, background:'var(--red)', border:'3px solid var(--ink)', boxShadow:'7px 7px 0 var(--ink)', transform:'rotate(-1.4deg)' }} />
+        <div style={{ position:'absolute', left:300, top:66, width:430, height:64, background:'var(--blue)', opacity:.28, border:'3px solid var(--ink)', transform:'rotate(1.8deg)' }} />
+        <h1 className="f-bungee" style={{ position:'relative', margin:'0 0 0 4px', fontSize:54, lineHeight:1.04, color:'var(--paper)', textShadow:'4px 4px 0 var(--ink)' }}>
+          KỊCH BẢN 1 · <span style={{ color:'var(--mustard)' }}>HÀNH TRÌNH TIẾN HOÁ</span>
+        </h1>
+        <div className="f-serif" style={{ position:'relative', fontStyle:'italic', fontSize:44, color:'var(--blue)', transform:'rotate(-1.2deg)', margin:'58px 0 0 170px' }}>
+          chọn trứng → tập focus → khoảnh khắc tiến hoá → cây tiến hoá
+        </div>
+      </div>
+
+      <HeroStrip />
+
+      <p className="f-mono" style={{ fontSize:15, lineHeight:1.75, maxWidth:920, margin:'26px 0 0', position:'relative' }}>
+        Demo kịch bản gameplay <b>v2</b> trên chất liệu <b style={{ color:'var(--red)' }}>Memphis Maximalism</b>:
+        thẻ xoay nghiêng, sticker đập vào mắt, viền mực 3px và bóng đổ cứng.
+        Hành trình của bé: chọn 1 trong 3 trứng nguyên tố, ngồi tập trung để đẩy XP và Sức mạnh,
+        chứng kiến khoảnh khắc <b style={{ color:'var(--mustardInk)' }}>tiến hoá</b> (lóe sáng — rung — đổi dáng hẳn),
+        rồi ngắm <b style={{ color:'var(--blue)' }}>cây tiến hoá</b> cả 3 line trên desktop.
+        Thử cả hai nút mô phỏng: <b>"Mô phỏng tiến hoá"</b> trên phone ③ và
+        <b> "Mô phỏng bỏ bê 5 ngày"</b> trên phone ④ — level giữ nguyên nhưng ngoại hình rũ xuống.
+      </p>
+
+      <div style={{ marginTop:16, display:'flex', gap:10, flexWrap:'wrap', alignItems:'center' }}>
+        <Chip rotate={-0.6}>FIXTURE CHUNG §3</Chip>
+        <span className="f-mono" style={{ fontSize:12.5, fontWeight:700 }}>
+          Lv.4 · 120/200 XP · Sức mạnh 62/64 · Thể trạng 78 (Khỏe mạnh) · 12 sushi · Streak 7 · Hôm nay 112 phút / 3 phiên · phiên chạy 24:31 (2/4)
+        </span>
+      </div>
+    </header>
+  );
+}
+
+function PageFooter(){
+  return (
+    <footer style={{ textAlign:'center', padding:'28px 24px 64px', position:'relative', zIndex:1 }}>
+      <Deco t="zigzag" color="var(--red)" size={120} style={{ position:'static', margin:'0 auto 14px', transform:'rotate(-2deg)', display:'block' }} />
+      <div className="f-mono" style={{ fontSize:14 }}>Pet Pomodoro — gameplay v2 · kịch bản 1/3 · demo duyệt thiết kế, bản thật sẽ build Nuxt (web) + Kotlin (Android)</div>
+      <div className="f-mono" style={{ fontSize:12.5, marginTop:8 }}>Số liệu, tên form và điều kiện nhánh đọc trực tiếp từ CATALOG + COND + SYSTEMS nhúng trong source.</div>
+    </footer>
+  );
+}
+
+function DeviceLabel({ text, color, offset=0, children }){
+  return (
+    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', transform:`translateY(${offset}px)` }}>
+      <div className="f-mono" style={{ fontStyle:'italic', fontSize:14, marginBottom:10, display:'flex', alignItems:'center', gap:8, color:'var(--ink)', transform:'rotate(-1.1deg)' }}>
+        <span style={{ width:12, height:12, background:color, border:'2px solid var(--ink)', display:'inline-block' }} />
+        {text}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function App(){
+  return (
+    <div style={{ minHeight:'100vh', background:'var(--cream)', position:'relative', overflowX:'hidden' }}>
+      <Confetti />
+      <PageHeader />
+      <main style={{ display:'flex', flexWrap:'wrap', gap:26, justifyContent:'center', alignItems:'flex-start', padding:'14px 28px 44px', position:'relative', zIndex:1 }}>
+        <DeviceLabel text="① Chọn trứng" color="var(--mustard)">
+          <AndroidFrame width={372} height={872} time="8:12" battery={88}>
+            <PhoneApp initialTab="egg" />
+          </AndroidFrame>
+        </DeviceLabel>
+        <DeviceLabel text="② Đang tập trung" color="var(--blue)" offset={30}>
+          <AndroidFrame width={372} height={872} time="9:41" battery={76}>
+            <PhoneApp initialTab="train" initialScreen="focus" />
+          </AndroidFrame>
+        </DeviceLabel>
+        <DeviceLabel text="③ Khoảnh khắc tiến hoá" color="var(--purple)" offset={8}>
+          <AndroidFrame width={372} height={872} time="9:58" battery={74}>
+            <PhoneApp initialTab="train" initialScreen="evolve" />
+          </AndroidFrame>
+        </DeviceLabel>
+        <DeviceLabel text="④ Thống kê & Đồng bộ" color="var(--olive)" offset={36}>
+          <AndroidFrame width={372} height={872} time="20:15" battery={92}>
+            <PhoneApp initialTab="stats" />
+          </AndroidFrame>
+        </DeviceLabel>
+      </main>
+      <div style={{ display:'flex', justifyContent:'center', padding:'0 28px 30px', position:'relative', zIndex:1 }}>
+        <DeviceLabel text="⑤ Web desktop — Cây tiến hoá & thống kê" color="var(--red)">
+          <BrowserWindow url="petpomodoro.app/cay-tien-hoa" title="Pet Pomodoro — Cây tiến hoá" width={1280} height={1350}>
+            <DesktopHome />
+          </BrowserWindow>
+        </DeviceLabel>
+      </div>
+      <PageFooter />
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

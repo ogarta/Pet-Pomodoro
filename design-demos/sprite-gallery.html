@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sprites · Bộ pet tiến hoá kiểu GBA — Pet Pomodoro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="./sprite-data.js"></script>
+<script src="./ref-sprites.js"></script>
+<script src="./ref-grids.js"></script>
+<script src="./new-pets.js"></script>
+<style>
+  :root{
+    --paper:#FBF5E9; --cream:#F2E9D8; --ink:#26201D; --ink2:#5A4F47;
+    --red:#BC3A28; --mustard:#E3A72F; --blue:#2B54A3; --green:#5F6B2F;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--cream);color:var(--ink);font-family:'Space Mono',monospace;}
+  .f-serif{font-family:'DM Serif Display',serif;}
+  .wrap{max-width:1720px;margin:0 auto;padding:34px 30px 70px;}
+
+  .head{border-bottom:4px solid var(--ink);padding-bottom:16px;margin-bottom:8px;
+        display:flex;justify-content:space-between;align-items:flex-end;gap:18px;flex-wrap:wrap;}
+  .head h1{font-size:42px;margin:0 0 8px;line-height:1;}
+  .head h1 em{font-style:italic;color:var(--red);}
+  .head p{margin:0;color:var(--ink2);font-size:13.5px;max-width:720px;line-height:1.55;}
+  .skillchip{border:3px solid var(--ink);background:var(--paper);box-shadow:5px 5px 0 var(--ink);
+             padding:11px 15px;font-size:12px;line-height:1.55;max-width:340px;}
+  .skillchip b{color:var(--red);}
+
+  .sec{margin-top:30px;}
+  .sec>h2{font-size:15px;letter-spacing:3px;margin:0 0 14px;border-left:8px solid var(--ink);padding-left:12px;}
+  .sec.lua>h2{border-color:var(--red);} .sec.thuy>h2{border-color:var(--blue);} .sec.thao>h2{border-color:var(--green);}
+
+  .timeline{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;
+            background:var(--paper);border:3px solid var(--ink);box-shadow:7px 7px 0 var(--ink);padding:22px 18px 16px;}
+  .cell{text-align:center;position:relative;}
+  .cell .sprite{background:
+      repeating-conic-gradient(#EFE6D2 0% 25%, #E7DCC3 0% 50%) 0 0/14px 14px;
+      border:2px solid var(--ink);display:inline-block;line-height:0;}
+  .cell .nm{font-weight:700;font-size:14px;margin-top:9px;}
+  .cell .st{font-size:11px;color:var(--ink2);margin-top:2px;}
+  .cell .tag{position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);
+             font-size:9.5px;letter-spacing:1.5px;padding:2px 8px;}
+  .arrow{font-size:30px;color:var(--ink2);padding-bottom:44px;}
+
+  .variants{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;
+            background:var(--paper);border:3px dashed var(--ink);padding:18px;}
+  .variants .cell .tag{background:var(--red);}
+
+  .palrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
+  .sw{display:flex;align-items:center;gap:5px;border:2px solid var(--ink);padding:2px 6px 2px 2px;
+      background:var(--cream);font-size:10.5px;}
+  .sw i{width:15px;height:15px;display:block;border:1.5px solid var(--ink);}
+
+  .refrow{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;}
+  .refrow figure{margin:0;background:var(--paper);border:3px solid var(--ink);box-shadow:6px 6px 0 var(--ink);padding:10px;}
+  .refrow img{display:block;max-width:100%;height:auto;}
+  .refrow figcaption{font-size:11px;color:var(--ink2);margin-top:8px;max-width:420px;line-height:1.5;}
+
+  .hero-sprite{image-rendering:pixelated;vertical-align:bottom;}
+  .note{font-size:11px;color:var(--ink2);line-height:1.5;max-width:230px;}
+  .foot{margin-top:34px;border:3px dashed var(--ink);background:var(--paper);padding:15px 20px;
+        font-size:12.5px;line-height:1.6;color:var(--ink2);}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const D = globalThis.SPRITE_DATA;
+
+function PixelSprite({ grid, palette, px = 5 }){
+  const w = grid[0].length, h = grid.length;
+  const rects = [];
+  grid.forEach((row, y) => {
+    for (let x = 0; x < row.length; x++) {
+      const ch = row[x];
+      if (ch !== "." && palette[ch]) rects.push(<rect key={x+","+y} x={x} y={y} width={1} height={1} fill={palette[ch].hex} />);
+    }
+  });
+  return <svg width={w*px} height={h*px} viewBox={"0 0 "+w+" "+h} shapeRendering="crispEdges">{rects}</svg>;
+}
+
+function Cell({ def, px, tag, name, sub }){
+  const pal = D.palettes[def.palette];
+  return (
+    <div className="cell">
+      {tag && <span className="tag">{tag}</span>}
+      <span className="sprite"><PixelSprite grid={def.grid} palette={pal} px={px} /></span>
+      <div className="nm">{name}</div>
+      <div className="st">{sub}</div>
+    </div>
+  );
+}
+
+function PaletteRow({ palKey }){
+  return (
+    <div className="palrow">
+      {Object.entries(D.palettes[palKey]).map(([ch, p]) => (
+        <span className="sw" key={ch}><i style={{background:p.hex}}></i>{ch}·{p.ten}</span>
+      ))}
+    </div>
+  );
+}
+
+function Line({ lineKey, color }){
+  const names = D.meta.lines[lineKey].stage;
+  const st1 = Object.values(D.grids).find(g => g.line === lineKey && g.stage === 1 && !/Back|Shiny|Om/.test(""));
+  return null;
+}
+
+function NewPetCell({ k, name, sub, tag }){
+  const r = globalThis.NEW_PETS.find(x => x.key === k);
+  if (!r) return null;
+  const im = new Image();
+  return (
+    <div className="cell">
+      {tag && <span className="tag">{tag}</span>}
+      <span className="sprite" style={{padding:10, lineHeight:0}}>
+        <img className="hero-sprite" src={"./" + r.file} style={{maxWidth:200, maxHeight:230}} alt={name} />
+      </span>
+      <div className="nm">{name}</div>
+      <div className="st">{sub}</div>
+    </div>
+  );
+}
+
+function NatCell({ k, name, sub, tag }){
+  const r = globalThis.REF_SPRITES.find(x => x.key === k);
+  if (!r) return null;
+  let sc = Math.max(1, Math.min(4, Math.round(340 / Math.max(r.w, r.h))));
+  if (Math.max(r.w, r.h) * sc > 420) sc -= 1;
+  return (
+    <div className="cell">
+      {tag && <span className="tag">{tag}</span>}
+      <span className="sprite" style={{padding:10, lineHeight:0}}>
+        <img className="hero-sprite" src={"./" + r.file}
+             width={r.w * sc} height={r.h * sc} alt={name} />
+      </span>
+      <div className="nm">{name}</div>
+      <div className="st">{r.w}×{r.h} px gốc · hiển thị ×{sc} = {r.w*sc}×{r.h*sc}</div>
+    </div>
+  );
+}
+
+function GridCell({ k, name, sub, tag }){
+  const g = globalThis.REF_GRIDS.find(x => x.key === k);
+  if (!g) return null;
+  return <Cell def={{ grid: g.grid, palette: g.palette, size: g.size }} px={g.size === 32 ? 6 : g.size === 40 ? 5 : 4} name={name} sub={sub} tag={tag} />;
+}
+
+function App(){
+  const G = D.grids;
+  const R = globalThis.REF_SPRITES;
+  const byKey = k => R.find(r => r.key === k);
+  const stage = (line, st) => Object.values(G).filter(g => g.line === line && g.stage === st);
+  const pxFor = sz => sz === 32 ? 6 : sz === 40 ? 5 : 4;
+
+  const RefCell = ({ keyName, name, sub, tag, px }) => {
+    const r = byKey(keyName);
+    if (!r) return null;
+    const disp = 220 / Math.max(r.w, r.h);
+    return (
+      <div className="cell">
+        {tag && <span className="tag">{tag}</span>}
+        <span className="sprite" style={{padding:8}}>
+          <img className="hero-sprite" src={"./" + r.file} width={Math.round(r.w*disp)} height={Math.round(r.h*disp)} alt={name} />
+        </span>
+        <div className="nm">{name}</div>
+        <div className="st">{sub}</div>
+      </div>
+    );
+  };
+
+  const renderRefLine = (lineKey, names, variants) => (
+    <div className="timeline">
+      <RefCell keyName={names[0][0]} name={names[0][1]} sub={"Mốc 1 (Cơ bản)"} tag="CƠ BẢN" />
+      <span className="arrow">➜</span>
+      <RefCell keyName={names[1][0]} name={names[1][1]} sub={"Mốc 2 (Tiến hoá)"} tag="TIẾN HOÁ" />
+      <span className="arrow">➜</span>
+      <RefCell keyName={names[2][0]} name={names[2][1]} sub={"Mốc 3 (Tối thượng)"} tag="TỐI THƯỢNG" />
+      {variants && variants.length > 0 && <div style={{width:14}}></div>}
+      {variants && variants.map(v => <RefCell key={v[0]} keyName={v[0]} name={v[1]} sub={v[2]} tag={v[3]} />)}
+    </div>
+  );
+
+  const has = k => !!G[k];
+
+  return (
+    <div className="wrap">
+      <div className="head">
+        <div>
+          <h1 className="f-serif">Bộ pet tiến hoá <em>· Pet Pomodoro</em></h1>
+          <p>Sprite chính thức được <b>tách trực tiếp từ 3 ảnh mẫu</b> bạn chọn (xóa nền, giữ nguyên chất pixel GBA) —
+             map vào đúng tên thú Việt trong spec. Kèm bộ prompt + quy trình tái tạo pet mới trong skill <b>pet-sprite-art</b>.</p>
+        </div>
+        <div className="skillchip"><b>Skill đã distill:</b> ~/.agents/skills/pet-sprite-art
+          — style DNA · prompt recipe (sinh concept chất mẫu bằng image-gen) · pipeline tách sprite từ ảnh · palette 3 hệ · QC checklist.</div>
+      </div>
+
+      <div className="sec lua">
+        <h2>⭐ SPRITE CHUẨN — tách từ ảnh mẫu (chất lượng = bản mẫu)</h2>
+
+        <div className="sec" style={{marginTop:10}}>
+          <h2 style={{borderColor:"var(--red)"}}>🔥 HỆ LỬA — dòng hồ ly</h2>
+          {renderRefLine("lua", [["tanLua","Tàn Lửa"],["bongBot","Bồng Bột"],["diemLong","Diễm Long"]],
+            [["tanLua-back","Tàn Lửa","phía sau","BACK"],["tanLua-shiny","Tàn Lửa shiny","palette swap","SHINY"],
+             ["diemLong-back","Diễm Long","phía sau","BACK"],["diemLong-shiny","Diễm Long shiny","palette swap","SHINY"]])}
+        </div>
+
+        <div className="sec" style={{marginTop:10}}>
+          <h2 style={{borderColor:"var(--blue)"}}>💧 HỆ THỦY — dòng cá nước</h2>
+          {renderRefLine("thuy", [["giot","Giọt"],["suoiVot","Suối Vọt"],["trieuLong","Triều Long"]])}
+        </div>
+
+        <div className="sec" style={{marginTop:10}}>
+          <h2 style={{borderColor:"var(--green)"}}>🌿 HỆ THẢO — dòng mầm cây</h2>
+          {renderRefLine("thao", [["mam","Mầm"],["bupXanh","Búp Xanh"],["coThuLinh","Cổ Thụ Linh"]])}
+        </div>
+
+        <div className="sec" style={{marginTop:10}}>
+          <h2>✨ HỆ PHỤ + LAI TẠO (từ chart mẫu — dự trữ cho hệ thống lai §2.2)</h2>
+          <div className="timeline">
+            <RefCell keyName="aquawoof" name="Aquawoof" sub="nước chó · Mốc 1" />
+            <RefCell keyName="tidewolf" name="Tidewolf" sub="nước chó · Mốc 2" />
+            <RefCell keyName="gigaHydro" name="Giga-Hydro" sub="nước chó · Mốc 3" />
+            <RefCell keyName="zapPup" name="Zap-Pup" sub="điện · Mốc 1" />
+            <RefCell keyName="voltFox" name="Volt-Fox" sub="điện · Mốc 2" />
+            <RefCell keyName="thundros" name="Thundros" sub="điện · Mốc 3" />
+            <RefCell keyName="aquaSprout" name="Aqua-Sprout" sub="Thủy×Thảo" tag="LAI" />
+            <RefCell keyName="infernoOak" name="Inferno-Oak" sub="Lửa×Thảo" tag="LAI" />
+            <RefCell keyName="sproutZap" name="Sprout-Zap" sub="Thảo×Điện" tag="LAI" />
+          </div>
+        </div>
+        <div className="foot" style={{marginTop:16}}>
+          Pet lai trong spec §2.2 (Thiên Lôi = Lửa×Thủy, Diễm Hoa = Thảo×Lửa, Sen Mưa = Thủy×Thảo) sinh được
+          ngay bằng prompt recipe lai 2 hệ của skill — hoặc mix sprite mẫu.
+        </div>
+      </div>
+
+      <div className="sec">
+        <h2>🎮 SPRITE IN-GAME — nguyên bản, nét từng pixel (không downscale)</h2>
+        <p style={{fontSize:12,color:"var(--ink2)",margin:"0 0 10px"}}>
+          Dùng nguyên PNG tách từ ảnh mẫu ở <b>độ phân giải gốc</b> — không nén, không bỏ pixel, hiển thị phóng nguyên số lần (×1/×2/×3)
+          kèm <code>image-rendering: pixelated</code> ⇒ nét tuyệt đối như bản mẫu. Kích thước thật ghi dưới mỗi pet —
+          đây là size xuất thẳng vào game (Nuxt/Android), stage 3 chiếm ~40% chiều cao màn hình điện thoại.
+        </p>
+        <div className="timeline">
+          <NatCell k="tanLua" name="Tàn Lửa" sub="Mốc 1 (Cơ bản)" tag="CƠ BẢN" />
+          <span className="arrow">➜</span>
+          <NatCell k="bongBot" name="Bồng Bột" sub="Mốc 2 (Tiến hoá)" tag="TIẾN HOÁ" />
+          <span className="arrow">➜</span>
+          <NatCell k="diemLong" name="Diễm Long" sub="Mốc 3 (Tối thượng)" tag="TỐI THƯỢNG" />
+        </div>
+        <div className="variants">
+          <NatCell k="tanLua-back" name="Tàn Lửa" sub="phía sau" tag="BACK" />
+          <NatCell k="tanLua-shiny" name="Tàn Lửa shiny" sub="palette swap" tag="SHINY" />
+          <NatCell k="bongBot-back" name="Bồng Bột" sub="phía sau" tag="BACK" />
+          <NatCell k="bongBot-shiny" name="Bồng Bột shiny" sub="palette swap" tag="SHINY" />
+          <NatCell k="diemLong-back" name="Diễm Long" sub="phía sau" tag="BACK" />
+          <NatCell k="diemLong-shiny" name="Diễm Long shiny" sub="palette swap" tag="SHINY" />
+        </div>
+        <div className="timeline" style={{marginTop:14}}>
+          <NatCell k="giot" name="Giọt" sub="Mốc 1 (Cơ bản)" tag="CƠ BẢN" />
+          <span className="arrow">➜</span>
+          <NatCell k="suoiVot" name="Suối Vọt" sub="Mốc 2 (Tiến hoá)" tag="TIẾN HOÁ" />
+          <span className="arrow">➜</span>
+          <NatCell k="trieuLong" name="Triều Long" sub="Mốc 3 (Tối thượng)" tag="TỐI THƯỢNG" />
+        </div>
+        <div className="timeline" style={{marginTop:14}}>
+          <NatCell k="mam" name="Mầm" sub="Mốc 1 (Cơ bản)" tag="CƠ BẢN" />
+          <span className="arrow">➜</span>
+          <NatCell k="bupXanh" name="Búp Xanh" sub="Mốc 2 (Tiến hoá)" tag="TIẾN HOÁ" />
+          <span className="arrow">➜</span>
+          <NatCell k="coThuLinh" name="Cổ Thụ Linh" sub="Mốc 3 (Tối thượng)" tag="TỐI THƯỢNG" />
+        </div>
+        <div className="foot" style={{marginTop:16}}>
+          Quy tắc hiển thị: chỉ phóng số nguyên lần (×1 ×2 ×3) + pixelated — không bao giờ scale lẻ (gây mờ).
+          Muốn pet nhỏ (icon/tamagotchi mini) dùng bản 48/64px đã có trong sprites/ref, hoặc sinh riêng bằng prompt recipe.
+        </div>
+      </div>
+
+      <div className="sec">
+        <h2>🌱 PET MỚI — sáng tạo (biến thể gốc mẫu, nét 100%)</h2>
+        <p style={{fontSize:12,color:"var(--ink2)",margin:"0 0 10px"}}>
+          3 hướng ý tưởng mới: <b>🍅 dòng Cà Chua</b> (pomodoro = cà chua — dòng mascôt) ·
+          <b> 🌙 dòng Nguyệt</b> (biến thể đêm của hệ Thủy) · <b>3 pet lai</b> đúng bảng §2.2 (Thiên Lôi · Diễm Hoa · Sen Mưa).
+          Kỹ thuật: hue-shift chọn dải màu trên sprite mẫu gốc + chi tiết điểm xuyết (quả, sao, sét) — nét nguyên bản.
+          Concept + prompt gen bản mở rộng: <b>docs/pet-moi.md</b>.
+        </p>
+
+        <div className="sec" style={{marginTop:10}}>
+          <h2 style={{borderColor:"var(--red)"}}>🍅 DÒNG CÀ CHUA</h2>
+          <div className="timeline">
+            <NewPetCell k="chuaNhat" name="Chua Nhát" sub="Mốc 1 · hạt mầm chua" tag="CƠ BẢN" />
+            <span className="arrow">➜</span>
+            <NewPetCell k="caChot" name="Cà Chốt" sub="Mốc 2 · nụ hoá quả" tag="TIẾN HOÁ" />
+            <span className="arrow">➜</span>
+            <NewPetCell k="coMocChua" name="Cổ Mộc Chua" sub="Mốc 3 · tán đỏ đèn lồng" tag="TỐI THƯỢNG" />
+          </div>
+        </div>
+
+        <div className="sec" style={{marginTop:10}}>
+          <h2 style={{borderColor:"var(--blue)"}}>🌙 DÒNG NGUYỆT</h2>
+          <div className="timeline">
+            <NewPetCell k="trangNon" name="Trăng Non" sub="Mốc 1 · giọt sương trăng" tag="CƠ BẢN" />
+            <span className="arrow">➜</span>
+            <NewPetCell k="trieuNguyet" name="Triều Nguyệt" sub="Mốc 2 · cá triều đêm" tag="TIẾN HOÁ" />
+            <span className="arrow">➜</span>
+            <NewPetCell k="nguyetLong" name="Nguyệt Long" sub="Mốc 3 · kình ngư nguyệt" tag="TỐI THƯỢNG" />
+          </div>
+        </div>
+
+        <div className="sec" style={{marginTop:10}}>
+          <h2>⚡ LAI TẠO THEO SPEC §2.2</h2>
+          <div className="timeline">
+            <NewPetCell k="thienLoi" name="Thiên Lôi" sub="Lửa × Thủy · hồ ly sét" tag="LAI" />
+            <NewPetCell k="diemHoa" name="Diễm Hoa" sub="Thảo × Lửa · florasaur than" tag="LAI" />
+            <NewPetCell k="senMua" name="Sen Mưa" sub="Thủy × Thảo · cá sen mưa" tag="LAI" />
+          </div>
+        </div>
+        <div className="foot" style={{marginTop:16}}>
+          Đây là bản <b>biến thể khu vực</b> (kỹ thuật Game Freak dùng cho regional form) — giữ nguyên dáng + nét mẫu gốc.
+          Muốn dáng hoàn toàn mới cho 3 dòng này: dùng prompt trong docs/pet-moi.md với image-gen của bạn rồi chạy lại
+          scripts/extract-ref-sprites.py.
+        </div>
+      </div>
+
+      <div className="sec">
+        <h2>📐 ẢNH MẪU GỐC (nguồn tách sprite)</h2>
+        <div className="refrow">
+          <figure>
+            <img src="./reference/thu-lua-fire-fox.png" alt="Dòng fox lửa" width="520" />
+            <figcaption>🔥 Nguồn hệ lửa: Petyre → Fyreox → Infernyx + front/back/shiny.</figcaption>
+          </figure>
+          <figure>
+            <img src="./reference/moc-tien-hoa-fish.jpg" alt="Dòng cá 3 mốc" width="380" />
+            <figcaption>💧 Nguồn hệ thủy: Shock-Fringe → Volt-Tide → Tide-Striker.</figcaption>
+          </figure>
+          <figure>
+            <img src="./reference/he-khac-lai-tao.png" alt="Chart đa hệ" width="480" />
+            <figcaption>🌿 Nguồn hệ thảo + hệ phụ + lai tạo.</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div className="foot">
+        Pipeline: ảnh mẫu → <b>scripts/extract-ref-sprites.py</b> (crop tự chọn hộp + xóa nền flood-fill + lọc debris) →
+        sprites/ref/*.png trong suốt · manifest ref-sprites.js · pet mới sinh bằng prompt recipe của skill pet-sprite-art rồi chạy lại pipeline.
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

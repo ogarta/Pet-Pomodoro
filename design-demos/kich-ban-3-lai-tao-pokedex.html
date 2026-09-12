@@ -1,0 +1,2974 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kịch bản 3 · Lai tạo &amp; Pokédex — Pet Pomodoro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  :root {
+    /* Màn MÀU lit-LCD kiểu GBC (spec §2.5 v3) — sprite Pokémon màu sống trên nền sáng,
+       vỏ máy + nút bấm giữ chất DMG console */
+    --ink: #35502E;        /* darkest trên màn — chữ, viền chip */
+    --ink2: #6B8258;       /* phụ — label, số phụ */
+    --lcd: #D9E6C9;        /* nền màn sáng */
+    --lcd-body: #C3D8A6;   /* tông thân chip/panel */
+    --scr-line: #8FA47A;   /* viền khung màn */
+    --hp-hi: #45B54E;      /* HP kiểu Pokemon: xanh ≥50% */
+    --hp-mid: #F2C23E;     /* vàng 20–49% */
+    --hp-low: #E5483C;     /* đỏ <20% */
+    --red: #C13E31;        /* chỉ dùng cho VỎ MÁY (shell) */
+    --red-d: #8E271E;
+    --amber: #B3672B;
+    --rose: #B04A6B;
+    --leaf: #4E7A28;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Baloo 2', 'Segoe UI', sans-serif;
+    background:
+      repeating-linear-gradient(0deg, rgba(122,100,62,.05) 0 2px, transparent 2px 26px),
+      repeating-linear-gradient(90deg, rgba(122,100,62,.05) 0 2px, transparent 2px 26px),
+      #E9DCC3;
+    color: #4A3F2C;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font-family: inherit; }
+  .pixelfont { font-family: 'VT323', monospace; }
+  .psp { font-family: 'Press Start 2P', monospace; }
+
+  /* ---------- demo page ---------- */
+  .page { padding: 44px 48px 64px; }
+  .page-head { margin-bottom: 32px; border-bottom: 3px solid rgba(122,100,62,.25); padding-bottom: 20px; }
+  .page-head h1 { font-size: 27px; font-weight: 800; color: #574726; letter-spacing: .2px; }
+  .page-head p { font-size: 15.5px; color: #6D5D40; margin-top: 8px; max-width: 1180px; line-height: 1.55; }
+  .page-head p b { color: #574726; }
+  .demo-row { display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start; }
+  .demo-item { display: flex; flex-direction: column; align-items: center; }
+  .demo-label { font-style: italic; font-size: 15px; color: #6D5D40; margin-bottom: 10px; font-weight: 600; }
+
+  /* ---------- console shell ---------- */
+  .pshell {
+    height: 100%;
+    display: flex; flex-direction: column;
+    padding: 34px 0 26px;
+    border-top: 4px solid rgba(255,255,255,.55);
+    border-bottom: 4px solid rgba(122,100,62,.18);
+    box-shadow: inset 0 0 0 2px rgba(122,100,62,.16);
+  }
+  .shell-top { display: flex; align-items: center; justify-content: space-between; padding: 2px 20px 8px; flex-shrink: 0; }
+  .pwr { display: flex; align-items: center; gap: 5px; }
+  .led { width: 9px; height: 9px; border-radius: 50%; background: #E0492E; box-shadow: 0 0 6px rgba(224,73,46,.85); }
+  .pwr .psp { font-size: 12px; color: #6E5F45; }
+  .wordmark { font-size: 12px; color: #574726; letter-spacing: 1px; }
+  .model { font-size: 12.5px; font-weight: 800; color: #6E5F45; letter-spacing: 1.5px; }
+
+  .bezel {
+    flex: 1; margin: 0 14px; min-height: 0;
+    background: #4E483C; border: 3px solid #37322A;
+    border-radius: 16px 16px 22px 22px;
+    padding: 11px 11px 5px;
+    display: flex; flex-direction: column;
+    box-shadow: inset 0 2px 0 rgba(255,255,255,.10), 0 3px 0 rgba(122,100,62,.25);
+  }
+  .bezel-cap { text-align: center; color: #CFC7B4; font-size: 14px; letter-spacing: 1px; padding: 3px 0 2px; flex-shrink: 0; }
+  .lcd-main { flex: 1; min-height: 0; }
+
+  .lcdp {
+    position: relative; background: var(--lcd);
+    border: 2px solid var(--scr-line); border-radius: 10px; overflow: hidden;
+    box-shadow: inset 0 2px 0 rgba(255,255,255,.55), inset 0 -3px 0 rgba(53,80,46,.16);
+  }
+  .lcd-grid {
+    position: absolute; inset: 0; pointer-events: none; z-index: 30;
+    background:
+      repeating-linear-gradient(0deg, rgba(53,80,46,.05) 0 1px, transparent 1px 3px),
+      repeating-linear-gradient(90deg, rgba(53,80,46,.045) 0 1px, transparent 1px 3px);
+  }
+  .lcd-glare {
+    position: absolute; top: -40%; left: -18%; width: 46%; height: 190%;
+    background: linear-gradient(100deg, rgba(255,255,246,.13), rgba(255,255,246,0) 70%);
+    transform: rotate(8deg); pointer-events: none; z-index: 31;
+  }
+  .lcd-content { position: relative; z-index: 10; height: 100%; display: flex; flex-direction: column; padding: 12px 12px 10px; overflow: hidden; }
+  .screen-scroll { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; }
+  .screen-scroll::-webkit-scrollbar { width: 0; }
+
+  /* ---------- screens ---------- */
+  .screen { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  .scr-title { font-family: 'VT323', monospace; font-size: 25px; color: var(--ink); text-align: center; line-height: 1.05; }
+  .scr-sub { text-align: center; font-size: 13px; color: var(--ink2); font-weight: 600; margin-top: 2px; }
+  .sec-label {
+    font-size: 11.5px; font-weight: 800; letter-spacing: .8px; color: var(--ink2);
+    border-bottom: 2px dashed rgba(53,80,46,.3); padding-bottom: 2px; margin: 6px 0 5px;
+  }
+
+  .status-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .status-chip {
+    font-size: 12.5px; font-weight: 800; letter-spacing: .8px;
+    padding: 3px 9px; border: 2px solid var(--ink); border-radius: 4px;
+    background: rgba(195,216,166,.62); color: var(--ink);
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .status-chip::before { content: ''; width: 8px; height: 8px; background: currentColor; border-radius: 2px; flex-shrink: 0; }
+  .status-chip.go { background: var(--ink); color: var(--lcd); }
+  .status-chip.warn { border-color: var(--ink2); color: var(--ink); background: rgba(195,216,166,.45); }
+  .status-chip.rest { border-color: var(--ink2); color: var(--ink); background: rgba(195,216,166,.45); }
+  .status-chip.bad { border-color: var(--hp-low); color: #B3372A; background: #F6DFD3; animation: blink 1s steps(1) infinite; }
+  .status-chip.idle { color: var(--ink2); }
+  .session { font-size: 19px; color: var(--ink2); letter-spacing: 1px; }
+
+  .timer-wrap { position: relative; text-align: center; line-height: .82; margin: 4px 0 2px; }
+  .timer { font-size: 84px; color: var(--ink); position: relative; z-index: 2; }
+  .timer-ghost { position: absolute; left: 0; right: 0; top: 0; font-size: 84px; color: rgba(53,80,46,.08); z-index: 1; }
+
+  .stage {
+    position: relative; height: 126px; margin: 4px 6px 8px;
+    background: rgba(195,216,166,.14);
+    border: 2px solid rgba(53,80,46,.35); border-radius: 8px; overflow: hidden;
+  }
+  .pet { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); }
+  .pet.hop { animation: hop .5s steps(1, end) infinite alternate; }
+  @keyframes hop { from { transform: translateX(-50%) translateY(0); } to { transform: translateX(-50%) translateY(-9px); } }
+  /* ỐM (spec §2.4): shiver ±1px ~400ms + mồ hôi + vũng bóng tối + bubble "…" */
+  .pet.shiver { animation: shiver .4s steps(1) infinite; }
+  @keyframes shiver {
+    0% { transform: translateX(-50%) translateY(0); }
+    25% { transform: translateX(calc(-50% - 1px)) translateY(-1px); }
+    50% { transform: translateX(-50%) translateY(0); }
+    75% { transform: translateX(calc(-50% + 1px)) translateY(1px); }
+    100% { transform: translateX(-50%) translateY(0); }
+  }
+  .sick-puddle { position: absolute; left: 50%; bottom: 3px; transform: translateX(-50%); width: 62%; height: 9px; background: rgba(53,80,46,.2); border-radius: 50%; }
+  .sick-bubble {
+    position: absolute; top: 6px; left: 63%; z-index: 7;
+    font-family: 'VT323', monospace; font-size: 19px; line-height: 1; color: var(--ink);
+    background: rgba(255,255,252,.88); border: 2px solid var(--ink); border-radius: 8px;
+    padding: 1px 7px 2px; animation: blink 1.2s steps(1) infinite;
+  }
+  .sweat { position: absolute; z-index: 7; animation: sweatfly 1.1s steps(4) infinite; }
+  @keyframes sweatfly { 0% { opacity: 1; transform: translate(0,0); } 100% { opacity: 0; transform: translate(-7px,-15px); } }
+  .ground { position: absolute; left: 6px; right: 6px; bottom: 5px; height: 3px; background: rgba(53,80,46,.4); border-radius: 2px; }
+  .grass { position: absolute; bottom: 8px; }
+  .petname {
+    position: absolute; top: 5px; left: 8px;
+    font-family: 'VT323', monospace; font-size: 17px; color: var(--ink2); letter-spacing: 1px;
+  }
+
+  .xp-row { display: flex; align-items: center; gap: 8px; margin: 2px 0 8px; }
+  .lv-chip { background: var(--ink); color: var(--lcd); font-size: 17px; padding: 1px 8px; border-radius: 4px; letter-spacing: 1px; }
+  .xp-bar { flex: 1; height: 12px; display: flex; gap: 3px; padding: 2px; border: 2px solid rgba(53,80,46,.55); border-radius: 4px; }
+  .xp-bar i { flex: 1; background: rgba(53,80,46,.13); border-radius: 1px; }
+  .xp-bar i.on { background: var(--ink); }
+  .xp-num { font-size: 17px; color: var(--ink2); letter-spacing: .5px; }
+
+  .meters { display: flex; flex-direction: column; gap: 7px; margin-bottom: 10px; }
+  .mini-label { font-size: 12.5px; font-weight: 800; letter-spacing: .4px; color: var(--ink2); }
+  .meter-note { font-family: 'VT323', monospace; font-size: 16px; color: var(--ink2); }
+
+  .foot-row { margin-top: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-top: 8px; }
+
+  .lcdbtn {
+    cursor: pointer; font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 13.5px; letter-spacing: .3px;
+    color: var(--ink); background: rgba(195,216,166,.62);
+    border: 2px solid var(--ink); border-radius: 8px; padding: 8px 12px;
+    box-shadow: 3px 3px 0 rgba(53,80,46,.75);
+    transition: transform .06s, box-shadow .06s, background .12s;
+  }
+  .lcdbtn:hover { background: rgba(195,216,166,.9); }
+  .lcdbtn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 rgba(53,80,46,.75); }
+  .lcdbtn.primary { background: var(--ink); color: var(--lcd); }
+  .lcdbtn.primary:hover { background: #44633A; }
+  .lcdbtn.big { width: 100%; padding: 9px 12px; font-size: 15px; }
+  .lcdbtn:disabled { opacity: .55; cursor: not-allowed; }
+
+  /* egg screen */
+  .egg-card {
+    cursor: pointer; display: flex; align-items: center; gap: 12px;
+    padding: 8px 10px; background: rgba(195,216,166,.28);
+    border: 2px solid rgba(53,80,46,.4); border-radius: 10px; position: relative;
+    transition: background .12s, transform .06s;
+    box-shadow: 2px 2px 0 rgba(53,80,46,.25);
+  }
+  .egg-card:hover { background: rgba(195,216,166,.5); }
+  .egg-card:active { transform: translate(1px, 1px); }
+  .egg-card.sel { border: 3px solid var(--ink); background: rgba(195,216,166,.55); box-shadow: 3px 3px 0 rgba(53,80,46,.55); }
+  .egg-slot {
+    width: 62px; height: 58px; display: flex; align-items: center; justify-content: center;
+    background: rgba(53,80,46,.08); border-radius: 8px;
+    border: 2px dashed rgba(53,80,46,.3); flex-shrink: 0;
+  }
+  .egg-slot.sel { border-style: solid; border-color: var(--ink); background: rgba(195,216,166,.5); }
+  .egg-name { font-size: 16.5px; font-weight: 800; color: var(--ink); text-align: left; }
+  .egg-sub { font-size: 12.5px; color: var(--ink2); font-weight: 600; text-align: left; margin-top: 1px; }
+  .chip-sel {
+    position: absolute; top: -9px; right: 10px;
+    background: var(--ink); color: var(--lcd);
+    font-size: 12px; font-weight: 800; letter-spacing: .5px;
+    padding: 1px 7px; border-radius: 4px; border: 2px solid rgba(53,80,46,.5);
+  }
+  .blink-tri {
+    position: absolute; right: 12px; top: 50%; margin-top: -6px;
+    width: 0; height: 0; border-top: 6px solid transparent; border-bottom: 6px solid transparent;
+    border-left: 9px solid var(--ink);
+    animation: blink 1s steps(1) infinite;
+  }
+  .blink-tri.inline { position: static; display: inline-block; vertical-align: middle; margin-left: 8px; }
+  @keyframes blink { 0%, 55% { opacity: 1; } 56%, 100% { opacity: 0; } }
+  .adopted-box {
+    background: rgba(195,216,166,.5); border: 2px dashed var(--ink); border-radius: 10px;
+    padding: 10px; text-align: center; display: flex; flex-direction: column; gap: 8px;
+    font-size: 14px; color: var(--ink); font-weight: 600;
+  }
+
+  /* feed screen */
+  .happy-banner {
+    margin: 6px auto 2px; text-align: center;
+    font-family: 'VT323', monospace; font-size: 21px; color: #8A5A20;
+    background: #FBE7C0; border: 2px solid #B3672B; border-radius: 6px;
+    padding: 2px 12px; width: fit-content;
+    animation: pop .25s steps(3);
+  }
+  @keyframes pop { from { transform: scale(.6); } to { transform: scale(1); } }
+  .feed-row { display: flex; align-items: stretch; gap: 10px; }
+  .sushi-plate { background: rgba(195,216,166,.35); border: 2px solid rgba(53,80,46,.4); border-radius: 10px; padding: 8px 10px; display: flex; align-items: center; }
+  .hint-line { font-size: 12.5px; color: var(--ink2); font-weight: 600; margin-top: 9px; line-height: 1.4; }
+  .heart { position: absolute; animation: heartup 1.4s steps(5) forwards; }
+  @keyframes heartup { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-32px); } }
+
+  /* lai tạo / breed screen */
+  .lean-opt {
+    cursor: pointer; flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 1px; min-width: 0;
+    text-align: left;
+    background: rgba(195,216,166,.28); border: 2px solid rgba(53,80,46,.4); border-radius: 8px;
+    padding: 5px 8px; font-weight: 800; font-size: 12.5px; color: var(--ink);
+    box-shadow: 2px 2px 0 rgba(53,80,46,.25);
+    transition: background .12s, transform .06s;
+    position: relative;
+  }
+  .lean-opt .lean-label { display: flex; align-items: center; gap: 5px; min-width: 0; max-width: 100%; }
+  .lean-opt .lean-label span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .lean-opt:hover { background: rgba(195,216,166,.5); }
+  .lean-opt:active { transform: translate(1px, 1px); }
+  .lean-opt.sel { border: 3px solid var(--ink); background: rgba(195,216,166,.6); box-shadow: 3px 3px 0 rgba(53,80,46,.5); }
+  .lean-cursor { width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 8px solid var(--ink); flex-shrink: 0; animation: blink 1s steps(1) infinite; }
+  .lean-sub { font-weight: 600; font-size: 11px; color: var(--ink2); line-height: 1.2; }
+  .lean-opt .pixelfont { font-size: 15px; }
+
+  .form-box {
+    position: relative; width: 84px; height: 92px; flex-shrink: 0;
+    background: rgba(53,80,46,.08); border: 2px solid rgba(53,80,46,.35); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  .form-box .cap {
+    position: absolute; top: 2px; left: 0; right: 0; text-align: center;
+    font-size: 10px; font-weight: 800; letter-spacing: .5px; color: var(--ink2); z-index: 3;
+  }
+  .form-box .qmark { font-family: 'VT323', monospace; font-size: 26px; color: #EFF5E4; position: absolute; bottom: 3px; left: 0; right: 0; text-align: center; text-shadow: 0 0 2px rgba(53,80,46,.95), 1px 1px 0 rgba(53,80,46,.95), -1px 1px 0 rgba(53,80,46,.95); }
+  .flashbox { animation: lcdflash 1s steps(1) 1; }
+  @keyframes lcdflash {
+    0%, 100% { filter: none; }
+    8%, 24%, 40%, 56%, 72% { filter: brightness(2.1) saturate(.15) contrast(1.25); }
+    16%, 32%, 48%, 64% { filter: brightness(.55); }
+    88% { filter: brightness(1.6) saturate(.3); }
+  }
+  .morphin { animation: morphin .5s steps(4) 1; }
+  @keyframes morphin { 0% { transform: scale(.25, 1.1); } 40% { transform: scale(1.2, .8); } 70% { transform: scale(.85, 1.15); } 100% { transform: scale(1, 1); } }
+
+  .tag-rare {
+    background: var(--red); color: #FFF3E6; font-size: 11.5px; font-weight: 800; letter-spacing: 1px;
+    padding: 1px 7px; border-radius: 4px; border: 2px solid var(--red-d); white-space: nowrap;
+  }
+  .tag-branch { background: #8A6A1E; color: #FFF3D6; font-size: 11.5px; font-weight: 800; letter-spacing: 1px; padding: 1px 7px; border-radius: 4px; border: 2px solid #6E5316; white-space: nowrap; }
+
+  .branch-card {
+    background: rgba(195,216,166,.32); border: 2px solid rgba(53,80,46,.4); border-radius: 8px;
+    padding: 6px 9px; font-size: 12.5px; color: var(--ink); font-weight: 600;
+  }
+  .branch-card.dim { opacity: .7; border-style: dashed; }
+  .branch-card b { font-size: 13.5px; }
+  .branch-card .pixelfont { font-size: 16px; color: var(--ink2); }
+
+  .sick-line { font-family: 'VT323', monospace; font-size: 19px; color: #B3372A; text-align: center; animation: blink 1s steps(1) infinite; letter-spacing: 1px; }
+  .decay-nums { font-family: 'VT323', monospace; font-size: 19px; color: var(--ink); letter-spacing: 1px; }
+
+  /* cond bars */
+  .cond-bar { display: flex; align-items: center; gap: 7px; }
+  .cond-bar .mini-label { min-width: 108px; }
+  .cond-cells { flex: 1; height: 13px; display: flex; gap: 2px; padding: 2px; border: 2px solid rgba(53,80,46,.55); border-radius: 4px; background: rgba(195,216,166,.18); }
+  .cond-cells i { flex: 1; background: rgba(53,80,46,.13); border-radius: 1px; }
+  .cond-cells i.on { background: #8FA47A; }
+  .cond-cells i.done { background: var(--ink); }
+  .cond-bar .pixelfont { font-size: 17px; color: var(--ink); min-width: 46px; text-align: right; }
+  .cond-code {
+    font-family: 'VT323', monospace; font-size: 21px; color: var(--ink);
+    background: rgba(195,216,166,.5); border: 2px solid var(--ink); border-radius: 6px;
+    padding: 1px 10px; display: inline-block; letter-spacing: .5px;
+  }
+
+  /* stats screen */
+  .fire-row { display: flex; gap: 6px; margin: 8px 0; }
+  .day-cell {
+    flex: 1; background: rgba(195,216,166,.25); border: 2px solid rgba(53,80,46,.35);
+    border-radius: 8px; padding: 6px 2px 4px;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+  }
+  .day-cell span { font-size: 12.5px; font-weight: 800; color: var(--ink2); }
+  .day-cell.today { border-color: var(--ink); background: rgba(195,216,166,.55); }
+  .fire.today { animation: firehop .6s steps(1) infinite alternate; }
+  @keyframes firehop { from { transform: translateY(0); } to { transform: translateY(-3px); } }
+  .fire-row.big .day-cell { padding: 10px 2px 8px; }
+
+  .today-panel {
+    display: flex; align-items: center; gap: 14px;
+    background: rgba(195,216,166,.3); border: 2px solid rgba(53,80,46,.4);
+    border-radius: 10px; padding: 8px 12px; margin-bottom: 10px;
+  }
+  .big-num { font-size: 44px; color: var(--ink); line-height: .8; }
+  .v-sep { width: 2px; height: 40px; background: rgba(53,80,46,.25); border-radius: 2px; }
+
+  .hist { background: rgba(195,216,166,.28); border: 2px solid rgba(53,80,46,.4); border-radius: 10px; padding: 8px 10px; margin-bottom: 10px; }
+  .hist-head { display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 13.5px; color: var(--ink); padding-bottom: 5px; border-bottom: 2px solid rgba(53,80,46,.2); }
+  .hist-head .pixelfont { font-size: 17px; color: var(--ink2); }
+  .hist-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid rgba(53,80,46,.12); }
+  .hist-row:last-child { border-bottom: none; }
+  .dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+  .dot.ok { background: var(--ink); }
+  .dot.skip { background: var(--ink2); }
+  .hist-row .time { font-size: 19px; color: var(--ink); min-width: 52px; }
+  .hist-row .mini-label { flex: 1; }
+  .hist-row .xp { font-size: 17px; color: var(--ink); }
+  .hist-row.muted { opacity: .55; }
+  .hist-day-label { font-size: 12.5px; font-weight: 800; color: var(--ink2); letter-spacing: 1px; padding-top: 7px; }
+
+  .sync-card { background: rgba(195,216,166,.42); border: 2px solid var(--ink); border-radius: 12px; padding: 10px; box-shadow: 3px 3px 0 rgba(53,80,46,.4); }
+  .sync-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+  .avatar { width: 46px; height: 46px; border-radius: 50%; background: #E8DCC3; border: 2px solid var(--ink); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+  .avatar.sm { width: 38px; height: 38px; }
+  .sync-name { font-size: 16px; font-weight: 800; color: var(--ink); }
+  .g-btn {
+    cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 9px;
+    background: #DCE8C8; border: 2px solid var(--ink); border-radius: 8px; padding: 8px 10px;
+    font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 14.5px; color: var(--ink);
+    box-shadow: 3px 3px 0 rgba(53,80,46,.5);
+    transition: transform .06s, box-shadow .06s, filter .15s;
+  }
+  .g-btn:hover { filter: brightness(.97); }
+  .g-btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 rgba(53,80,46,.5); }
+
+  /* HUD battle Gen-1 (theo ảnh mẫu Mewtwo/Blastoise DMG) */
+  .stage-hud { position: absolute; top: 6px; right: 6px; z-index: 6; }
+  .gb-hud {
+    min-width: 158px; background: var(--lcd); border: 2px solid var(--ink); border-radius: 3px;
+    box-shadow: 2px 2px 0 rgba(53,80,46,.6); padding: 3px 7px 5px;
+  }
+  .gb-hud-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .gb-hud-name { font-weight: 800; font-size: 14px; letter-spacing: .4px; color: var(--ink); line-height: 1.2; }
+  .gb-hud-lv { font-family: 'VT323', monospace; font-size: 16px; color: var(--ink2); white-space: nowrap; }
+  .gb-hud-hp { display: flex; align-items: center; gap: 5px; margin-top: 2px; }
+  .gb-hud-tt { font-weight: 800; font-size: 10.5px; color: var(--ink); border: 1.5px solid var(--ink); border-radius: 2px; padding: 0 3px; flex-shrink: 0; }
+  .gb-hud-bar { flex: 1; display: flex; align-items: flex-end; gap: 2px; height: 11px; padding: 1px 2px; border: 1.5px solid var(--ink); border-radius: 2px; background: rgba(53,80,46,.08); }
+  .gb-hud-bar i { flex: 1; height: 5px; background: rgba(53,80,46,.16); border-radius: 1px; }
+  .gb-hud-bar i.on { height: 8px; }
+  .gb-hud-num { font-family: 'VT323', monospace; font-size: 16px; color: var(--ink); white-space: nowrap; }
+  .gb-hud.compact { min-width: 0; width: 100px; padding: 2px 5px 3px; box-shadow: 2px 2px 0 rgba(53,80,46,.45); }
+  .gb-hud.compact .gb-hud-name { font-size: 10px; }
+  .gb-hud.compact .gb-hud-lv { font-size: 12px; }
+  .gb-hud.compact .gb-hud-num { font-size: 11px; }
+  .gb-hud.compact .gb-hud-bar { height: 9px; }
+  .gb-hud.crit .gb-hud-bar i.on { animation: hudblink .56s steps(1) infinite; }
+  .gb-hud.crit .gb-hud-lv::after { content: ' · ỐM'; }
+  @keyframes hudblink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: .2; } }
+
+  /* tab bar */
+  .lcd-tab {
+    cursor: pointer; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+    padding: 6px 2px 4px; background: rgba(195,216,166,.5); color: var(--ink);
+    border: 2px solid rgba(53,80,46,.45); border-radius: 8px;
+    font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 12.5px;
+    transition: background .12s;
+  }
+  .lcd-tab:hover { background: rgba(195,216,166,.85); }
+  .lcd-tab:active { transform: translateY(1px); }
+  .lcd-tab.active { background: var(--ink); color: var(--lcd); border-color: var(--ink); }
+  .lcd-tab.active::after { content: ''; width: 14px; height: 3px; background: var(--lcd); animation: blink 1s steps(1) infinite; }
+
+  /* deck */
+  .deck { display: flex; align-items: center; gap: 12px; padding: 12px 18px 2px; flex-shrink: 0; }
+  .deck-mid { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .pills { display: flex; gap: 16px; }
+  .pill-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .pill { width: 44px; height: 13px; border-radius: 999px; background: #E7D9BB; border: 2px solid #C6B48D; box-shadow: 0 2px 0 #C6B48D; transform: rotate(-18deg); cursor: pointer; }
+  .pill:active { transform: rotate(-18deg) translateY(2px); box-shadow: none; }
+  .shell-label { font-size: 12px; font-weight: 800; letter-spacing: .8px; color: #6E5F45; }
+  .speaker { display: flex; gap: 7px; }
+  .speaker i { width: 6px; height: 18px; border-radius: 3px; background: rgba(122,100,62,.28); box-shadow: inset 0 2px 2px rgba(122,100,62,.4); transform: skewX(-14deg); }
+  .deck-hint { font-size: 12px; font-weight: 700; color: #6E5F45; text-align: center; line-height: 1.35; }
+  .deck-right { display: flex; gap: 14px; }
+  .ab-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .ab-btn {
+    width: 54px; height: 54px; border-radius: 50%;
+    border: 3px solid var(--red-d); background: var(--red);
+    box-shadow: 0 5px 0 var(--red-d), inset 0 -5px 0 rgba(0,0,0,.2);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: transform .05s, box-shadow .05s, filter .12s;
+  }
+  .ab-btn:hover { filter: brightness(1.07); }
+  .ab-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--red-d), inset 0 -2px 0 rgba(0,0,0,.2); }
+  .ab-btn .psp { font-size: 14px; color: #FFF6E8; }
+  .ab-btn.dark { background: #A93529; }
+
+  .dp-arm {
+    position: absolute; cursor: pointer; background: #E7D9BB; border: 2px solid #C6B48D;
+    box-shadow: inset 0 -3px 0 rgba(120,100,60,.28), 0 2px 0 #C6B48D;
+    transition: transform .05s, box-shadow .05s, background .12s;
+  }
+  .dp-arm:hover { background: #EFE2C6; }
+  .dp-arm:active { transform: translateY(2px); box-shadow: inset 0 -1px 0 rgba(120,100,60,.28); }
+  .dp-dec { position: absolute; background: #E7D9BB; border: 2px solid #C6B48D; box-shadow: inset 0 -3px 0 rgba(120,100,60,.28); }
+  .dp-tri { position: absolute; left: 50%; top: 50%; width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .dp-tri-l { transform: translate(-50%, -50%); border-right: 7px solid #A08A5C; border-left: none; }
+  .dp-tri-r { transform: translate(-50%, -50%); border-left: 7px solid #A08A5C; border-right: none; }
+
+  /* ---------- desktop web ---------- */
+  .web-app { height: 100%; display: flex; flex-direction: column; background: #F1E8D5; }
+  .web-bar { display: flex; align-items: center; gap: 26px; padding: 14px 26px; background: #F6EFDF; border-bottom: 3px solid rgba(122,100,62,.28); box-shadow: 0 3px 0 rgba(122,100,62,.12); }
+  .web-mark { font-size: 13px; color: #574726; }
+  .web-nav { display: flex; gap: 8px; flex: 1; }
+  .wnav { cursor: pointer; font-weight: 800; font-size: 14px; color: #6E5F45; padding: 6px 14px; border-radius: 999px; border: 2px solid transparent; }
+  .wnav:hover { border-color: rgba(122,100,62,.4); }
+  .wnav.active { background: #574726; color: #F3EBD8; border-color: #574726; box-shadow: 2px 2px 0 rgba(87,71,38,.35); }
+  .web-right { display: flex; align-items: center; gap: 12px; }
+  .web-main { flex: 1; display: flex; gap: 18px; padding: 16px 22px; min-height: 0; }
+  .web-left { flex: 1.5; min-width: 0; display: flex; }
+  .lcd-web { flex: 1; }
+  .w-content { position: relative; z-index: 10; height: 100%; display: flex; flex-direction: column; padding: 14px 16px; overflow-y: auto; }
+  .w-content::-webkit-scrollbar { width: 0; }
+  .web-right-col { flex: 1; display: flex; flex-direction: column; gap: 14px; min-width: 0; overflow-y: auto; }
+  .plastic-card { background: #F6EFDF; border: 2px solid #C9B892; border-radius: 16px; box-shadow: 4px 4px 0 rgba(122,100,62,.22), inset 0 2px 0 rgba(255,255,255,.7); padding: 12px; }
+  .mc-head { text-align: center; }
+
+  /* dex grid */
+  .dex-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-bottom: 8px; border-bottom: 2px solid rgba(53,80,46,.3); margin-bottom: 8px; }
+  .dex-count { display: flex; align-items: center; gap: 9px; }
+  .dex-count .pixelfont { font-size: 21px; color: var(--ink); letter-spacing: 1px; }
+  .dex-blocks { display: flex; gap: 2px; }
+  .dex-blocks i { width: 9px; height: 13px; background: rgba(53,80,46,.14); border-radius: 2px; }
+  .dex-blocks i.on { background: var(--ink); }
+  .dex-legend { font-size: 11.5px; font-weight: 700; color: var(--ink2); margin-bottom: 7px; }
+  .dex-legend .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: -1px; margin: 0 3px 0 8px; border: 1.5px solid rgba(53,80,46,.5); }
+
+  .dex-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 7px; }
+  .dex-cell {
+    cursor: pointer; position: relative; background: rgba(53,80,46,.06);
+    border: 2px solid rgba(53,80,46,.35); border-radius: 8px; padding: 5px 2px 3px;
+    display: flex; flex-direction: column; align-items: center; gap: 1px;
+    transition: background .12s;
+  }
+  .dex-cell:hover { background: rgba(195,216,166,.8); }
+  .dex-cell:active { transform: translateY(1px); }
+  .dex-cell.sel { border: 3px solid var(--ink); background: rgba(195,216,166,.55); box-shadow: 2px 2px 0 rgba(53,80,46,.5); }
+  .dex-cell .no { font-family: 'VT323', monospace; font-size: 13px; color: var(--ink2); line-height: 1; }
+  .dex-cell .nm { font-family: 'VT323', monospace; font-size: 15px; color: var(--ink); line-height: 1.05; text-align: center; }
+  .dex-cell .mini-tag {
+    position: absolute; top: -7px; right: 3px; font-size: 9.5px; font-weight: 800;
+    background: var(--ink); color: var(--lcd); padding: 0 4px; border-radius: 3px;
+    border: 1.5px solid var(--ink); letter-spacing: .5px;
+  }
+  .dex-cell .mini-tag.br { background: var(--ink2); border-color: var(--ink2); }
+  .dex-line-head { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 800; letter-spacing: 1px; color: var(--ink2); margin-top: 3px; }
+  .dex-line-head .rule { flex: 1; height: 2px; background: rgba(53,80,46,.2); }
+
+  .side-name { font-family: 'VT323', monospace; font-size: 30px; color: var(--ink); line-height: 1; }
+  .side-sprite {
+    width: 108px; height: 108px; flex-shrink: 0; border-radius: 10px;
+    background: rgba(53,80,46,.08); border: 2px solid rgba(53,80,46,.35);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .sys-row { display: flex; gap: 8px; align-items: baseline; padding: 4px 0; border-bottom: 1px dashed rgba(122,100,62,.3); font-size: 12.5px; line-height: 1.35; }
+  .sys-row:last-child { border-bottom: none; }
+  .sys-row .psp { font-size: 9px; color: #574726; min-width: 92px; }
+  .sys-row .sys-desc { color: #6D5D40; font-weight: 600; }
+  .phys-btn {
+    cursor: pointer; flex: 1; border-radius: 999px; padding: 9px 14px;
+    font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 14px;
+    background: #E7D9BB; color: #574726; border: 2px solid #A08A5C;
+    box-shadow: 0 4px 0 #C6B48D;
+    transition: transform .05s, box-shadow .05s, filter .12s;
+  }
+  .phys-btn:hover { filter: brightness(1.04); }
+  .phys-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #C6B48D; }
+  .phys-btn.red { background: var(--red); color: #FFF3E6; border-color: var(--red-d); box-shadow: 0 4px 0 var(--red-d); }
+  .phys-btn.red:active { box-shadow: 0 1px 0 var(--red-d); }
+  .phys-btn:disabled { opacity: .6; cursor: not-allowed; }
+  .dev-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .dev-chip { font-family: 'VT323', monospace; font-size: 15px; letter-spacing: 1px; border: 2px solid rgba(53,80,46,.5); color: var(--ink2); padding: 0 8px; border-radius: 4px; background: #DCE8C8; }
+  .dev-chip.ok { background: var(--leaf); color: #F0F6DC; border-color: #2E4A26; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState } = React;
+
+/* =====================================================================
+ * AndroidFrame — copy từ /Users/be_gt/.zcode/skills/huashu-design/assets/android_frame.jsx
+ * ===================================================================== */
+const androidFrameStyles = {
+  wrapper: {
+    display: 'inline-block',
+    padding: 10,
+    background: '#1a1a1a',
+    borderRadius: 44,
+    boxShadow: '0 0 0 2px #2a2a2a, 0 20px 60px rgba(0,0,0,0.3)',
+    position: 'relative',
+  },
+  screen: {
+    position: 'relative',
+    borderRadius: 36,
+    overflow: 'hidden',
+    background: '#fff',
+  },
+  statusBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 32,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '0 24px',
+    fontSize: 14,
+    fontWeight: 500,
+    fontFamily: 'Roboto, -apple-system, sans-serif',
+    zIndex: 20,
+    pointerEvents: 'none',
+  },
+  punchHole: {
+    position: 'absolute',
+    top: 10,
+    left: '50%',
+    transform: 'translateX(-50%)',
+    width: 14,
+    height: 14,
+    background: '#000',
+    borderRadius: '50%',
+    zIndex: 30,
+  },
+  statusIcons: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+  },
+  batteryText: {
+    fontSize: 11,
+    fontWeight: 600,
+    marginLeft: 2,
+  },
+  content: {
+    position: 'absolute',
+    top: 32,
+    left: 0,
+    right: 0,
+    bottom: 24,
+    overflow: 'auto',
+  },
+  navBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 24,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 60,
+    zIndex: 10,
+  },
+  navButton: {
+    width: 36,
+    height: 4,
+    background: 'rgba(0,0,0,0.3)',
+    borderRadius: 999,
+  },
+};
+
+function AndroidFrame({
+  children,
+  width = 412,
+  height = 892,
+  time = '9:41',
+  battery = 100,
+  darkMode = false,
+  navStyle = 'gesture',
+}) {
+  const textColor = darkMode ? '#fff' : '#1a1a1a';
+
+  return (
+    <div style={androidFrameStyles.wrapper}>
+      <div style={{
+        ...androidFrameStyles.screen,
+        width,
+        height,
+        background: darkMode ? '#000' : '#fff',
+      }}>
+        <div style={{ ...androidFrameStyles.statusBar, color: textColor }}>
+          <span>{time}</span>
+          <div style={androidFrameStyles.statusIcons}>
+            <svg width="14" height="10" viewBox="0 0 14 10" fill="currentColor">
+              <rect x="0" y="6" width="2" height="4" rx="0.5" />
+              <rect x="4" y="4" width="2" height="6" rx="0.5" />
+              <rect x="8" y="2" width="2" height="8" rx="0.5" />
+              <rect x="12" y="0" width="2" height="10" rx="0.5" />
+            </svg>
+            <svg width="14" height="10" viewBox="0 0 14 10" fill="none">
+              <path d="M7 9a1 1 0 100-2 1 1 0 000 2z" fill="currentColor" />
+              <path d="M3 6a5 5 0 018 0" stroke="currentColor" strokeWidth="1.2" />
+              <path d="M0.5 3.5a11 11 0 0113 0" stroke="currentColor" strokeWidth="1.2" opacity="0.6" />
+            </svg>
+            <div style={{
+              width: 22,
+              height: 10,
+              border: '1.5px solid currentColor',
+              borderRadius: 2,
+              padding: 1,
+              position: 'relative',
+            }}>
+              <div style={{
+                width: `${battery}%`,
+                height: '100%',
+                background: 'currentColor',
+                borderRadius: 1,
+              }} />
+            </div>
+            <span style={androidFrameStyles.batteryText}>{battery}%</span>
+          </div>
+        </div>
+
+        <div style={androidFrameStyles.punchHole} />
+
+        <div style={androidFrameStyles.content}>
+          {children}
+        </div>
+
+        {navStyle === 'gesture' && (
+          <div style={androidFrameStyles.navBar}>
+            <div style={{
+              ...androidFrameStyles.navButton,
+              width: 100,
+              height: 4,
+              background: darkMode ? 'rgba(101,124,72,0.5)' : 'rgba(0,0,0,0.4)',
+            }} />
+          </div>
+        )}
+
+        {navStyle === 'buttons' && (
+          <div style={androidFrameStyles.navBar}>
+            <span style={{ color: textColor, fontSize: 20 }}>◁</span>
+            <span style={{ color: textColor, fontSize: 16 }}>○</span>
+            <span style={{ color: textColor, fontSize: 16 }}>□</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+if (typeof window !== 'undefined') {
+  window.AndroidFrame = AndroidFrame;
+}
+
+/* =====================================================================
+ * BrowserWindow — copy từ /Users/be_gt/.zcode/skills/huashu-design/assets/browser_window.jsx
+ * ===================================================================== */
+const browserWindowStyles = {
+  window: {
+    display: 'inline-block',
+    background: '#fff',
+    borderRadius: 10,
+    overflow: 'hidden',
+    boxShadow: '0 30px 80px rgba(0,0,0,0.25), 0 0 0 0.5px rgba(0,0,0,0.15)',
+  },
+  chrome: {
+    background: '#dee1e6',
+    paddingTop: 10,
+    paddingLeft: 10,
+    paddingRight: 10,
+    userSelect: 'none',
+  },
+  tabRow: {
+    display: 'flex',
+    alignItems: 'flex-end',
+    gap: 6,
+    position: 'relative',
+  },
+  trafficLights: {
+    display: 'flex',
+    gap: 8,
+    alignItems: 'center',
+    paddingBottom: 10,
+    marginRight: 8,
+  },
+  light: {
+    width: 12,
+    height: 12,
+    borderRadius: '50%',
+    border: '0.5px solid rgba(0,0,0,0.15)',
+  },
+  close: { background: '#ff5f57' },
+  minimize: { background: '#febc2e' },
+  maximize: { background: '#28c840' },
+  tab: {
+    background: '#fff',
+    padding: '8px 30px 8px 14px',
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+    fontSize: 12,
+    color: '#222',
+    fontFamily: '-apple-system, sans-serif',
+    maxWidth: 220,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    position: 'relative',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  },
+  favicon: {
+    width: 14,
+    height: 14,
+    borderRadius: 2,
+    background: '#999',
+    flexShrink: 0,
+  },
+  navBar: {
+    background: '#fff',
+    padding: '8px 14px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    borderBottom: '1px solid #e5e7eb',
+  },
+  navButtons: {
+    display: 'flex',
+    gap: 4,
+    color: '#5f6368',
+    fontSize: 16,
+  },
+  navButton: {
+    width: 28,
+    height: 28,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: '50%',
+    cursor: 'pointer',
+  },
+  urlBar: {
+    flex: 1,
+    background: '#f1f3f4',
+    borderRadius: 999,
+    padding: '7px 14px',
+    fontSize: 13,
+    color: '#333',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    fontFamily: '-apple-system, sans-serif',
+  },
+  lockIcon: {
+    color: '#5f6368',
+    fontSize: 12,
+  },
+  content: {
+    position: 'relative',
+    overflow: 'auto',
+    background: '#fff',
+  },
+};
+
+function BrowserWindow({
+  title = 'New Tab',
+  url = 'https://example.com',
+  width = 1200,
+  height = 800,
+  showTrafficLights = true,
+  children,
+}) {
+  return (
+    <div style={browserWindowStyles.window}>
+      <div style={browserWindowStyles.chrome}>
+        <div style={browserWindowStyles.tabRow}>
+          {showTrafficLights && (
+            <div style={browserWindowStyles.trafficLights}>
+              <div style={{ ...browserWindowStyles.light, ...browserWindowStyles.close }} />
+              <div style={{ ...browserWindowStyles.light, ...browserWindowStyles.minimize }} />
+              <div style={{ ...browserWindowStyles.light, ...browserWindowStyles.maximize }} />
+            </div>
+          )}
+          <div style={browserWindowStyles.tab}>
+            <div style={browserWindowStyles.favicon} />
+            <span>{title}</span>
+          </div>
+        </div>
+      </div>
+
+      <div style={browserWindowStyles.navBar}>
+        <div style={browserWindowStyles.navButtons}>
+          <div style={browserWindowStyles.navButton}>←</div>
+          <div style={browserWindowStyles.navButton}>→</div>
+          <div style={browserWindowStyles.navButton}>↻</div>
+        </div>
+        <div style={browserWindowStyles.urlBar}>
+          <span style={browserWindowStyles.lockIcon}>🔒</span>
+          <span>{url}</span>
+        </div>
+      </div>
+
+      <div style={{ ...browserWindowStyles.content, width, height }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+if (typeof window !== 'undefined') {
+  window.BrowserWindow = BrowserWindow;
+}
+
+/* =====================================================================
+ * Pet Pomodoro — KỊCH BẢN 3: LAI TẠO & POKÉDEX (Cozy Handheld Console)
+ * gameplay v2 theo docs/gameplay-spec.md — line Lửa (Tàn Lửa) làm hero.
+ *
+ * KIẾN TRÚC MỞ (spec §1): mọi màn hình render từ 3 config:
+ *   CATALOG — bộ sinh vật (3 line × [3 stage + 2 branch + 1 hybrid] + trứng)
+ *   COND    — registry điều kiện (combo AND/OR)
+ *   SYSTEMS — khai báo hệ module (on / decay / ui slots)
+ * Thêm loài / thêm điều kiện / thêm hệ = thêm entry config, KHÔNG sửa core.
+ * ===================================================================== */
+
+/* ---------- công thức số (spec §3) ---------- */
+const xpNeed = L => 80 + 30 * L;                      // Lv.4→5 cần 200 XP
+const powerCap = L => Math.min(100, 40 + 6 * L);      // Lv.4 cap 64
+
+/* ---------- registry điều kiện (spec §1.3) ---------- */
+const COND = {
+  level_at_least:          (st, v) => st.level  >= v,
+  power_at_least:          (st, v) => st.power  >= v,
+  streak_at_least:         (st, v) => st.streak >= v,
+  healthy_days_at_least:   (st, v) => st.healthyDays >= v,
+  sessions_today_at_least: (st, v) => st.todaySessions >= v,
+  and: (st, of) => of.every(c => evalCond(st, c)),
+  or:  (st, of) => of.some(c => evalCond(st, c)),
+};
+function evalCond(st, c) {
+  if (c.k === 'and') return c.of.every(x => evalCond(st, x));
+  if (c.k === 'or')  return c.of.some(x => evalCond(st, x));
+  return COND[c.k](st, c.v);
+}
+const COND_CODE = {
+  level_at_least: 'level', power_at_least: 'power', streak_at_least: 'streak',
+  healthy_days_at_least: 'healthyDays', sessions_today_at_least: 'sessionsToday',
+};
+const COND_NAME = {
+  level_at_least: 'LEVEL', power_at_least: 'SỨC MẠNH', streak_at_least: 'STREAK',
+  healthy_days_at_least: 'KHỎE LIÊN TỤC', sessions_today_at_least: 'PHIÊN HÔM NAY',
+};
+function condText(c) {
+  if (!c) return '—';
+  if (c.k === 'and') return c.of.map(condText).join(' ∧ ');
+  if (c.k === 'or')  return c.of.map(condText).join(' ∨ ');
+  return COND_CODE[c.k] + '≥' + c.v;
+}
+function condLeaves(c, acc = []) {
+  if (c.k === 'and' || c.k === 'or') c.of.forEach(x => condLeaves(x, acc));
+  else acc.push(c);
+  return acc;
+}
+
+/* ---------- pixel art data — CHUẨN v3 (spec §2.5): Pokémon MÀU, phức tạp tăng theo stage ----------
+   Tham chiếu bộ starter thật: Charmander→Charmeleon→Charizard (Lửa) · Squirtle→Wartortle→Blastoise (Thủy)
+   · Bulbasaur→Ivysaur→Venusaur (Thảo). Kích thước: st1 32×32 → st2 40×40 → st3 48×48 (đổi dáng rõ),
+   outline theo hue, 4–6 tông + highlight. Palette ốm = nhợt/desaturate riêng (spec §2.4). */
+
+/* ===== SPRITE MÀU v3 — tham chiếu Pokemon (spec §2.5), dựng từ scripts/gen-sprites.py + bổ sung ===== */
+const SPR_PAL = {
+  fire: { o: "#4A1410", d: "#7E1F16", f: "#B5382A", l: "#E06038", h: "#F5A05A", c: "#F2E5C8", C: "#D9BE9A", v: "#5A1810", r: "#D9452B", y: "#F28C28", Y: "#F7C948", W: "#FFF6D8", k: "#143C3C", t: "#3FA8A0", w: "#FFFFFF", Z: "#1E4E4A", T: "#2E7E76", i: "#7FD4C8", A: "#FFD97C", P: "#F2A0BC", S: "#9AA8BC", X: "#3E4C60", R: "#C13E31", Q: "#8E271E" },
+  fireSick: { o: "#5A4438", d: "#8A6A5C", f: "#B08A76", l: "#C9A88E", h: "#E0C8AC", c: "#E5DCC8", C: "#C2B49A", g: "#8C8C8C", G: "#6E6E6E", k: "#4A4038", t: "#8CA8A0", w: "#FFFFFF" },
+  water: { o: "#16283E", d: "#24365C", f: "#35507E", l: "#5B7CB0", h: "#8FA8CE", c: "#C7D8EE", C: "#9FB4D0", a: "#E8C860", A: "#FFD97C", b: "#A8D8F0", B: "#5FA8CC", k: "#101820", t: "#F0C040", w: "#FFFFFF", P: "#F2A0BC", S: "#9AA8BC", X: "#3E4C60", R: "#C13E31", Q: "#8E271E" },
+  grass: { o: "#1E3A1C", d: "#3E7A34", f: "#5FA84A", l: "#93D06E", h: "#B8E88A", c: "#D8EFC0", C: "#A8C888", u: "#4E8A5E", U: "#37634A", p: "#F0A0B8", P: "#F2A0BC", m: "#8A6242", M: "#63452E", k: "#142014", w: "#FFFFFF", R: "#C13E31", e: "#FF8A4A", A: "#FFD97C", S: "#9AA8BC", X: "#3E4C60", Q: "#8E271E" },
+  egg: { o: "#4A3C30", c: "#F7E7CE", C: "#DEC29B", e: "#FFF8EA", y: "#F5B840", Y: "#FFDD7C", W: "#FFF7DB" },
+  steam: { o: "#1B2E4A", d: "#27406B", f: "#39558A", l: "#5F80B8", h: "#8FAED6", c: "#CFE0F2", C: "#A2B8D4", v: "#5A1810", r: "#D9452B", y: "#F28C28", Y: "#F7C948", W: "#FFF6D8", b: "#AEE0F5", B: "#5FA8CC", k: "#12262E", t: "#3FA8A0", w: "#FFFFFF" },
+  steamSick: { o: "#5E6470", d: "#7E8694", f: "#9AA2B0", l: "#B6BCCA", h: "#D2D6DE", c: "#E4E8EC", C: "#C6CCD4", v: "#8A7A6E", r: "#C0A890", y: "#CDB896", Y: "#DFD2AC", W: "#F4F0E2", b: "#DCEAEF", B: "#ACC6CE", g: "#909090", G: "#6E6E6E", k: "#3E4650", t: "#8FB0AC", w: "#FFFFFF" },
+  lotus: { o: "#1B2E4A", d: "#27406B", f: "#39558A", l: "#5F80B8", h: "#8FAED6", c: "#CFE0F2", C: "#A2B8D4", g: "#B8E88A", G: "#93D06E", e: "#5FA84A", E: "#3E7A34", p: "#F2A0BC", P: "#D06890", b: "#AEE0F5", B: "#5FA8CC", k: "#12262E", t: "#3FA8A0", w: "#FFFFFF" },
+  blossom: { o: "#1E3A1C", d: "#3E7A34", f: "#5FA84A", l: "#93D06E", h: "#B8E88A", c: "#D8EFC0", C: "#A8C888", v: "#5A1810", r: "#D9452B", y: "#F28C28", Y: "#F7C948", W: "#FFF6D8", p: "#F2A0BC", P: "#D06890", u: "#4E8A5E", U: "#37634A", k: "#142014", t: "#3FA8A0", w: "#FFFFFF" },
+};
+const SPR_GRIDS = {
+  trungEgg: { pal: SPR_PAL.egg, rows: [
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "...............oo...............",
+    ".............ooccoo.............",
+    "............oeeeecco............",
+    "...........oeeecccccCo..........",
+    "..........oeeccccccccCo.........",
+    ".........oecccyycccccCo.........",
+    ".........oeccyYyyccccCo.........",
+    ".........oeccyYWWyccCCo.........",
+    ".........oeccyYYyccccCo.........",
+    ".........oecccyycccccco.........",
+    ".........oeccccccccccCo.........",
+    ".........oeccccccccccCCo........",
+    "..........occcccccccCCo.........",
+    "..........occccccccCCCo.........",
+    "...........occcccCCCCo..........",
+    "............occcccCCo...........",
+    ".............ocCCCo.............",
+    "..............oooo..............",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+  ] },
+  tanLua: { pal: SPR_PAL.fire, rows: [
+    "................................",
+    "................................",
+    "......oo........oo..............",
+    ".....oddo......oddo.............",
+    "....oddo........oddo............",
+    "....oddoooooooooddo.............",
+    "....ollfffdddfffffddo.....vrv...",
+    "....olfffdddddffffdo....vryYyrv.",
+    "....oddddfffddddfffo...vryYYyrv.",
+    "....owkkkfffwkkkfffo..vryYWYyrv.",
+    "....okttkfffkttkfffo.vryYWWYyrv.",
+    "....okttkfffkttkfffo.vryYWWYyrv.",
+    "....okkcccfffffffffo.vryYWWYyrv.",
+    "....occocffffffffffo.vryYWYyrv..",
+    ".....ocfcfcffffffdo.vryYWYrv....",
+    "......offcccffffdo.vryYWYrv.....",
+    ".......occccfffdoryYWYyrv.......",
+    "........occccfdoryYWYyrv........",
+    "........occccfdoryYWYyrv........",
+    ".......occcffffddoyYWYyrv.......",
+    ".......occcffffddoyYWYyrv.......",
+    "........occcfffdoryYYrv.........",
+    "........offfffddovrrv...........",
+    ".........offffddo...............",
+    ".........offo.offo..............",
+    ".........oddo.oddo..............",
+    ".........oooo.oooo..............",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+  ] },
+  tanLuaOm: { pal: SPR_PAL.fireSick, rows: [
+    "................................",
+    "................................",
+    "................................",
+    ".......oo......oo...............",
+    "......oddo....oddo..............",
+    ".....oddooooooooo...............",
+    ".....ollffffffffddo.....gGg.....",
+    ".....olfffffffffddo....gGgGg....",
+    ".....okk.fffkk.fffo...gGgGg.....",
+    ".....okk.fffkk.fffo....gGg......",
+    ".....occccfffffffffo............",
+    ".....ococofffffffffo............",
+    "......ocffcffddo................",
+    ".......ofcccfffdo...............",
+    "........occcffdo................",
+    "........occcffdo................",
+    ".......occcffddo................",
+    ".......occcffddo................",
+    "........occffdo.................",
+    "........offffddo................",
+    ".........offfddo................",
+    ".........offooffo...............",
+    ".........oddooddo...............",
+    ".........oooooooo...............",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+  ] },
+  bongBot: { pal: SPR_PAL.fire, rows: [
+    "........................................",
+    "........................................",
+    "...........oo.........oo................",
+    "..........oddo.......oddo...............",
+    ".........oddo.......oddo................",
+    "........oddo.......oddo.................",
+    "........oddooooooooooooddo..............",
+    ".......olffdddddffffffffffo....vrv......",
+    ".......olfffffffffffffffddo..vryYyrv....",
+    "......olfffffffffffffffffddovryYYyrv....",
+    "......odddddfffdddddfffffffovryYWYrv....",
+    "......owddddfffwddddfffffffovryYWYrv....",
+    "......oktttkfffktttkfffffffovryYWYrv....",
+    "......oktttkfffktttkfffffffovryYWYrv....",
+    "......okkkkkfffkkkkkfffffffovryYWYrv....",
+    "......okkcccccfffffffffffffovryYWYrv....",
+    "......occcocffffffffffffffo.vryYWYyrv...",
+    ".......ocfcfcffffffffddddddovryYWYyrv...",
+    "........occccfffffffffddddo.vryYWYyrv...",
+    "........occccccfffffffdddddoryYWYyrv....",
+    ".......occcccffffffffddddddoryYWYrv.....",
+    ".......occcccffffffffddddddoryYWYrv.....",
+    ".......occccccfffffffddddddoryYWYrv.....",
+    ".......occccccfffffffddddddoryYyrv......",
+    ".......occccccfffffffddddddoryYyrv......",
+    ".......occccfffffddd.ddddddoryYrv.......",
+    ".......occccfffffddd.ddddddoryrv........",
+    "........occcfffffdddddddddo.............",
+    "........occcffffddddddddddo.............",
+    ".........occffdffddddddddo..............",
+    "..........offo......offo................",
+    "..........oddo......oddo................",
+    "..........oooo......oooo................",
+    "........................................",
+    "........................................",
+    "........................................",
+    "........................................",
+    "........................................",
+    "........................................",
+    "........................................",
+  ] },
+  diemLong: { pal: SPR_PAL.fire, rows: [
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "........ZZ....oo........oo......................",
+    ".......ZtiZ..oddo......oddo.....................",
+    "......Zitttioddo......oddo......................",
+    ".....Zittttioddo.....oooooooo...................",
+    "....Zitttttollfffdddddffffffddo.....vrv.........",
+    "...Zittttttolffffffffffffffffddo...vryYyrv......",
+    "..Zittttttolffffffffffffffffffddo.vryYYyrv......",
+    "..ZittttiZoddddddfffddddddddddddovryYWYrv.......",
+    "..ZttttiZ.owdddddfffwdddddddddddovryYWYrv.......",
+    "..ZtttiZ..oktttkkfffktttkkddddddovryYWYrv.......",
+    "..vZttiZv.oktttkkfffktttkkddddddovryYWYrv.......",
+    "...vZttZv.okkkkkkfffkkkkkkddddddovryYWYrv.......",
+    "..vvZttZvvokkccccccccfffffffffddovryYWYrv.......",
+    ".vTTvZZvTToccccccocfffffffffffddovryYWYyrv......",
+    "vTTTv.vTTTTocfcfcfffffffffffffddovryYWYyrv......",
+    "vTTTTv.vTTTToccccffffffffffffdddovryYWYyrv......",
+    ".vTTTv..vTTT.occccccffffffffddddoryYWYyrv.......",
+    "..vTZttTZv...occccccffffffffddddoryYWYyrv.......",
+    "...vZtttZv..occcccffffffffffdddddoryYWYrv.......",
+    "....ZZZZZ..occccffffffffffffddddddoryYWYrv......",
+    "..........occccfffffffffffffdddddddoryYWYrv.....",
+    "..........occccfffffffffffffdddddddoryYyrv......",
+    "..........occcccffffffffffffdddddddoryYyrv......",
+    "..........occcffffffffffffffdddddddoryYrv.......",
+    "..........occffffffddd..ddddddddd.o.ryrv........",
+    "..........occfffdffdddd..ddddddddoyYrv..........",
+    "...........occffddffddd.ddddddddoyrv............",
+    "............ocffddffddd.ddddddo.................",
+    "............offfddffddd.ddddddo.................",
+    ".............offfddd.ddddddddo..................",
+    "...............o....o.....o.....................",
+    "..............offo..offo..offfo.................",
+    "..............oddo..oddo..oddo..................",
+    "..............oooo..oooo..oooo..................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+  ] },
+  diemLongHien: { pal: SPR_PAL.fire, rows: [
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    ".............A.P................................",
+    "........ZZ....oo........oo......................",
+    ".......AtiZ..oddo......oddo.....................",
+    "......Zitttioddo......oddo......................",
+    ".....Zittttioddo.....oooooooo...................",
+    "....ZiPttttollfffdddddffffffddo.....vrv.........",
+    "...Zittttttolffffffffffffffffddo...vryYyrv......",
+    "..Zittttttolffffffffffffffffffddo.vryYYyrv......",
+    "..ZittttiZoddddddfffddddddddddddovryYWYrv.......",
+    "..ZttttiZ.owdddddfffwdddddddddddovryYWYrv.......",
+    "..ZtttiZ..okffffkfffkffffkddddddovryYWYrv.......",
+    "..vZttiZv.ofkkkkfffffkkkkfddddddovryYWYrv.......",
+    "...vZttZv.offfffffffffffffddddddovryYWYrv.......",
+    "..vvZttZvvokPPcccccccfPPffffffddovryYWYrv.......",
+    ".vTTvZZvTToccccccocfffffffffffddovryYWYyrv......",
+    "vTTTv.ATTTTocfcfcfffffffffffffddovryYWYyrv......",
+    "vTTTTv.vTTTToccccffffffffffffdddovryYWYyrv......",
+    ".vTTTv..vTTT.occccccffffffffddddoryYWYyrv.......",
+    "..vTZttTZv...occccccffffffffddddoryYWYyrv.......",
+    "...vZtttZv..occcccffffffffffdddddoryYWYrv.......",
+    "....ZZZZZ..occccffffffffffffddddddoryYWYrv......",
+    "..........occccfffffffffffffdddddddoryYWYrv.....",
+    "..........occccfffffffffffffdddddddoryYyrv......",
+    ".......P..occcccffffffffffffdddddddoryYyrv......",
+    "..........occcffffffffffffffdddddddoryYrv.......",
+    "..........occffffffddd..ddddddddd.o.ryrv........",
+    "..........occfffdffdddd..ddddddddoyYrv..........",
+    "...........occffddffddd.ddddddddoyrv............",
+    "............ocffddffddd.ddddddo.................",
+    ".........A..offfddffddd.ddddddo.................",
+    ".............offfddd.ddddddddo..................",
+    "...............o....o.....o.....................",
+    "..............offo..offo..ofPfo.................",
+    "..............oddo..oddo..oddo..................",
+    "..............oPoo..Aooo..oooo..................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+  ] },
+  diemLongCB: { pal: SPR_PAL.fire, rows: [
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "........ZZ....oo........oo......................",
+    ".......ZtiZ..oddo......oddo.....................",
+    "......Zitttioddo......oddo......................",
+    ".....Zittttioddo.....oooooooo...................",
+    "....Zitttttollfffdddddffffffddo.....vrv.........",
+    "...Zittttttolffffffffffffffffddo...vryYyrv......",
+    "..Zittttttolffffffffffffffffffddo.vryYYyrv......",
+    "..ZittttiZoXSSSSSSSSSSSSSSSSSSSdovryYWYrv.......",
+    "..ZttttiZ.oXSwSSSSSSSSSwSSSSSSSdovryYWYrv.......",
+    "..ZtttiZ..oktttkkfffktttkkddddddovryYWYrv.......",
+    "..vZttiZv.oktttkkfffktttkkddddddovryYWYrv.......",
+    "...vZttZv.okkkkkkfffkkkkkkddddddovryYWYrv.......",
+    "..vvZttZvvokkccccccccfffffffffddovryYWYrv.......",
+    ".vTTvZZvTToccccccocfffffffffffddovryYWYyrv......",
+    "vTTTv.vTTTTocfcfcfffffffffffffddovryYWYyrv......",
+    "vTTTTv.vTTTToccccffffffffffffdddovryYWYyrv......",
+    ".vTTTv..vTTT.occccccffffffffddddoryYWYyrv.......",
+    "..vTZttTZv...occccccffffffffddddoryYWYyrv.......",
+    "...vZtttZv.oXSXcccffffffffffdddddoryYWYrv.......",
+    "....ZZZZZ..oXSSXffffffffffffXSSXddoryYWYrv......",
+    "..........ocXSSXffffffffffffXSSXdddoryYWYrv.....",
+    "..........occccfffXRRRXfffffdddddddoryYyrv......",
+    "..........occcccfXRRRRRXffffdddddddoryYyrv......",
+    "..........occcfffXRRRRRXffffdddddddoryYrv.......",
+    "..........occfffffXRRRX.ddddddddd.o.ryrv........",
+    "..........occfffdffdddd..ddddddddoyYrv..........",
+    "...........occffddffddd.ddddddddoyrv............",
+    "............ocffddffddd.ddddddo.................",
+    "............offfddffddd.ddddddo.................",
+    ".............offfddd.ddddddddo..................",
+    "...............o....o.....o.....................",
+    "..............offo..offo..offfo.................",
+    "..............oddo..oddo..oddo..................",
+    "..............oooo..oooo..oooo..................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+  ] },
+  giot: { pal: SPR_PAL.water, rows: [
+    "................................",
+    "................................",
+    "................................",
+    "..............b.................",
+    ".............bbb................",
+    "............bbBbb...............",
+    "............bbBbb...............",
+    "...........obBBBbo..............",
+    "..........oBBBBBBo..............",
+    "......oooooooooooooo............",
+    ".....odddddddddddddo............",
+    "....odddddddddddddddo...........",
+    "....odkkkkffffdddddddo..........",
+    "....odwkkkffffdddddddo..........",
+    "....odkttkffffdddddddoa.........",
+    "....odkkkkffffdddddddoaa........",
+    "....occoccccdddddddddoaAa.......",
+    "....occcccaAccdddddddoaAAa......",
+    "...occcccccccccccccco.aAAa......",
+    "...occcccccccccccccco.aAAa......",
+    "...occcccccccccccccdoaAa........",
+    "....occccccccccccccoaa..........",
+    "....occccccccccccccoa...........",
+    ".....occcccccccccco.............",
+    "......occcccccccco..............",
+    "........ooooooooo...............",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+  ] },
+  suoiVot: { pal: SPR_PAL.water, rows: [
+    "........................................",
+    "........................................",
+    "..................a.....................",
+    ".................aa...............bb....",
+    ".................aAa...............b....",
+    "................aAAa.............bB.....",
+    "................aAAa..............bB....",
+    "...............aaAAa...............b....",
+    "...............aaAAa.............bBb....",
+    "..............aaaAAaa...................",
+    ".............aaaaAAaaaa.................",
+    "............aaaaaAAaaaaa................",
+    "..............ooooooooooo...............",
+    "..........oddddddddddddddddo............",
+    ".......odddddddddddddddddddddoa.........",
+    ".....oddddddddddddddddddddddddoaa.......",
+    "....odddddddkkkkkdddddddddddddoaAa......",
+    "...oddddddddwkkkkddddddddddddddoaAAa....",
+    "...oddddddddkttkkddddddddddddddoaAAa....",
+    "..odddddddddkkkkkddddddddddddddoaAAa....",
+    "..oocodddddddddddddddddddddddddoaaAa....",
+    "..occccdddfffffffffffffffffffffoaAAa....",
+    "..occcccaAcccffffffffffffffffffoaaAa....",
+    "...occccccfffffffffffffffffffffoaaAa....",
+    "...occccccBfffBffffffffffffffffoaAa.....",
+    "...occcccffffBfffffffffffffffffoaa......",
+    "....occccffffffffffffffffffffffo.a......",
+    ".....occcffffffffffffffffffffffo........",
+    "......occcffffffffffffffffffffo.........",
+    "........occffffffffffffffffffo..........",
+    "..........occfffffffffffffffo...........",
+    ".............offffffffffffo.............",
+    "................oooooooo................",
+    "........................................",
+    "........................................",
+    "........................................",
+    "........................................",
+    "........................................",
+    "........................................",
+    "........................................",
+  ] },
+  trieuLong: { pal: SPR_PAL.water, rows: [
+    "................................................",
+    "................................................",
+    "................................................",
+    "....................a......................bb...",
+    "...................aa.....................bBb...",
+    "...................aAa......................b...",
+    "..................aAAa...................bBb.b..",
+    "..................aAAa..................bB....b.",
+    ".................aaAAaa....................BbB..",
+    "................aaaAAaaa........................",
+    "...............aaaaAAaaaa................bBb....",
+    "..............aaaaaAAaaaaa......................",
+    ".............aaaaaaAAaaaaaa.....................",
+    "............aaaaaaaAAaaaaaaa....................",
+    "....oooooooooooooooooooooooooooooooooooo........",
+    "...oddddddddddddddddddddddddddddddddddddoB..bB..",
+    "...odddddddddkkkkkdddddffffffffffffffff.o..bBb..",
+    "...odddddddddwkkkkdddddfffffffffffffffffo.bb..b.",
+    "...odddddddddkttkkdddddfffffffffffffffffob......",
+    "...odddddddddkkkkkdddddfffffffffffffffffo.......",
+    "...odddddddwwdddddwwdddfffffffffffffffffo.......",
+    "...odddddddcccccocccdddfffffffffffffffffo.......",
+    "...occcccccccccccccccccfffffffffffffffffo.......",
+    "...occcccccccaAccffffffffBffBfffffffffffo.......",
+    "..o.cccccccccaAAaccffffffBfBffffffffffffo.......",
+    "..o.cccccccccaAAaccfffffffffffffffffffffo.......",
+    "..o.ccccccccccffffffffffffffffffffffffffo.......",
+    "..o.ccccccccccffffffffBfffBff.ffffffffffo.......",
+    "..o.ccccccccccffffffffffffffffffffffffffo.......",
+    "..o.cccccccccfffffffffffffffffffffffffffo.......",
+    "...occcccccccfffffffffffffffffffffffffffo.......",
+    "...occccccccffffffffffffffffffffffffffffo.......",
+    "....occccccccfffffffffffffffffffffffffffo.......",
+    ".....occccccccffffffffffffffffffffffffffo.......",
+    "......occccccccfffffffffffffffffffffffffo.......",
+    ".......occccccccffffffffffffffffffffffffo.......",
+    "........occccccc.fffffffffffffffffffffffo.......",
+    "..........occcccccffffffffffffffffffffffo.......",
+    "............occcccc.ffffffffffffffffffffo.......",
+    "..............occ.ffffffff.ddddddddfffffo.......",
+    "................oc.ffffff.ddddddfff.o...........",
+    "..................oooooooooooooooo..............",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+  ] },
+  trieuLongHien: { pal: SPR_PAL.water, rows: [
+    "................................................",
+    "................A...............................",
+    ".........................P......................",
+    "....................a......................bb...",
+    "...................aa.....................bBb...",
+    "...................aAa......................b...",
+    "..................aAAa...................bBb.b..",
+    "..................aAAa..................bB....b.",
+    ".................aaAAaa....................BbB..",
+    "................aaaAAaaa........................",
+    "...............aaaaAAaaaa................bBb....",
+    "..............aaaaaAAaaaaa......................",
+    "..........A..aaaaaaAAaaaaaa.....................",
+    "............aaaaaaaAAaaaaaaa....................",
+    "....oooooooooooooooooooooooooooooooooooo........",
+    "...oddddddddddddddddddddddddddddddddddddoB..bB..",
+    "...oddddddddkffffkdddddffffffffffffffff.o..bBb..",
+    "...oddddddddfkkkkfdddddfffffffffffffffffo.bb..b.",
+    "...oddddddddffffffdddddfffffffffffffffffob......",
+    "...oddddddddffffffdddddfffffffffffffffffo.......",
+    "...odddddPdwwdddddwwdddfffffffffffffffffo.......",
+    "...odddddddcccccocccdddfffffffffffffffffo.......",
+    "...occcccccccccccccccccfffffffffffffffffo.......",
+    "...occcccccccaAccffffffffBffBfffffffffffo.......",
+    "..o.cccccccccaAAaccffffffBfBffffffffffffo.......",
+    "..o.cccccccccaAAaccfffffffffffffffffffffo.......",
+    "..o.ccccccccccffffffffffffffffffffffffffo.......",
+    "..o.ccccccccccffffffffBfffBff.ffffffffffo.......",
+    "..o.ccccccccccffffffffffffffffffffffffffo.......",
+    "..o.cccccccccfffffffffffffffffffffffffffo.......",
+    "...occcccAcccfffffffffffffffffffffffffffo.......",
+    "...occccccccffffffffffffffffffffffffffffo.......",
+    "....occccccccfffffffffffffffffffffffffffo.......",
+    ".....occccccccffffffffffffffffffffffffffo.......",
+    "......occccccccfffffffffffffffffffffffffo.......",
+    ".......occccccccffffffffffffffffffffffffo.......",
+    "........occPcccc.fffffffffffffffffffffffo.......",
+    "..........occcccccffffffffffffffffffffffo.......",
+    "............occcccc.ffffffffffffffffffffo.......",
+    "..............occ.ffffffff.ddddddddfffffo.......",
+    "................oc.fAffff.ddddddfff.o...........",
+    "..................oooooooooooooooo..............",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+  ] },
+  trieuLongCB: { pal: SPR_PAL.water, rows: [
+    "................................................",
+    "................................................",
+    "................................................",
+    "....................a......................bb...",
+    "...................aa.....................bBb...",
+    "...................aAa......................b...",
+    "..................aAAa...................bBb.b..",
+    "..................aAAa..................bB....b.",
+    ".................aaAAaa....................BbB..",
+    "................aaaAAaaa........................",
+    "...............aaaaAAaaaa................bBb....",
+    "..............aaaaaAAaaaaa......................",
+    ".............aaaaaaAAaaaaaa.....................",
+    "............aaaaaaaAAaaaaaaa....................",
+    "....oooooooooooooooooooooooooooooooooooo........",
+    "...odddddddXSSSSSSSSSdddddddddddddddddddoB..bB..",
+    "...odddddddddkkkkkdddddffffffffffffffff.o..bBb..",
+    "...odddddddddwkkkkdddddfffffffffffffffffo.bb..b.",
+    "...odddddddddkttkkdddddfffffffffffffffffob......",
+    "...odddddddddkkkkkdddddfffffffffffffffffo.......",
+    "...odddddddwwdddddwwdddfffffffffffffffffo.......",
+    "...odddddddcccccocccdddfffffffffffffffffo.......",
+    "...occcccccccccccccccccfffffffffffffffffo.......",
+    "...occcccccccXRRRXfffffffBffBfffffffffffo.......",
+    "..o.cccccccccXRRRXcffffffBfBffffffffffffo.......",
+    "..o.cccccccccXRRRXcfffffffffffffffffffffo.......",
+    "..o.ccccccccccffffffffffffffffffffffffffo.......",
+    "..o.ccccccccccffffffffBfffBff.ffffffffffo.......",
+    "..o.ccccccccccffffffffffffffffffffffffffo.......",
+    "..o.cccccccccfffffffffffffffffffffffffffo.......",
+    "...occcccccccfffffffffffffffffffffffffffo.......",
+    "...occccccccffffffffffffffffffffffffffffo.......",
+    "....occccccccfffffffffffffffffffffffffffo.......",
+    ".....occccccccffffffffffffffffffffffffffo.......",
+    "......occccccccfffffffffffffffffffffffffo.......",
+    ".......occccccccffffffffffffffffffffffffo.......",
+    "........occccccc.fffffffffffffffffffffffo.......",
+    "..........occcccccffffffffffffffffffffffo.......",
+    "............occcccc.ffffffffffffffffffffo.......",
+    "..............occ.ffffffff.ddddddddfffffo.......",
+    "................oc.ffffff.ddddddfff.o...........",
+    "..................oooooooooooooooo..............",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+  ] },
+  mam: { pal: SPR_PAL.grass, rows: [
+    "................................",
+    "................................",
+    "............oo....oo............",
+    "...........ohho..ohho...........",
+    "..........ohhho..ohhho..........",
+    "..........ohhho..ohhho..........",
+    ".........ohhhho..ohhhho.........",
+    ".........ohhho....ohhho.........",
+    ".........ohho..oo..ohho.........",
+    "..........oho..oo..oho..........",
+    "...........oooooooooo...........",
+    "..........oduuuuuuuuUo..........",
+    ".........odduuuuuuuUUo..........",
+    "........odduuuuuuuuuUUo.........",
+    "........oduuuuuuuuuuUUo.........",
+    "........odukkkuuukkkUUo.........",
+    "........oduwkkuuuwkkUUo.........",
+    "........odukkkuuukkkUUo.........",
+    "........odukkkuuukkkUUo.........",
+    "........odppuuuoouuppUo.........",
+    "........odduuuuuuuuuUUo.........",
+    "........odduuuuuuuuuUUo.........",
+    "........odduuuuuuuuuUUo.........",
+    "........oduuuuuuuuuuUUo.........",
+    ".........oduuuuuuuuUUo..........",
+    "..........oduuuuuuuUo...........",
+    "............oooooooo............",
+    "...........offo...offo..........",
+    "...........oddo...oddo..........",
+    "...........oooo...oooo..........",
+    "................................",
+    "................................",
+  ] },
+  bupXanh: { pal: SPR_PAL.grass, rows: [
+    "........................................",
+    "........................................",
+    "........................................",
+    "..........................pp.pp.........",
+    ".........................pPPpp..........",
+    "........................pPPPPpo.........",
+    "........................pPPPPPPp........",
+    ".......................pPPpPPPPp.o......",
+    ".......................pPpUUUUUppo......",
+    ".......................oUUUUUUUUUoo.....",
+    "......................oUuUUUUUUUUoo.....",
+    "......................oUUuUUUUUUUoo.....",
+    "......................oUUUUuUUUUUoo.....",
+    "......................oUUUUUUuUUUo.o....",
+    ".....oooooooooooooo...oUUUUUUUUUUo.o....",
+    "....oddffffddffffffffooUUUUUUUUUo.o.....",
+    "....odffffffddddffffffffooUUUUUUUUo.....",
+    "...odfffffffddddffffffffooUUUUUUUoo.....",
+    "...odwkkk.fffoccccccdddd.ooUUUUUUoo.....",
+    "...odwkkffffoccccccddddd.ooUUUUUo.o..o..",
+    "...odkkkffffoccoo.ccdddd.o.oUUUUo.o..oh.",
+    "...odkkkfffffcccccccdddd.o..oUUo..o.ohho",
+    "...odccccccoccccccccddddd.o...oUUo.o..ho",
+    "...occccccccccccccccccddddo...oUo.o...o.",
+    "...occccccccccccccccccccddddd.o...o.....",
+    "...occcccccccccccccccccccddddo....o.....",
+    "...odccccccccccccccccccccccdddo...o.....",
+    "...oddccccccccccccccccccccddddo...o.....",
+    "...oddccccccccccccccccccccccddo...o.....",
+    "...oddccccccccccccccccccccco..oo..o.....",
+    "....odccccccccccccccccccccco...o..o.....",
+    ".....odcc.cccccccccccc..oo..o..o..o.....",
+    ".......ooooooooooooooo..o..o..o...o.....",
+    "......o.ccoo.........o..o..o..o...o.....",
+    "......o..o..........o..oo...o..o........",
+    ".....oo..oo.........oo..oo..oo.oo.......",
+    "........................................",
+    "........................................",
+    "........................................",
+    "........................................",
+  ] },
+  coThuLinh: { pal: SPR_PAL.grass, rows: [
+    "..........ooooffhllllllllllllllhfffoooo.........",
+    ".......ooofffhhhhhhhllllllllhhhhhhhffffooo......",
+    "......offfffhhhhhhhhhllllllhhhhhhhhhffffffo.....",
+    "....oofffffhhhhhhhhhhhllllhhhhhhhhhhhffffffoo...",
+    "...offffffffhhhhhhhhhllllllhhhhhhhhhlffffffffo..",
+    "...offfffffffhhhhhhhlllldlllhhhhhhhlfffffffffo..",
+    "..offfffffffffldddddddddddddddddddlfffffffffffo.",
+    "...offffffffdddddddddddddddddddddddddffffffffo..",
+    "...offffffdddddddddddddddddddddddddddddffffffo..",
+    "....offffdddddddddddddddddddddddddddddddffffo...",
+    "....offfffdddddddddddddddddddddddddddddfffffo...",
+    ".....oofffffdddddddddddddddddddddddddfffffoo....",
+    ".......oooofoofdddddddddddddddddddfoofoooo......",
+    "...........o.ommmMmmmMmmdmmMmmmMmmo..o..........",
+    ".............ommmMmmMMmmmmMMmmmMmmo.............",
+    ".............ommmmMMmmmmmmmmMMmmmmo.............",
+    ".............ommMMmmmMmmmmmMmmMMmmo.............",
+    ".............oMmmMmmMMMMMMMMmmmMmMo.............",
+    ".............ommmmmmmmmmmmmmmmmmmmo.............",
+    "............oommmReRmMmmmmmMReRMmmoo............",
+    "...........oddddmRRRmMmmmmmMRRRMddddo...........",
+    "......ooooooddddmmmmmmmMMmmmmmmmddddoooooo......",
+    ".....ommmmmmmmmdmMmmmMmmmmmMmmmMdmmmmmmmmmo.....",
+    ".....ommmmmmmmmdmMmmmMmmmmmMmmmMdmmmmmmmmmo.....",
+    ".....ommmmmmmmmmMkkMkkMkkMkkMkkMmmmmmmmmmmo.....",
+    ".....ommmmmmmmmmkMMkMMkMMkMMkMMkmmmmmmmmmmo.....",
+    ".....ommmmmmmmmmkkkekkkekkkekkkkmmmmmmmmmmo.....",
+    ".....ommmmmmmmmmkkkRkkkRkkkRkkkkmmmmmmmmmmo.....",
+    ".....ommmmmmommmkMkMkMkMkMkMkMkMmmmommmmmmo.....",
+    ".....ommmmmmommmMkMkMkMkMkMkMkMkmmmommmmmmo.....",
+    ".....ommMmmmommmmmmmmmmmmmmmmmmmmmmommmMmmo.....",
+    ".....ommmmmmommmmMmmmMmmmmmMmmmMmmmommmmmmo.....",
+    ".....ommmmmmommmmMmmmMmmmmmMmmmMmmmommmmmmo.....",
+    ".....ommmmmmommmmmmmmmmmmmmmmmmmmmmommmmmmo.....",
+    ".....ommmmmmommmmmmmmmmoommmmmmmmmmommmmmmo.....",
+    ".....omMmmmmommmmMmmmmmoommmmmmMmmmommmmMmo.....",
+    ".....ommmmmmommmmmmmmmmoommmmmmmmmmommmmmmo.....",
+    ".....ommmmmmommmmMmmmmmoommmmmmMmmmommmmmmo.....",
+    ".....ommmmmmommmmMmmmmmoommmmmmMmmmommmmmmo.....",
+    ".....ommmMmmommmmmmmmmmoommmmmmmmmmommMmmmo.....",
+    ".....ommmmmmommmmMmmmmmoommmmmmMmmmommmmmmo.....",
+    "...ooommmmmmommmmMmmmmmoommmmmmMmmmommmmmmooo...",
+    "..ommmmmmmmmmmmmmmmmmmmoommmmmmmmmmmmmmmmmmmmo..",
+    "..ommmommmommmmmmMmmmmmoommmmmmMmmmmmommmommmo..",
+    "..ommmommmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmommmo..",
+    "..omMmommmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmomMmo..",
+    "...oooomMmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmMmoooo...",
+    ".......ooooMmMMoMMmMomMMmoMmMMoMMmMomMooo.......",
+  ] },
+  coThuLinhHien: { pal: SPR_PAL.grass, rows: [
+    "..........ooooPfhlllPlllllPllllhfffoooo.........",
+    ".......ooofffhhhhhhhllllllllhhhhhhhffffooo......",
+    "......offfffAhhhhhhhhllllllhhhhhAhhhffffffo.....",
+    "....oofffffhhhhhhhhhhhllllhhhhhhhhhhhffffffoo...",
+    "...offffffffhhhhhhhhhllllllhhhhhhhhhlffffffffo..",
+    "...offfffffffhhhhhhhlllldlllhhhhhhhlfffffffffo..",
+    "..Pfffffffffffldddddddddddddddddddlfffffffffffo.",
+    "...offffffffdddddddddddddddddddddddddffffffffo..",
+    "...offffffdddddddddddddddddddddddddddddffffffo..",
+    "....offffdddddddddddddddddddddddddddddddffffo...",
+    "....offfffdddddddddddddddddddddddddddddfffffoP..",
+    ".....oofffffdddddddddddddddddddddddddfffffoo....",
+    ".......oooofoofdddddddddddddddddddfoofoooo......",
+    "...........o.ommmMmmmMmmdmmMmmmMmmo..o..........",
+    ".............ommmMmmMMmmmmMMmmmMmmo.............",
+    ".............ommmmMMmmmmmmmmMMmmmmo.............",
+    ".............ommMMmmmMmmmmmMmmMMmmo.............",
+    ".............oMmmMmmMMMMMMMMmmmMmMo.............",
+    ".............ommmmmmmmmmmmmmmmmmmmo.............",
+    "............oommkkkRmMmmmmmMkkkMmmoo............",
+    "...........oddPPmRRRmMmmmmmMRRRMPPddo...........",
+    "......ooooooddddmmmmmmmMMmmmmmmmddddoooooo......",
+    ".....ommmmmmmmmdmMmmmMmmmmmMmmmMdmmmmmmmmmo.....",
+    ".....ommmmmmmmmdmMmmmMmmmmmMmmmMdmmmmmmmmmo.....",
+    ".....ommmmmmmmmmMkkMkkMkkMkkMkkMmmmmmmmmmmo.....",
+    ".....ommmmmmmmmmkMMkMMkMMkMMkMMkmmmmmmmmmmo.....",
+    ".....ommmmmmmmmmkkkekkkekkkekkkkmmmmmmmmmmo.....",
+    ".....ommmmmmmmmmkkkRkkkRkkkRkkkkmmmmmmmmmmo.....",
+    ".....ommmmmmommmkMkMkMkMkMkMkMkMmmmommmmmmo.....",
+    ".....ommmmmmommmMkMkMkMkMkMkMkMkmmmommmmmmo.....",
+    ".....ommMmmmommmmmmmmmmmmmmmmmmmmmmommmMmmo.....",
+    ".....ommmmmmommmmMmmmMmmmmmMmmmMmmmommmmmmo.....",
+    ".....ommmmmmommmmMmmmMmmmmmMmmmMmmmommmmmmo.....",
+    ".....ommmmmmommmmmmmmmmmmmmmmmmmmmmommmmmmo.....",
+    ".....ommmmmmommmmmmmmmmoommmmmmmmmmommmmmmo.....",
+    ".....omMmmmmommmmMmmmmmoommmmmmMmmmommmmMmo.....",
+    ".....ommmmmmommmmmmmmmmoommmmmmmmmmommmmmmo.....",
+    ".....ommmmmmommmmMmmmmmoommmmmmMmmmommmmmmo.....",
+    ".....ommmmmmommmmMmmmmmoommmmmmMmmmommmmmmo.....",
+    ".....ommmMmmommmmmmmmmmoommmmmmmmmmommMmmmo.....",
+    ".....ommmmmmommmmMmmmmmoommmmmmMmmmommmmmmo.....",
+    "...ooommmmmmommmmMmmmmmoommmmmmMmmmommmmmmooo...",
+    "..ommmmmmmmmmmmmmmmmmmmoommmmmmmmmmmmmmmmmmmmo..",
+    "..ommmommmommmmmmMmmmmmoommmmmmMmmmmmommmommmo..",
+    "..ommmommmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmommmo..",
+    "..omMmommmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmomMmo..",
+    "...oooomMmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmMmoooo...",
+    ".......ooooMmMMoMMmMomMMmoMmMMoMMmMomMooo.......",
+  ] },
+  coThuLinhCB: { pal: SPR_PAL.grass, rows: [
+    "..........ooooffhllllllllllllllhfffoooo.........",
+    ".......ooofffhhhhhhhllllllllhhhhhhhffffooo......",
+    "......offfffhhhhhhhhhllllllhhhhhhhhhffffffo.....",
+    "....oofffffhhhhhhhhhhhllllhhhhhhhhhhhffffffoo...",
+    "...offffffffhhhhhhhhhllllllhhhhhhhhhlffffffffo..",
+    "...offfffffffhhhhhhhlllldlllhhhhhhhlfffffffffo..",
+    "..offfffffffffldddddddddddddddddddlfffffffffffo.",
+    "...offffffffdddddddddddddddddddddddddffffffffo..",
+    "...offffffdddddddddddddddddddddddddddddffffffo..",
+    "....offffdddddddddddddddddddddddddddddddffffo...",
+    "....offfffdddddddddddddddddddddddddddddfffffo...",
+    ".....oofffffdddddddddddddddddddddddddfffffoo....",
+    ".......oooofoofdddddddddddddddddddfoofoooo......",
+    "...........o.ommmMmmmMmmdmmMmmmMmmo..o..........",
+    ".............ommmMmmMMmmmmMMmmmMmmo.............",
+    ".............ommmmMMmmmmmmmmMMmmmmo.............",
+    ".............oXSSSSSSSSSSSSSSSSSSmo.............",
+    ".............oXSXSSSSSSSSSSSSSSSXMo.............",
+    ".............ommmmmmmmmmmmmmmmmmmmo.............",
+    "............oommmReRmMmmmmmMReRMmmoo............",
+    "...........oddddmRRRmMmmmmmMRRRMddddo...........",
+    "......ooooooddddmmmmmmmMMmmmmmmmddddoooooo......",
+    ".....ommmmmmmmmdmMmmmMmmmmmMmmmMdmmmmmmmmmo.....",
+    ".....ommmmmmmmmdmMmmmMmmmmmMmmmMdmmmmmmmmmo.....",
+    ".....ommmmmmmmmmMkkMkkMkkMkkMkkMmmmmmmmmmmo.....",
+    ".....ommmmmmmmmmkMMkMMkMMkMMkMMkmmmmmmmmmmo.....",
+    ".....ommmmmmmmmmkkkekkkekkkekkkkmmmmmmmmmmo.....",
+    ".....ommmmmmmmmmkkkRkkkRkkkRkkkkmmmmmmmmmmo.....",
+    ".....ommmmmmommmkMkMkMkMkMkMkMkMmmmommmmmmo.....",
+    ".....ommmmmmommmMkMkMkMkMkMkMkMkmmmommmmmmo.....",
+    ".....ommMmmmommmmmmmmmmmmmmmmmmmmmmommmMmmo.....",
+    ".....ommmmmmommmmMmmmMXRRRXMmmmMmmmommmmmmo.....",
+    ".....ommmmmmommmmMmmmMXRRRXMmmmMmmmommmmmmo.....",
+    ".....ommmmmmommmmmmmmmXRRRXmmmmmmmmommmmmmo.....",
+    ".....ommmmmmommmmmmmmmmoommmmmmmmmmommmmmmo.....",
+    ".....omMmmmmommmmMmmmmmoommmmmmMmmmommmmMmo.....",
+    ".....ommmmmmommmmmmmmmmoommmmmmmmmmommmmmmo.....",
+    ".....ommmmmmommmmMmmmmmoommmmmmMmmmommmmmmo.....",
+    ".....ommmmmmommmmMmmmmmoommmmmmMmmmommmmmmo.....",
+    ".....ommmMmmommmmmmmmmmoommmmmmmmmmommMmmmo.....",
+    ".....ommmmmmommmmMmmmmmoommmmmmMmmmommmmmmo.....",
+    "...ooommmmmmommmmMmmmmmoommmmmmMmmmommmmmmooo...",
+    "..ommmmmmmmmmmmmmmmmmmmoommmmmmmmmmmmmmmmmmmmo..",
+    "..ommmommmommmmmmMmmmmmoommmmmmMmmmmmommmommmo..",
+    "..ommmommmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmommmo..",
+    "..omMmommmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmomMmo..",
+    "...oooomMmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmMmoooo...",
+    ".......ooooMmMMoMMmMomMMmoMmMMoMMmMomMooo.......",
+  ] },
+  hoiNuocBoc: { pal: SPR_PAL.steam, rows: [
+    "................................",
+    "............bb..................",
+    "......oo...bBBb.oo..............",
+    ".....oyyo..bBBboyyo.............",
+    "....oyyo........oyyo............",
+    "....oyyoooooooooyyo.............",
+    ".bB.ollfffdddfffffddo.....vrv...",
+    "....olfffdddddffffdo....vryYyrv.",
+    "....oddddfffddddfffo...vryYYyrv.",
+    ".B..owkkkfffwkkkfffo..vryYWYyrv.",
+    "....okttkfffkttkfffo.vryYWWYyrv.",
+    "....okttkfffkttkfffo.vryYWWYyrv.",
+    "....okkcccfffffffffo.vryYWWYyrv.",
+    "....occocffffffffffo.vryYWYyrv..",
+    ".....ocfcfcffffffdo.vryYWYrv....",
+    "......offcccffffdo.vryYWYrv.....",
+    ".......occccfffdoryYWYyrv.......",
+    "........occccfdoryYWYyrv........",
+    "........occccfdoryYWYyrv........",
+    ".......occcffffddoyYWYyrv.......",
+    ".......occcffffddoyYWYyrv.......",
+    "........occcfffdoryYYrv.........",
+    "........offfffddovrrv...........",
+    ".........offffddo...............",
+    ".........offo.offo..............",
+    ".........oddo.oddo..............",
+    ".........oooo.oooo..............",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+  ] },
+  hoiNuocBocOm: { pal: SPR_PAL.steamSick, rows: [
+    "................................",
+    "................................",
+    "................................",
+    ".......oo......oo...............",
+    "......oddo....oddo..............",
+    ".....oddooooooooo...............",
+    ".....ollffffffffddo.....gGg.....",
+    ".....olfffffffffddo....gGgGg....",
+    ".....okk.fffkk.fffo...gGgGg.....",
+    ".....okk.fffkk.fffo....gGg......",
+    ".....occccfffffffffo............",
+    ".....ococofffffffffo............",
+    "......ocffcffddo.......b........",
+    ".......ofcccfffdo.....bBb.......",
+    "........occcffdo................",
+    "........occcffdo................",
+    ".......occcffddo................",
+    ".......occcffddo................",
+    "........occffdo.................",
+    "........offffddo................",
+    ".........offfddo................",
+    ".........offooffo...............",
+    ".........oddooddo...............",
+    ".........oooooooo...............",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+  ] },
+  senMua: { pal: SPR_PAL.lotus, rows: [
+    "...........pP...................",
+    "..........gGGg..................",
+    "......oo..geeg..oo..............",
+    ".....oddo.geeg.oddo.............",
+    "....oddo...ee...oddo............",
+    "....oddoooooooooddo.............",
+    "....ollfffdddfffffddo.....olo...",
+    ".b..olfffdddddffffdo....olhchlo.",
+    "....oddddfffddddfffo...olhcchlo.",
+    "....owkkkfffwkkkfffo..olhcwchlo.",
+    "B...okttkfffkttkfffo.olhcwwchlo.",
+    "....okttkfffkttkfffo.olhcwwchlo.",
+    "....okkcccfffffffffo.olhcwwchlo.",
+    "....occocffffffffffo.olhcwchlo..",
+    ".....ocfcfcffffffdo.olhcwclo....",
+    "......offcccffffdo.olhcwclo.....",
+    ".......occccfffdolhcwchlo.......",
+    "........occccfdolhcwchlo........",
+    "........occccfdolhcwchlo........",
+    ".......occcffffddohcwchlo.......",
+    ".......occcffffddohcwchlo.......",
+    "........occcfffdolhcclo.........",
+    "........offfffddoollo...........",
+    ".........offffddo...............",
+    ".........offo.offo..............",
+    ".........oddo.oddo..............",
+    ".........oooo.oooo..............",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+  ] },
+  diemHoa: { pal: SPR_PAL.blossom, rows: [
+    "................................",
+    "............pP..................",
+    "......oo..pPPPPpoo..............",
+    ".....oddo.pUUUUUpdo.............",
+    "....oddo...UUU..oddo............",
+    "....oddoooooooooddo.............",
+    "....ollfffdddfffffddo.....vrv...",
+    "....olfffdddddffffdo....vryYyrv.",
+    "....oddddfffddddfffo...vryYYyrv.",
+    "....owkkkfffwkkkfffo..vryYWYyrv.",
+    "....okttkfffkttkfffo.vryYWWYyrv.",
+    "....okttkfffkttkfffo.vryYWWYyrv.",
+    "....okkcccfffffffffo.vryYWWYyrv.",
+    "....occocffffffffffo.vryYWYyrv..",
+    ".....ocfcfcffffffdo.vryYWYrv....",
+    "......offcccffffdo.vryYWYrv.....",
+    ".......occccfffdoryYWYyrv.......",
+    "........occccfdoryYWYyrv........",
+    "........occccfdoryYWYyrv........",
+    ".......occcffffddoyYWYyrv.......",
+    ".......occcffffddoyYWYyrv.......",
+    "........occcfffdoryYYrv.........",
+    "........offfffddovrrv...........",
+    ".........offffddo...............",
+    ".........offo.offo..............",
+    ".........oddo.oddo..............",
+    ".........oooo.oooo..............",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+  ] },
+};
+
+
+/* silhouette dex: một màu tối trên nền màn sáng */
+const SIL_COLOR = '#41523A';
+function silPal(pal) { const out = {}; Object.keys(pal).forEach(k => { out[k] = SIL_COLOR; }); return out; }
+
+/* palette ốm fallback: nhợt/desaturate (form có grid ốm riêng thì dùng grid riêng — spec §2.4) */
+function desatPal(pal) {
+  const out = {};
+  Object.keys(pal).forEach(k => {
+    const hex = pal[k];
+    if (hex[0] !== '#' || hex.length !== 7) { out[k] = hex; return; }
+    const n = parseInt(hex.slice(1), 16);
+    const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+    const lum = (0.3 * r + 0.59 * g + 0.11 * b) / 255;
+    const mix = ch => Math.round(ch * 0.22 + lum * 232 * 0.78);
+    out[k] = 'rgb(' + mix(r) + ',' + mix(g) + ',' + mix(b) + ')';
+  });
+  return out;
+}
+
+/* px theo hộp chứa (grid 32/40/48 dùng chung renderer) */
+function fitPx(rows, box) {
+  const h = rows.length, w = Math.max.apply(null, rows.map(r => r.length));
+  return Math.max(1, Math.floor((box / Math.max(h, w)) * 2) / 2);
+}
+
+/* grid ốm RIÊNG theo form id — override data, bật khi condition < 30 (spec §2.4) */
+const SICK_OF = { 'tan-lua': SPR_GRIDS.tanLuaOm, 'hoi-nuoc-boc': SPR_GRIDS.hoiNuocBocOm };
+function formSprite(form, linePal, sick) {
+  if (sick) {
+    const g = SICK_OF[form.id] || (form.sickRows ? { rows: form.sickRows, pal: form.sickPal } : null);
+    if (g) return g;
+    return { rows: form.rows, pal: desatPal(form.pal || linePal) };
+  }
+  return { rows: form.rows, pal: form.pal || linePal };
+}
+
+/* ---------- CATALOG sinh vật (spec §1.4 + §2) ---------- */
+const HYBRID_COND = { k: 'and', of: [{ k: 'power_at_least', v: 85 }, { k: 'streak_at_least', v: 10 }] };
+
+const HYBRIDS = [
+  { id: 'hoi-nuoc-boc', name: 'Hơi Nước Bốc', a: 'flame', b: 'water', rows: SPR_GRIDS.hoiNuocBoc.rows, pal: SPR_GRIDS.hoiNuocBoc.pal, sickRows: SPR_GRIDS.hoiNuocBocOm.rows, sickPal: SPR_GRIDS.hoiNuocBocOm.pal, cond: HYBRID_COND, role: 'Form lai hiếm · điều kiện kép' },
+  { id: 'sen-mua',      name: 'Sen Mưa',      a: 'water', b: 'grass', rows: SPR_GRIDS.senMua.rows, pal: SPR_GRIDS.senMua.pal, cond: HYBRID_COND, role: 'Form lai hiếm · điều kiện kép' },
+  { id: 'diem-hoa',     name: 'Diễm Hoa',     a: 'grass', b: 'flame', rows: SPR_GRIDS.diemHoa.rows, pal: SPR_GRIDS.diemHoa.pal, cond: HYBRID_COND, role: 'Form lai hiếm · điều kiện kép' },
+];
+const PRIMARY_HYBRID = { flame: 'hoi-nuoc-boc', water: 'sen-mua', grass: 'diem-hoa' };
+const ELEMENT = {
+  flame: { name: 'Lửa',  icon: '🔥', pal: SPR_PAL.fire },
+  water: { name: 'Thủy', icon: '💧', pal: SPR_PAL.water },
+  grass: { name: 'Thảo', icon: '🌿', pal: SPR_PAL.grass },
+};
+
+const CATALOG = {
+  flame: {
+    id: 'flame', name: 'Lửa', icon: '🔥', pal: SPR_PAL.fire,
+    stages: [
+      { atLevel: 1,  id: 'tan-lua',  name: 'Tàn Lửa',  desc: 'Hổ lửa con', rows: SPR_GRIDS.tanLua.rows, pal: SPR_PAL.fire },
+      { atLevel: 8,  id: 'bong-bot', name: 'Bồng Bột', desc: 'Thiếu niên lửa · mọc cánh mầm', rows: SPR_GRIDS.bongBot.rows, pal: SPR_PAL.fire },
+      { atLevel: 16, id: 'diem-long', name: 'Diễm Long', desc: 'Rồng lửa nhỏ · sừng + thân dày', rows: SPR_GRIDS.diemLong.rows, pal: SPR_PAL.fire },
+    ],
+    branches: [
+      { id: 'hien',       base: 'diem-long', suffix: 'Hiền',       rows: SPR_GRIDS.diemLongHien.rows, pal: SPR_PAL.fire, cond: { k: 'and', of: [{ k: 'level_at_least', v: 16 }, { k: 'streak_at_least', v: 7 }] }, meaning: 'Thưởng thói quen đều đặn · aura dịu' },
+      { id: 'chien-binh', base: 'diem-long', suffix: 'Chiến Binh', rows: SPR_GRIDS.diemLongCB.rows, pal: SPR_PAL.fire, cond: { k: 'and', of: [{ k: 'level_at_least', v: 16 }, { k: 'power_at_least', v: 80 }] }, meaning: 'Thưởng sức mạnh cao · giáp uy phong' },
+    ],
+  },
+  water: {
+    id: 'water', name: 'Thủy', icon: '💧', pal: SPR_PAL.water,
+    stages: [
+      { atLevel: 1,  id: 'giot',       name: 'Giọt',       desc: 'Gấu nước', rows: SPR_GRIDS.giot.rows, pal: SPR_PAL.water },
+      { atLevel: 8,  id: 'suoi-vot',   name: 'Suối Vọt',   desc: 'Cá heo nước ngọt', rows: SPR_GRIDS.suoiVot.rows, pal: SPR_PAL.water },
+      { atLevel: 16, id: 'trieu-long', name: 'Triều Long', desc: 'Rồng sóng', rows: SPR_GRIDS.trieuLong.rows, pal: SPR_PAL.water },
+    ],
+    branches: [
+      { id: 'hien',       base: 'trieu-long', suffix: 'Hiền',       rows: SPR_GRIDS.trieuLongHien.rows, pal: SPR_PAL.water, cond: { k: 'and', of: [{ k: 'level_at_least', v: 16 }, { k: 'streak_at_least', v: 7 }] }, meaning: 'Thưởng thói quen đều đặn · aura dịu' },
+      { id: 'chien-binh', base: 'trieu-long', suffix: 'Chiến Binh', rows: SPR_GRIDS.trieuLongCB.rows, pal: SPR_PAL.water, cond: { k: 'and', of: [{ k: 'level_at_least', v: 16 }, { k: 'power_at_least', v: 80 }] }, meaning: 'Thưởng sức mạnh cao · giáp uy phong' },
+    ],
+  },
+  grass: {
+    id: 'grass', name: 'Thảo', icon: '🌿', pal: SPR_PAL.grass,
+    stages: [
+      { atLevel: 1,  id: 'mam',          name: 'Mầm',          desc: 'Hạt nảy mầm', rows: SPR_GRIDS.mam.rows, pal: SPR_PAL.grass },
+      { atLevel: 8,  id: 'bup-xanh',     name: 'Búp Xanh',     desc: 'Hươu lá', rows: SPR_GRIDS.bupXanh.rows, pal: SPR_PAL.grass },
+      { atLevel: 16, id: 'co-thu-linh',  name: 'Cổ Thụ Linh',  desc: 'Linh thú cây cổ tích', rows: SPR_GRIDS.coThuLinh.rows, pal: SPR_PAL.grass },
+    ],
+    branches: [
+      { id: 'hien',       base: 'co-thu-linh', suffix: 'Hiền',       rows: SPR_GRIDS.coThuLinhHien.rows, pal: SPR_PAL.grass, cond: { k: 'and', of: [{ k: 'level_at_least', v: 16 }, { k: 'streak_at_least', v: 7 }] }, meaning: 'Thưởng thói quen đều đặn · aura dịu' },
+      { id: 'chien-binh', base: 'co-thu-linh', suffix: 'Chiến Binh', rows: SPR_GRIDS.coThuLinhCB.rows, pal: SPR_PAL.grass, cond: { k: 'and', of: [{ k: 'level_at_least', v: 16 }, { k: 'power_at_least', v: 80 }] }, meaning: 'Thưởng sức mạnh cao · giáp uy phong' },
+    ],
+  },
+};
+
+/* form branch tên đầy đủ: Diễm Long Hiền / Diễm Long Chiến Binh (thủy, thảo tương tự) */
+Object.values(CATALOG).forEach(line => {
+  const s3 = line.stages[2].name;
+  line.branches.forEach(b => { b.name = s3 + ' ' + b.suffix; b.lineId = line.id; });
+  line.hybridId = PRIMARY_HYBRID[line.id];
+});
+
+/* hướng mầm nguyên tố ở Stage 2 — render từ catalog (2 hybrid có thể + thuần) */
+function leanOptions(lineId) {
+  const hybs = HYBRIDS.filter(h => h.a === lineId || h.b === lineId);
+  return [
+    ...hybs.map(h => ({
+      kind: 'hybrid', key: h.id,
+      label: ELEMENT[lineId].name.toUpperCase() + '×' + ELEMENT[h.a === lineId ? h.b : h.a].name.toUpperCase(),
+      hint: 'lai ' + h.name.toUpperCase() + ' (HIẾM)',
+      target: h,
+    })),
+    { kind: 'pure', key: 'pure', label: ELEMENT[lineId].name.toUpperCase() + ' THUẦN', hint: 'Stage 3: HIỀN / CHIẾN BINH', target: null },
+  ];
+}
+
+/* ---------- POKÉDEX entries — build TỪ catalog (19 form) ---------- */
+const DEX_ENTRIES = [
+  { kind: 'egg', id: 'egg', no: '000', name: 'Trứng Nguyên Tố', lineId: null, rows: SPR_GRIDS.trungEgg.rows, pal: SPR_GRIDS.trungEgg.pal, cond: null, role: 'Điểm khởi đầu — chọn 1/3 trứng nguyên tố' },
+];
+let dexNo = 1;
+Object.values(CATALOG).forEach(line => {
+  line.stages.forEach(st => {
+    DEX_ENTRIES.push({ kind: 'stage', id: st.id, no: String(dexNo++).padStart(3, '0'), name: st.name, lineId: line.id, rows: st.rows, pal: st.pal, cond: null, role: st.desc + ' · mở ở Lv.' + st.atLevel });
+  });
+  line.branches.forEach(b => {
+    DEX_ENTRIES.push({ kind: 'branch', id: b.id + '-' + line.id, no: String(dexNo++).padStart(3, '0'), name: b.name, lineId: line.id, rows: b.rows, pal: b.pal, cond: b.cond, role: b.meaning });
+  });
+  const h = HYBRIDS.find(x => x.id === line.hybridId);
+  DEX_ENTRIES.push({ kind: 'hybrid', id: h.id, no: String(dexNo++).padStart(3, '0'), name: h.name, lineId: line.id, rows: h.rows, pal: h.pal, cond: h.cond, role: h.role + ' · ' + ELEMENT[h.a].name + '×' + ELEMENT[h.b].name });
+});
+
+/* ---------- SYSTEMS — khai báo hệ module (spec §1.2), UI đọc từ đây ---------- */
+const SYSTEMS = [
+  { id: 'level',      on: { session_complete: '+1 XP mỗi phút focus', feed: '+5 XP' }, emits: ['level_up'], ui: [{ slot: 'focus', type: 'xp_bar' }] },
+  { id: 'power',      on: { session_complete: '+8 sức mạnh' }, decay: { perIdleDay: '−6', perGoalDay: '−2' }, ui: [{ slot: 'focus', type: 'meter', label: 'Sức mạnh', capByLevel: true }] },
+  { id: 'evolution',  on: { level_up: 'checkEvolution (mốc stage + nhánh, đọc CATALOG)' }, rules: 'cond registry', ui: [{ slot: 'stats', type: 'evo_hint' }] },
+  { id: 'breeding',   on: { stage_reach_2: 'mở chọn hướng mầm nguyên tố' }, ui: [{ slot: 'focus_sub', type: 'breed_lab' }] },
+  { id: 'collection', ui: [{ slot: 'desktop', type: 'pokedex' }] },
+];
+function registerSystem(sys) { SYSTEMS.push(sys); }  // thêm hệ = 1 dòng, không đụng core
+
+/* §1.6 — Ngày mai thêm hệ Nhiệm vụ hằng ngày — KHÔNG đụng core:
+   registerSystem({ id:'daily_quests', on:{ session_complete:'quests.check', feed:'quests.check' },
+                    ui:[{ slot:'home_bottom', type:'quest_list' }] });
+   registerConditionType('total_sessions_at_least', (s, v) => s.stats.totalSessions >= v);
+   → Pokédex, panel điều kiện, cây nhánh vẫn render y nguyên từ config bên trên. */
+
+function registerConditionType(key, fn) { COND[key] = fn; }
+
+/* ---------- core fixture (spec §3, dùng chung 3 demo) ---------- */
+const HERO_CORE = { level: 4, xp: 120, power: 62, condition: 78, streak: 7, todaySessions: 3, healthyDays: 2 };
+const BASE_STATE = {
+  tab: 'egg', egg: 'flame', adopted: false,
+  run: true, session: 2,
+  level: HERO_CORE.level, xp: HERO_CORE.xp, power: HERO_CORE.power, condition: HERO_CORE.condition,
+  streak: HERO_CORE.streak, todaySessions: HERO_CORE.todaySessions, healthyDays: HERO_CORE.healthyDays,
+  coins: 12, justFed: false,
+  lean: 'hoi-nuoc-boc', simBoost: false, flashing: false, revealed: false,
+  sick: false,
+};
+
+/* ---------- pixel sprite renderer ---------- */
+function PixelSprite({ rows, pal, px = 4, style, className }) {
+  const h = rows.length;
+  const w = Math.max.apply(null, rows.map(r => r.length));
+  const rects = [];
+  rows.forEach((row, y) => {
+    for (let x = 0; x < row.length; x++) {
+      const c = pal[row[x]];
+      if (c) rects.push(<rect key={x + '_' + y} x={x} y={y} width={1.04} height={1.04} fill={c} />);
+    }
+  });
+  return (
+    <svg width={w * px} height={h * px} viewBox={'0 0 ' + w + ' ' + h} shapeRendering="crispEdges" style={{ display: 'block', ...style }} className={className}>
+      {rects}
+    </svg>
+  );
+}
+
+/* ---------- sprite phụ ---------- */
+const SUSHI_ROWS = [
+  "...oooooo...",
+  "..oowooowoo..",
+  "..oooooooo..",
+  ".nnnnnnnnnn.",
+  ".wwwwwwwwww.",
+  ".wwwwwwwwww.",
+  "..wwwwwwww..",
+  "...wwwwww...",
+];
+const SUSHI_PAL = { o: '#4A3C30', w: '#FDF8EC', n: '#EE7A6A' };
+const FIRE_ROWS = [
+  "....o...",
+  "...oo...",
+  "..oooo..",
+  ".oooyoo.",
+  ".ooyyoo.",
+  ".oyyyyo.",
+  "..oyyo..",
+  "...oo...",
+];
+const FIRE_PAL = { o: '#D9452B', y: '#F7C948' };
+const HEART_ROWS = [
+  ".rr.rr.",
+  "rrrrrrr",
+  "rrrrrrr",
+  ".rrrrr.",
+  "..rrr..",
+  "...r...",
+];
+const HEART_PAL = { r: '#E0526A' };
+const SWEAT_ROWS = [
+  "..b.",
+  ".bb.",
+  ".bbb",
+  "bbbb",
+  ".bb.",
+];
+const SWEAT_PAL = { b: '#5FA8CC' };
+const GRASS_ROWS = [
+  "g.g.g.",
+  "g.g.g.",
+  "gggggg",
+];
+const AVATAR_ROWS = [
+  "..hhhhhh..",
+  ".hhhhhhhh.",
+  ".hhffffff.",
+  ".hffffffh.",
+  ".hfeffefh.",
+  ".hffffffh.",
+  "..ffffff..",
+  "..cccccc..",
+  ".cccccccc.",
+  ".cccccccc.",
+];
+const AVATAR_PAL = { h: '#5A4632', f: '#F2C9A0', e: '#3A3236', c: '#4E7A9E' };
+const ARROWS_ROWS = [
+  "..k.....k..",
+  ".kkkkkkkkk.",
+  "kkkkkkkkkkk",
+  ".kkkkkkkkk.",
+  "..k.....k..",
+];
+const ICON_EGG = [
+  "...kk...",
+  "..kkkk..",
+  ".kkkkkk.",
+  ".kkkkkk.",
+  ".kkkkkk.",
+  ".kkkkkk.",
+  "..kkkk..",
+  "........",
+];
+const ICON_HOUR = [
+  "kkkkkkkk",
+  ".k....k.",
+  "..k..k..",
+  "...kk...",
+  "..k..k..",
+  ".k....k.",
+  "kkkkkkkk",
+  "........",
+];
+const ICON_SUSHI = [
+  "..kkkk..",
+  ".kkkkkk.",
+  ".kkkkkk.",
+  "kkkkkkkk",
+  ".kkkkkk.",
+  ".kkkkkk.",
+  "..kkkk..",
+  "........",
+];
+const ICON_STAIRS = [
+  ".....kk.",
+  ".....kk.",
+  "...kkkk.",
+  "...kkkk.",
+  ".kkkkkk.",
+  ".kkkkkk.",
+  "kkkkkkkk",
+  "kkkkkkkk",
+];
+const TAB_DEFS = [
+  { id: 'egg', label: 'Trứng', icon: ICON_EGG },
+  { id: 'focus', label: 'Tập', icon: ICON_HOUR },
+  { id: 'feed', label: 'Ăn', icon: ICON_SUSHI },
+  { id: 'stats', label: 'Stats', icon: ICON_STAIRS },
+];
+const TAB_CYCLE = ['egg', 'focus', 'breed', 'feed', 'stats'];
+
+const HISTORY_TODAY = [
+  { t: '07:30', d: '50 phút · Đọc sách', x: 50, st: 'ok' },
+  { t: '10:05', d: '37 phút · Viết lách', x: 37, st: 'ok' },
+  { t: '14:20', d: '25 phút · Ôn bài', x: 25, st: 'ok' },
+  { t: '16:44', d: '12 phút · bỏ dở', x: 0, st: 'skip' },
+];
+
+/* logo Google G chuẩn 4 màu */
+function GoogleG() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true" style={{ flexShrink: 0 }}>
+      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+    </svg>
+  );
+}
+
+function ArrowSwap() {
+  return <PixelSprite rows={ARROWS_ROWS} pal={{ k: '#6B8258' }} px={1.4} style={{ display: 'inline-block', verticalAlign: '-2px', margin: '0 2px' }} />;
+}
+
+/* ---------- shared UI ---------- */
+function LcdPanel({ className = '', style, children }) {
+  return (
+    <div className={'lcdp ' + className} style={style}>
+      <div className="lcd-grid" />
+      <div className="lcd-glare" />
+      {children}
+    </div>
+  );
+}
+
+function BlockMeter({ label, value, max = 100, cap, fill, num, note, blocks = 12 }) {
+  const on = Math.round((value / max) * blocks);
+  const cells = [];
+  for (let i = 0; i < blocks; i++) {
+    cells.push(<i key={i} style={{ flex: 1, background: i < on ? fill : 'rgba(53,80,46,.14)', borderRadius: 2 }} />);
+  }
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <span className="mini-label" style={{ minWidth: 74 }}>{label}</span>
+      <div style={{ flex: 1, position: 'relative' }}>
+        <div style={{ height: 16, display: 'flex', gap: 3, padding: 2, border: '2px solid rgba(53,80,46,.55)', borderRadius: 4, background: 'rgba(101,124,72,.18)' }}>
+          {cells}
+        </div>
+        {cap != null && (
+          <React.Fragment>
+            <span className="cap-tick" style={{ position: 'absolute', top: -3, bottom: -3, width: 3, background: '#35502E', borderRadius: 2, left: 'calc(' + cap + '% - 1px)' }} />
+            <span style={{ position: 'absolute', top: -14, left: 'calc(' + cap + '% - 1px)', transform: 'translateX(-50%)', fontSize: 10, fontWeight: 800, color: '#35502E' }}>CAP {cap}</span>
+          </React.Fragment>
+        )}
+      </div>
+      <span className="pixelfont" style={{ fontSize: 19, color: '#35502E', minWidth: 58, textAlign: 'right' }}>{num || value}</span>
+      {note && <span className="meter-note">{note}</span>}
+    </div>
+  );
+}
+
+function CondBar({ name, need, cur }) {
+  const ok = cur >= need;
+  const blocks = 10;
+  const on = Math.min(blocks, Math.round((cur / need) * blocks));
+  const cells = [];
+  for (let i = 0; i < blocks; i++) {
+    cells.push(<i key={i} className={i < on ? (ok ? 'done' : 'on') : ''} />);
+  }
+  return (
+    <div className="cond-bar">
+      <span className="mini-label">{name} ≥ {need}</span>
+      <div className="cond-cells">{cells}</div>
+      <span className="pixelfont" style={ok ? { color: '#2E7D32' } : null}>{cur}/{need}{ok ? ' ✓' : ''}</span>
+    </div>
+  );
+}
+
+function CoinChip({ coin }) {
+  return (
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: '#35502E', borderRadius: 999, padding: '4px 12px 4px 9px', boxShadow: '2px 2px 0 rgba(53,80,46,.35)' }}>
+      <PixelSprite rows={SUSHI_ROWS} pal={SUSHI_PAL} px={1.8} />
+      <span className="pixelfont" style={{ color: '#E9F2D8', fontSize: 20, lineHeight: 1 }}>× {coin} sushi</span>
+    </div>
+  );
+}
+
+function TabBar({ tab, onTab }) {
+  const activeId = tab === 'breed' ? 'focus' : tab;
+  return (
+    <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+      {TAB_DEFS.map(t => {
+        const active = t.id === activeId;
+        return (
+          <button key={t.id} className={'lcd-tab' + (active ? ' active' : '')} onClick={() => onTab(t.id)}>
+            <PixelSprite rows={t.icon} pal={{ k: active ? '#D9E6C9' : '#35502E' }} px={2} style={{ margin: '0 auto' }} />
+            <span>{t.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ---------- HUD battle kiểu Gen-1, MÀU Pokemon (spec §2.5) ----------
+   Tên đậm + Lv · hàng TT (Thể trạng) + thanh vạch phân đoạn + số.
+   Màu HP: xanh ≥50% → vàng 20–49% → đỏ <20%; <30 (ốm) = đỏ nhấp nháy. */
+function BattleHUD({ name, level, cond, max = 100, compact }) {
+  const critical = cond < 30;
+  const pct = cond / max;
+  const hpColor = pct >= 0.5 ? 'var(--hp-hi)' : pct >= 0.2 ? 'var(--hp-mid)' : 'var(--hp-low)';
+  const cells = compact ? 14 : 22;
+  const on = Math.max(0, Math.min(cells, Math.round((cond / max) * cells)));
+  const segs = [];
+  for (let i = 0; i < cells; i++) segs.push(<i key={i} className={i < on ? 'on' : ''} style={i < on ? { background: hpColor } : null} />);
+  return (
+    <div className={'gb-hud' + (compact ? ' compact' : '') + (critical ? ' crit' : '')}>
+      <div className="gb-hud-top">
+        <span className="gb-hud-name">{name}</span>
+        <span className="gb-hud-lv">Lv.{level}</span>
+      </div>
+      <div className="gb-hud-hp">
+        <span className="gb-hud-tt">TT</span>
+        <span className="gb-hud-bar">{segs}</span>
+        <span className="gb-hud-num">{cond}/{max}</span>
+      </div>
+    </div>
+  );
+}
+
+function PetStage({ form, linePal, sick, hop, paused, hearts, height, name, hud }) {
+  const spr = formSprite(form, linePal, sick);          // grid ốm riêng theo form (spec §2.4)
+  const px = fitPx(spr.rows, 118);
+  const boxH = Math.round(spr.rows.length * px) + 24;
+  const petStyle = { left: hud ? '27%' : '50%' };
+  if (paused) petStyle.animationPlayState = 'paused';
+  return (
+    <div className="stage" style={{ height: height || boxH }}>
+      {name && !hud && <span className="petname">{name}{sick ? ' · ỐM YẾU' : ''}</span>}
+      <div className={'pet' + (sick ? ' shiver' : (hop && !paused ? ' hop' : ''))} style={petStyle}>
+        <PixelSprite rows={spr.rows} pal={spr.pal} px={px} />
+      </div>
+      {sick && <div className="sick-puddle" />}
+      {sick && <span className="sick-bubble">…</span>}
+      {sick && (
+        <span className="sweat" style={{ left: '32%', top: 26 }}>
+          <PixelSprite rows={SWEAT_ROWS} pal={SWEAT_PAL} px={2} />
+        </span>
+      )}
+      {sick && (
+        <span className="sweat" style={{ left: '63%', top: 36, animationDelay: '.5s' }}>
+          <PixelSprite rows={SWEAT_ROWS} pal={SWEAT_PAL} px={1.6} />
+        </span>
+      )}
+      {hud && (
+        <div className="stage-hud">
+          <BattleHUD name={hud.name} level={hud.level} cond={hud.cond} />
+        </div>
+      )}
+      {hearts && (
+        <span className="heart" style={{ left: '24%', bottom: 64 }}>
+          <PixelSprite rows={HEART_ROWS} pal={HEART_PAL} px={2} />
+        </span>
+      )}
+      {hearts && (
+        <span className="heart" style={{ left: '56%', bottom: 56, animationDelay: '.25s' }}>
+          <PixelSprite rows={HEART_ROWS} pal={HEART_PAL} px={2.6} />
+        </span>
+      )}
+      <PixelSprite rows={GRASS_ROWS} pal={{ g: '#7FA858' }} px={3} style={{ position: 'absolute', left: 10, bottom: 8 }} />
+      <PixelSprite rows={GRASS_ROWS} pal={{ g: '#7FA858' }} px={3} style={{ position: 'absolute', right: 12, bottom: 8 }} />
+      <div className="ground" />
+    </div>
+  );
+}
+
+function Dpad({ onPrev, onNext }) {
+  const decStyle = { left: 34, top: 0, width: 28, height: 37, borderRadius: '7px 7px 2px 2px' };
+  return (
+    <div style={{ position: 'relative', width: 96, height: 96, flexShrink: 0 }}>
+      <div className="dp-dec" style={decStyle} />
+      <div className="dp-dec" style={{ left: 34, bottom: 0, width: 28, height: 37, borderRadius: '2px 2px 7px 7px' }} />
+      <div className="dp-dec" style={{ left: 34, top: 34, width: 28, height: 28 }} />
+      <button className="dp-arm" style={{ left: 0, top: 34, width: 37, height: 28, borderRadius: '2px 7px 7px 2px' }} onClick={onPrev} aria-label="Trước">
+        <span className="dp-tri dp-tri-l" />
+      </button>
+      <button className="dp-arm" style={{ right: 0, top: 34, width: 37, height: 28, borderRadius: '7px 2px 2px 7px' }} onClick={onNext} aria-label="Sau">
+        <span className="dp-tri dp-tri-r" />
+      </button>
+      <div style={{ position: 'absolute', left: 42, top: 42, width: 12, height: 12, borderRadius: '50%', background: 'rgba(120,100,60,.22)' }} />
+    </div>
+  );
+}
+
+function RoundBtn({ letter, label, onClick, dark }) {
+  return (
+    <div className="ab-col">
+      <button className={'ab-btn' + (dark ? ' dark' : '')} onClick={onClick} aria-label={label}>
+        <span className="psp">{letter}</span>
+      </button>
+      <span className="shell-label">{label}</span>
+    </div>
+  );
+}
+
+/* helper: form hiện tại của pet theo level */
+function heroForm(s) {
+  const line = CATALOG[s.egg];
+  let cur = line.stages[0];
+  line.stages.forEach(st => { if (s.level >= st.atLevel) cur = st; });
+  return { line, form: cur };
+}
+function condStateOf(s, simBoost) {
+  return {
+    level: s.level,
+    power: simBoost ? Math.max(s.power, 85) : s.power,
+    streak: simBoost ? Math.max(s.streak, 10) : s.streak,
+    healthyDays: s.healthyDays,
+    todaySessions: s.todaySessions,
+  };
+}
+
+/* ============================ SCREENS ============================ */
+
+function EggScreen({ s, patch }) {
+  const lines = Object.values(CATALOG);
+  return (
+    <div className="screen">
+      <div className="scr-title">Chọn quả trứng<span className="blink-tri inline" /></div>
+      <div className="scr-sub">1 trứng = 1 line nguyên tố · 3 stage + nhánh + form lai</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginTop: 12 }}>
+        {lines.map(line => {
+          const sel = s.egg === line.id;
+          return (
+            <button key={line.id} className={'egg-card' + (sel ? ' sel' : '')} onClick={() => patch({ egg: line.id, adopted: false, revealed: false, simBoost: false })}>
+              <div className={'egg-slot' + (sel ? ' sel' : '')}>
+                <PixelSprite rows={SPR_GRIDS.trungEgg.rows} pal={SPR_GRIDS.trungEgg.pal} px={1.7} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div className="egg-name">TRỨNG {line.name.toUpperCase()} · LINE {line.name.toUpperCase()}</div>
+                <div className="egg-sub">{line.stages.map(st => st.name).join(' → ')} + 2 nhánh + 1 lai</div>
+              </div>
+              {sel && <span className="blink-tri" />}
+              {sel && <span className="chip-sel">ĐANG CHỌN</span>}
+            </button>
+          );
+        })}
+      </div>
+      <div style={{ marginTop: 'auto', paddingTop: 12 }}>
+        {!s.adopted ? (
+          <button className="lcdbtn primary big" onClick={() => patch({ adopted: true })}>
+            Nhận {CATALOG[s.egg].stages[0].name} về nhà
+          </button>
+        ) : (
+          <div className="adopted-box">
+            <span>Đã đón <b>{CATALOG[s.egg].stages[0].name}</b> về nhà! Bé lớn lên bằng phiên tập trung + bữa ăn.</span>
+            <button className="lcdbtn" onClick={() => patch({ tab: 'focus' })}>
+              Đến màn Tập
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function FocusScreen({ s, patch, goBreed }) {
+  const { line, form } = heroForm(s);
+  const paused = !s.run;
+  const need = xpNeed(s.level);
+  const cap = powerCap(s.level);
+  const focusUi = [];
+  SYSTEMS.forEach(sys => (sys.ui || []).forEach(u => { if (u.slot === 'focus') focusUi.push({ sys, u }); }));
+  return (
+    <div className="screen">
+      <div className="status-row">
+        <span className={'status-chip ' + (paused ? 'warn' : 'go')}>{paused ? 'TẠM DỪNG' : 'ĐANG TẬP TRUNG'}</span>
+        <span className="pixelfont session">PHIÊN {s.session}/4</span>
+      </div>
+      <div className="timer-wrap">
+        <span className="pixelfont timer-ghost">88:88</span>
+        <span className="pixelfont timer">24:31</span>
+      </div>
+      <PetStage
+        form={form}
+        linePal={line.pal}
+        sick={s.sick}
+        hop={!paused}
+        paused={paused}
+        hud={{ name: form.name.toUpperCase() + (s.sick ? ' · ỐM YẾU' : ''), level: s.level, cond: s.condition }}
+      />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {focusUi.map(({ sys, u }) => {
+          if (u.type === 'xp_bar') {
+            const cells = [];
+            const on = Math.min(10, Math.round((s.xp / need) * 10));
+            for (let i = 0; i < 10; i++) cells.push(<i key={i} className={i < on ? 'on' : ''} />);
+            return (
+              <div className="xp-row" key={sys.id} style={{ margin: 0 }}>
+                <span className="pixelfont lv-chip">LV.{s.level}</span>
+                <div className="xp-bar">{cells}</div>
+                <span className="pixelfont xp-num">{s.xp}/{need} XP</span>
+              </div>
+            );
+          }
+          return (
+            <BlockMeter key={sys.id} label={u.label} value={s.power} cap={u.capByLevel ? cap : null}
+              num={s.power + '/' + cap} fill="#E07830"
+              note={s.sick ? 'ỐM YẾU' : '+8/PHIÊN'} />
+          );
+        })}
+        <BlockMeter label="Thể trạng" value={s.condition} num={s.condition + ''}
+          fill="#45B54E"
+          note={s.condition >= 70 ? 'KHỎE MẠNH' : s.condition >= 30 ? 'BÌNH THƯỜNG' : 'ỐM YẾU'} />
+      </div>
+      <div className="hint-line">Hệ power: hoàn thành phiên +8 · quên luyện −6/ngày · cap theo level (LV.{s.level} → {cap}).</div>
+      <div className="foot-row">
+        <CoinChip coin={s.coins} />
+        <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
+          <button className="lcdbtn" onClick={goBreed}>Lai tạo →</button>
+          <button className="lcdbtn primary" onClick={() => patch({ run: !s.run })}>
+            {paused ? 'Tiếp tục' : 'Tạm dừng'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BreedScreen({ s, patch, simBreed, sickSim, recover, moveLean }) {
+  const { line, form } = heroForm(s);
+  const stageIdx = line.stages.indexOf(form);
+  const options = leanOptions(line.id);
+  const lean = options.find(o => o.key === s.lean) || options[0];
+  const stage3 = line.stages[2].name;
+  return (
+    <div className="screen">
+      <div className="status-row">
+        <span className="scr-title" style={{ textAlign: 'left', fontSize: 23 }}>LAB LAI TẠO<span className="blink-tri inline" /></span>
+        <span className={'status-chip ' + (s.sick ? 'bad' : 'go')}>{form.name.toUpperCase()} · LV.{s.level} · ST.{stageIdx + 1}/3</span>
+      </div>
+
+      <div className="sec-label">① CHỌN HƯỚNG MẦM (STAGE 2) · D-PAD ◀ ▶</div>
+      <div style={{ display: 'flex', gap: 5 }}>
+        {options.map(o => (
+          <button key={o.key} className={'lean-opt' + (o.key === lean.key ? ' sel' : '')} onClick={() => patch({ lean: o.key })}>
+            <span className="lean-label">
+              {o.key === lean.key && <span className="lean-cursor" />}
+              <span>{o.label}</span>
+            </span>
+            <span className="lean-sub">{o.hint}</span>
+            {o.kind === 'hybrid' && <span className="tag-rare" style={{ alignSelf: 'flex-end', marginLeft: 'auto' }}>HIẾM</span>}
+          </button>
+        ))}
+      </div>
+
+      <div className="sec-label">
+        {lean.kind === 'hybrid' ? '② FORM LAI · ' + lean.target.name.toUpperCase() + ' (' + ELEMENT[lean.target.a].name.toUpperCase() + '×' + ELEMENT[lean.target.b].name.toUpperCase() + ')' : '② NHÁNH STAGE 3 · THUẦN ' + ELEMENT[line.id].name.toUpperCase()}
+      </div>
+
+      {lean.kind === 'hybrid' ? (
+        <React.Fragment>
+        <div style={{ display: 'flex', gap: 9, alignItems: 'stretch' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5, flexShrink: 0 }}>
+            <div className="form-box">
+              <span className="cap">HIỆN TẠI</span>
+              <PixelSprite rows={(() => { const sp = formSprite(form, line.pal, s.sick); return sp.rows; })()} pal={(() => { const sp = formSprite(form, line.pal, s.sick); return sp.pal; })()} px={fitPx(form.rows, 72)} style={{ marginTop: 8 }} />
+            </div>
+            <BattleHUD compact name={form.name.toUpperCase()} level={s.level} cond={s.condition} />
+          </div>
+          <div className={'form-box' + (s.flashing ? ' flashbox' : '')}>
+            <span className="cap">DỰ KIẾN LAI</span>
+            {s.revealed ? (
+              <PixelSprite rows={lean.target.rows} pal={lean.target.pal} px={fitPx(lean.target.rows, 72)} className="morphin" style={{ marginTop: 8 }} />
+            ) : (
+              <React.Fragment>
+                <PixelSprite rows={lean.target.rows} pal={silPal(lean.target.pal)} px={fitPx(lean.target.rows, 72)} style={{ marginTop: 8, opacity: .85 }} />
+                <span className="qmark">???</span>
+              </React.Fragment>
+            )}
+          </div>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 5, minWidth: 0 }}>
+            <div style={{ display: 'flex', gap: 5, alignItems: 'center', flexWrap: 'wrap' }}>
+              <span className="pixelfont" style={{ fontSize: 18, color: 'var(--ink)' }}>{lean.target.name.toUpperCase()}</span>
+              <span className="tag-rare">HIẾM</span>
+            </div>
+            <div className="pixelfont" style={{ fontSize: 16, color: 'var(--ink2)', lineHeight: 1.2 }}>
+              {s.flashing ? 'ĐANG LÓE LCD…' : s.revealed ? 'ĐÃ GHI VÀO POKÉDEX' : 'CHƯA GHI NHẬN · ???'}
+            </div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 6 }}>
+          {condLeaves(lean.target.cond).map((leaf, i) => {
+            const st = condStateOf(s, s.simBoost || s.revealed);
+            return <CondBar key={i} name={COND_NAME[leaf.k]} need={leaf.v} cur={st[COND_CODE[leaf.k]]} />;
+          })}
+        </div>
+        </React.Fragment>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {line.branches.map(b => {
+            const st = condStateOf(s, false);
+            return (
+              <div key={b.id} className="branch-card">
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <b>{b.name}</b>
+                  <span className="tag-branch">NHÁNH</span>
+                </div>
+                <span className="pixelfont" style={{ fontSize: 17 }}>{condText(b.cond)}</span>
+                <div className="lean-sub">
+                  {condLeaves(b.cond).map(l => COND_CODE[l.k] + ' ' + st[COND_CODE[l.k]] + '/' + l.v + (st[COND_CODE[l.k]] >= l.v ? ' ✓' : '')).join(' · ')}
+                </div>
+              </div>
+            );
+          })}
+          <div className="branch-card dim">
+            <b>(Mặc định)</b> {stage3} Thường
+            <span className="pixelfont" style={{ fontSize: 17 }}> — level≥16</span>
+            <div className="lean-sub">Không đòi thêm điều kiện — form thường</div>
+          </div>
+        </div>
+      )}
+
+      {lean.kind === 'hybrid' && (
+        <div style={{ marginTop: 6 }}>
+          <button className="lcdbtn primary big" disabled={s.flashing || s.revealed} onClick={simBreed}>
+            {s.flashing ? 'ĐANG LAI…' : s.revealed ? 'ĐÃ MỞ ' + lean.target.name.toUpperCase() + ' ✓' : 'Mô phỏng đủ điều kiện'}
+          </button>
+        </div>
+      )}
+
+      <div className="sec-label">③ RỦI RO BỎ BÊ — 62→14 SỨC MẠNH · 78→18 THỂ TRẠNG</div>
+      <div className="branch-card" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 9px' }}>
+        <span className="lean-sub" style={{ flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>LV giữ nguyên · chỉ power sụp (−6/ngày nghỉ)</span>
+        {!s.sick ? (
+          <button className="lcdbtn" style={{ padding: '4px 8px', fontSize: 12, flexShrink: 0 }} onClick={sickSim}>Mô phỏng nghỉ 2 tuần</button>
+        ) : (
+          <button className="lcdbtn" style={{ padding: '4px 8px', fontSize: 12, flexShrink: 0 }} onClick={recover}>Mọc lại · chăm 3 ngày</button>
+        )}
+      </div>
+      {s.sick && <div className="sick-line" style={{ marginTop: 3 }}>LV GIỮ NGUYÊN · NGOẠI HÌNH ỐM YẾU</div>}
+
+      <div className="foot-row">
+        <button className="lcdbtn" onClick={() => patch({ tab: 'focus' })}>← Về màn Tập</button>
+        <span className="lean-sub" style={{ marginLeft: 'auto' }}>Hệ breeding · đọc CATALOG + COND</span>
+      </div>
+    </div>
+  );
+}
+
+function FeedScreen({ s, patch, feed }) {
+  const { line, form } = heroForm(s);
+  const canFeed = s.coins > 0;
+  return (
+    <div className="screen">
+      <div className="status-row">
+        <span className="status-chip rest">{s.justFed ? 'BÉ ĂN NGON!' : 'BÉ ĐANG CHỜ BỮA'}</span>
+        <CoinChip coin={s.coins} />
+      </div>
+      <PetStage form={form} linePal={line.pal} sick={s.sick} hop={s.justFed} hearts={s.justFed} name={form.name.toUpperCase()} />
+      {s.justFed && <div className="happy-banner">{form.name} thích lắm!</div>}
+      <div className="hint-line" style={{ marginTop: 8 }}>
+        Mỗi bữa: −1 sushi · +15 thể trạng · +5 XP (hệ level). Sushi kiếm được +1 sau mỗi phiên hoàn thành.
+      </div>
+      <div className="feed-row" style={{ marginTop: 'auto', paddingTop: 10 }}>
+        <div className="sushi-plate">
+          <PixelSprite rows={SUSHI_ROWS} pal={SUSHI_PAL} px={4} />
+        </div>
+        <button className="lcdbtn primary big" disabled={!canFeed} onClick={feed}>
+          {canFeed ? 'Cho ăn 1 sushi (còn ' + s.coins + ')' : 'Hết sushi rồi — tập thêm nhé!'}
+        </button>
+      </div>
+      <div className="hint-line">Thể trạng ≥70 Khỏe mạnh · 30–69 Bình thường · &lt;30 Ốm yếu (sprite rũ xuống).</div>
+    </div>
+  );
+}
+
+function StatsScreen({ s, patch, sickSim, recover }) {
+  const { line, form } = heroForm(s);
+  const days = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+  return (
+    <div className="screen">
+      <div className="status-row">
+        <span className="status-chip go">STREAK 7 NGÀY</span>
+        <span className="pixelfont session">MỤC TIÊU 3/3 PHIÊN ✓</span>
+      </div>
+      <div className="fire-row big">
+        {days.map((d, i) => (
+          <div key={d} className={'day-cell' + (i === days.length - 1 ? ' today' : '')}>
+            <div className={'fire' + (i === days.length - 1 ? ' today' : '')}>
+              <PixelSprite rows={FIRE_ROWS} pal={FIRE_PAL} px={2.6} style={{ margin: '0 auto' }} />
+            </div>
+            <span>{d}</span>
+          </div>
+        ))}
+      </div>
+      <div className="today-panel">
+        <div>
+          <div className="pixelfont big-num">112</div>
+          <div className="mini-label">phút hôm nay</div>
+        </div>
+        <div className="v-sep" />
+        <div>
+          <div className="pixelfont big-num">3</div>
+          <div className="mini-label">phiên · +120 XP</div>
+        </div>
+        <div style={{ flex: 1 }} />
+        <div style={{ textAlign: 'right' }}>
+          <div className="pixelfont" style={{ fontSize: 19, color: 'var(--ink)' }}>SẮP MỞ</div>
+          <div className="mini-label">Hơi Nước Bốc (HIẾM)</div>
+        </div>
+      </div>
+      <div className="hist">
+        <div className="hist-head">
+          <span>Phiên gần đây</span>
+          <span className="pixelfont">+120 XP</span>
+        </div>
+        {HISTORY_TODAY.map(h => (
+          <div key={h.t} className={'hist-row' + (h.st === 'skip' ? ' muted' : '')}>
+            <span className={'dot ' + h.st} />
+            <span className="pixelfont time">{h.t}</span>
+            <span className="mini-label">{h.d}</span>
+            <span className="pixelfont xp">{h.x > 0 ? '+' + h.x + ' XP' : '—'}</span>
+          </div>
+        ))}
+      </div>
+      <div className="branch-card" style={{ marginBottom: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <b>QUẢN LÝ SỨC MẠNH</b>
+          <span className="pixelfont" style={{ fontSize: 17 }}>62 → 14 · 78 → 18</span>
+          {!s.sick ? (
+            <button className="lcdbtn" style={{ marginLeft: 'auto', padding: '4px 8px', fontSize: 12 }} onClick={sickSim}>Mô phỏng nghỉ 2 tuần</button>
+          ) : (
+            <button className="lcdbtn" style={{ marginLeft: 'auto', padding: '4px 8px', fontSize: 12 }} onClick={recover}>Mọc lại</button>
+          )}
+        </div>
+        {s.sick && <div className="sick-line" style={{ marginTop: 5 }}>LV GIỮ NGUYÊN · NGOẠI HÌNH ỐM YẾU</div>}
+        {!s.sick && <div className="lean-sub" style={{ marginTop: 3 }}>Decay chạy nền · sprite hệ power đọc SYSTEMS</div>}
+      </div>
+      <div className="sync-card">
+        <div className="sync-row">
+          <div className="avatar">
+            <PixelSprite rows={AVATAR_ROWS} pal={AVATAR_PAL} px={3.2} />
+          </div>
+          <div>
+            <div className="sync-name">Minh Anh</div>
+            <div className="mini-label">Đã đồng bộ · web <ArrowSwap /> Android · 2 phút trước</div>
+          </div>
+        </div>
+        <button className="g-btn">
+          <GoogleG /> Đăng nhập bằng Google
+        </button>
+      </div>
+      <div className="lean-sub" style={{ marginTop: 7, textAlign: 'center' }}>
+        HỆ ĐANG CHẠY: {SYSTEMS.map(x => x.id).join(' · ')} — đọc từ SYSTEMS
+      </div>
+    </div>
+  );
+}
+
+/* ============================ PHONE ============================ */
+
+function PhoneApp({ tint, initial }) {
+  const [s, setS] = useState(initial);
+  const patch = o => setS(p => ({ ...p, ...o }));
+  const { line, form } = heroForm(s);
+
+  const goTab = id => patch({ tab: id, justFed: id === 'feed' ? s.justFed : false });
+  const cycleTab = dir => {
+    const idx = TAB_CYCLE.indexOf(s.tab);
+    goTab(TAB_CYCLE[(idx + dir + TAB_CYCLE.length) % TAB_CYCLE.length]);
+  };
+  const moveLean = dir => {
+    const opts = leanOptions(line.id);
+    const idx = Math.max(0, opts.findIndex(o => o.key === s.lean));
+    patch({ lean: opts[(idx + dir + opts.length) % opts.length].key });
+  };
+  const feed = () => {
+    if (s.coins > 0) patch({ coins: s.coins - 1, condition: Math.min(100, s.condition + 15), xp: s.xp + 5, justFed: true });
+  };
+  const feedFromB = () => {
+    if (s.tab === 'breed') { patch({ sick: true, power: 14, condition: 18 }); return; }
+    if (s.coins > 0) patch({ tab: 'feed', coins: s.coins - 1, condition: Math.min(100, s.condition + 15), xp: s.xp + 5, justFed: true });
+  };
+  const simBreed = () => {
+    if (s.flashing || s.revealed) return;
+    patch({ flashing: true });
+    setTimeout(() => setS(p => ({ ...p, flashing: false, simBoost: true, revealed: true })), 1050);
+  };
+  const sickSim = () => patch({ sick: true, power: 14, condition: 18 });
+  const recover = () => patch({ sick: false, power: 62, condition: 78 });
+
+  const onA = () => {
+    if (s.tab === 'egg') { patch({ adopted: true }); return; }
+    if (s.tab === 'focus') { patch({ run: !s.run }); return; }
+    if (s.tab === 'breed') { simBreed(); return; }
+    if (s.tab === 'feed') { feed(); return; }
+  };
+  const onDpad = dir => {
+    if (s.tab === 'breed') moveLean(dir);
+    else cycleTab(dir);
+  };
+  const onSelect = () => {
+    if (s.tab === 'breed') moveLean(1);
+    else patch({ run: !s.run });
+  };
+
+  const hint =
+    s.tab === 'breed' ? '◀ ▶ đổi hướng mầm · A mô phỏng lai · B nghỉ 2 tuần · START về vòng tab' :
+    s.tab === 'focus' ? '◀ ▶ đổi màn (▶ = LAB LAI TẠO) · A tạm dừng · B cho ăn' :
+    s.tab === 'egg' ? 'A nhận trứng về nhà · ◀ ▶ đổi màn' :
+    s.tab === 'feed' ? 'A/B cho ăn ngay · ◀ ▶ đổi màn' :
+    'SELECT tạm dừng · START mở LAB LAI TẠO';
+
+  const speaker = [];
+  for (let i = 0; i < 6; i++) speaker.push(<i key={i} />);
+
+  return (
+    <div className="pshell" style={{ background: tint }}>
+      <div className="shell-top">
+        <div className="pwr"><span className="led" /><span className="psp">PWR</span></div>
+        <div className="wordmark psp">PET POMODORO</div>
+        <div className="model">PP-01</div>
+      </div>
+      <div className="bezel">
+        <LcdPanel className="lcd-main">
+          <div className="lcd-content">
+            <div className="screen-scroll">
+              {s.tab === 'egg' && <EggScreen s={s} patch={patch} />}
+              {s.tab === 'focus' && <FocusScreen s={s} patch={patch} goBreed={() => patch({ tab: 'breed' })} />}
+              {s.tab === 'breed' && <BreedScreen s={s} patch={patch} simBreed={simBreed} sickSim={sickSim} recover={recover} moveLean={moveLean} />}
+              {s.tab === 'feed' && <FeedScreen s={s} patch={patch} feed={feed} />}
+              {s.tab === 'stats' && <StatsScreen s={s} patch={patch} sickSim={sickSim} recover={recover} />}
+            </div>
+            <TabBar tab={s.tab} onTab={goTab} />
+          </div>
+        </LcdPanel>
+        <div className="pixelfont bezel-cap">DOT-MATRIX · PIN CỦA BÉ = SỰ TẬP TRUNG</div>
+      </div>
+      <div className="deck">
+        <Dpad onPrev={() => onDpad(-1)} onNext={() => onDpad(1)} />
+        <div className="deck-mid">
+          <div className="pills">
+            <div className="pill-col"><button className="pill" aria-label="SELECT" onClick={onSelect} /><span className="shell-label">SELECT</span></div>
+            <div className="pill-col"><button className="pill" aria-label="START" onClick={() => patch({ tab: 'breed' })} /><span className="shell-label">START</span></div>
+          </div>
+          <div className="speaker">{speaker}</div>
+          <div className="deck-hint">{hint}</div>
+        </div>
+        <div className="deck-right">
+          <RoundBtn letter="B" label="CHO ĂN" onClick={feedFromB} dark />
+          <RoundBtn letter="A" label="OK" onClick={onA} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConsolePhone({ tint, label, initial }) {
+  return (
+    <div className="demo-item">
+      <em className="demo-label">{label}</em>
+      <AndroidFrame time="20:24" battery={76}>
+        <PhoneApp tint={tint} initial={initial} />
+      </AndroidFrame>
+    </div>
+  );
+}
+
+/* ============================ POKÉDEX (DESKTOP) ============================ */
+
+const CUR_BY_KEY = {
+  level_at_least: HERO_CORE.level,
+  power_at_least: HERO_CORE.power,
+  streak_at_least: HERO_CORE.streak,
+  healthy_days_at_least: HERO_CORE.healthyDays,
+  sessions_today_at_least: HERO_CORE.todaySessions,
+};
+
+function DexCell({ e, unlocked, sel, onSelect }) {
+  return (
+    <button className={'dex-cell' + (sel ? ' sel' : '')} onClick={onSelect}>
+      {e.kind === 'hybrid' && <span className="mini-tag">HIẾM</span>}
+      {e.kind === 'branch' && <span className="mini-tag br">NHÁNH</span>}
+      <span className="no">#{e.no}</span>
+      <PixelSprite rows={e.rows} pal={unlocked ? e.pal : silPal(e.pal)} px={fitPx(e.rows, 50)} style={{ margin: '1px auto' }} />
+      <span className="nm">{unlocked ? e.name : '???'}</span>
+    </button>
+  );
+}
+
+function DexDetail({ e, unlocked, onUnlock }) {
+  const line = e.lineId ? CATALOG[e.lineId] : null;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+        <div className="side-sprite">
+          <PixelSprite rows={e.rows} pal={unlocked ? e.pal : silPal(e.pal)} px={fitPx(e.rows, 96)} />
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <div className="side-name">{unlocked ? e.name : '???'}</div>
+          <div className="mini-label" style={{ marginTop: 3 }}>
+            {line ? line.icon + ' LINE ' + line.name.toUpperCase() : '★ MỞ ĐẦU'} · #{e.no}
+          </div>
+          <div style={{ display: 'flex', gap: 5, marginTop: 5, flexWrap: 'wrap' }}>
+            <span className={'status-chip ' + (unlocked ? 'rest' : 'idle')}>{unlocked ? 'ĐÃ PHÁT HIỆN' : 'CHƯA GHI NHẬN'}</span>
+            {e.kind === 'hybrid' && <span className="tag-rare">HIẾM</span>}
+            {e.kind === 'branch' && <span className="tag-branch">NHÁNH</span>}
+          </div>
+        </div>
+      </div>
+      <div className="mini-label">VAI TRÒ: <span style={{ color: 'var(--ink)' }}>{e.role.toUpperCase()}</span></div>
+      <div>
+        <div className="sec-label" style={{ marginTop: 0 }}>ĐIỀU KIỆN MỞ (REGISTRY)</div>
+        {e.cond ? (
+          <React.Fragment>
+            <span className="cond-code">{condText(e.cond)}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 7 }}>
+              {condLeaves(e.cond).map((leaf, i) => (
+                <CondBar key={i} name={COND_NAME[leaf.k]} need={leaf.v} cur={CUR_BY_KEY[leaf.k]} />
+              ))}
+            </div>
+          </React.Fragment>
+        ) : (
+          <span className="lean-sub">Không điều kiện — {e.kind === 'egg' ? 'nhận 1/3 trứng ở màn Trứng.' : 'tiến hoá theo mốc level từ CATALOG.'}</span>
+        )}
+      </div>
+      <button className="phys-btn red" disabled={unlocked} onClick={onUnlock}>
+        {unlocked ? 'ĐÃ PHÁT HIỆN ✓' : 'Mô phỏng mở khóa'}
+      </button>
+    </div>
+  );
+}
+
+function PokedexApp() {
+  const [dex, setDex] = useState({ unlocked: ['egg', 'tan-lua', 'bong-bot'], selId: 'tan-lua' });
+  const sel = DEX_ENTRIES.find(e => e.id === dex.selId);
+  const isUnlocked = id => dex.unlocked.indexOf(id) !== -1;
+  const unlock = () => {
+    if (!isUnlocked(sel.id)) setDex({ ...dex, unlocked: [...dex.unlocked, sel.id] });
+  };
+  const sections = [
+    { key: 'egg', label: '★ TRỨNG NGUYÊN TỐ', items: DEX_ENTRIES.filter(e => e.kind === 'egg') },
+  ].concat(Object.values(CATALOG).map(line => ({
+    key: line.id,
+    label: line.icon + ' LINE ' + line.name.toUpperCase() + ' — 3 STAGE + 2 NHÁNH + 1 LAI',
+    items: DEX_ENTRIES.filter(e => e.lineId === line.id),
+  })));
+  const count = dex.unlocked.length;
+  const total = DEX_ENTRIES.length;
+  const blocks = [];
+  for (let i = 0; i < total; i++) blocks.push(<i key={i} className={i < count ? 'on' : ''} />);
+
+  return (
+    <div className="web-app">
+      <header className="web-bar">
+        <span className="psp web-mark">PET POMODORO</span>
+        <nav className="web-nav">
+          <span className="wnav active">Pokédex</span>
+          <span className="wnav">Thống kê</span>
+          <span className="wnav">Cửa hàng</span>
+        </nav>
+        <div className="web-right">
+          <CoinChip coin={12} />
+          <div className="avatar sm">
+            <PixelSprite rows={AVATAR_ROWS} pal={AVATAR_PAL} px={2.6} />
+          </div>
+        </div>
+      </header>
+      <div className="web-main">
+        <section className="web-left">
+          <LcdPanel className="lcd-web">
+            <div className="w-content">
+              <div className="dex-head">
+                <div>
+                  <div className="psp" style={{ fontSize: 15, color: 'var(--ink)' }}>POKÉDEX</div>
+                  <div className="dex-legend">
+                    {total} form · 3 line nguyên tố
+                    <span className="sw" style={{ background: '#45B54E' }} />đã phát hiện
+                    <span className="sw" style={{ background: SIL_COLOR }} />chưa gặp (silhouette)
+                  </div>
+                </div>
+                <div className="dex-count">
+                  <span className="pixelfont" style={{ whiteSpace: 'nowrap' }}>{count}/{total} ĐÃ PHÁT HIỆN</span>
+                  <div className="dex-blocks">{blocks}</div>
+                </div>
+              </div>
+              <div className="dex-grid">
+                {sections.map(sec => (
+                  <React.Fragment key={sec.key}>
+                    <div className="dex-line-head"><span>{sec.label}</span><span className="rule" /></div>
+                    {sec.items.map(e => (
+                      <DexCell key={e.id} e={e} unlocked={isUnlocked(e.id)} sel={e.id === dex.selId}
+                        onSelect={() => setDex({ ...dex, selId: e.id })} />
+                    ))}
+                  </React.Fragment>
+                ))}
+              </div>
+            </div>
+          </LcdPanel>
+        </section>
+        <section className="web-right-col">
+          <div className="plastic-card">
+            <div className="mc-head mini-label" style={{ marginBottom: 8 }}>CHI TIẾT FORM · ĐIỀU KIỆN ĐỌC TỪ REGISTRY</div>
+            <DexDetail e={sel} unlocked={isUnlocked(sel.id)} onUnlock={unlock} />
+          </div>
+          <div className="plastic-card">
+            <div className="mc-head mini-label" style={{ marginBottom: 4 }}>KIẾN TRÚC MỞ (SPEC §1) · UI ĐỌC TỪ SYSTEMS</div>
+            {SYSTEMS.map(sys => (
+              <div className="sys-row" key={sys.id}>
+                <span className="psp">{sys.id.toUpperCase()}</span>
+                <span className="sys-desc">
+                  on: {sys.on ? Object.keys(sys.on).join(', ') : '—'}
+                  {sys.decay ? ' · decay: ' + Object.keys(sys.decay).map(k => sys.decay[k] + ' (' + k + ')').join(', ') : ''}
+                  {' · ui: ' + (sys.ui || []).map(u => u.slot + '/' + u.type).join(', ')}
+                </span>
+              </div>
+            ))}
+            <div className="dev-chips" style={{ marginTop: 8 }}>
+              <span className="dev-chip">CATALOG · 19 FORM</span>
+              <span className="dev-chip">COND · 7 KEYS</span>
+              <span className="dev-chip ok">THÊM HỆ = THÊM 1 ENTRY</span>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+/* ============================ PAGE ============================ */
+
+function App() {
+  return (
+    <div className="page">
+      <header className="page-head">
+        <h1>Kịch bản 3 · 🧬 LAI TẠO &amp; POKÉDEX — Cozy Handheld Console (gameplay v2)</h1>
+        <p>
+          Demo kịch bản 3 theo <b>gameplay-spec v2</b>: line <b>Lửa (Tàn Lửa)</b> làm hero. Chọn hướng mầm nguyên tố từ Stage 2,
+          săn form lai <b>HIẾM Hơi Nước Bốc</b> (Lửa×Thủy · điều kiện kép <b>power≥85 ∧ streak≥10</b> đọc từ registry),
+          mô phỏng <b>nghỉ 2 tuần</b> để thấy biến thể ỐM YẾU (level giữ nguyên, sức mạnh sụp 62→14, thể trạng 78→18),
+          và <b>POKÉDEX 19 form</b> render từ CATALOG — đã mở thì full màu, chưa gặp thì silhouette.
+          Mỗi máy là một state machine độc lập; toàn bộ form, điều kiện, nhánh render từ 3 config
+          <b> CATALOG · COND · SYSTEMS</b> — kiến trúc mở của spec §1.
+        </p>
+      </header>
+      <div className="demo-row">
+        <ConsolePhone
+          label="① Chọn trứng"
+          tint="#F6EFDF"
+          initial={{ ...BASE_STATE, tab: 'egg' }}
+        />
+        <ConsolePhone
+          label="② Đang tập trung"
+          tint="#D8EAD2"
+          initial={{ ...BASE_STATE, tab: 'focus' }}
+        />
+        <ConsolePhone
+          label="③ Lai tạo"
+          tint="#F3D9C8"
+          initial={{ ...BASE_STATE, tab: 'breed' }}
+        />
+        <ConsolePhone
+          label="④ Thống kê"
+          tint="#F6DCE0"
+          initial={{ ...BASE_STATE, tab: 'stats' }}
+        />
+        <div className="demo-item">
+          <em className="demo-label">⑤ Pokédex — petpomodoro.app/pokedex</em>
+          <BrowserWindow
+            title="Pet Pomodoro — Pokédex 19 form"
+            url="petpomodoro.app/pokedex"
+            width={1060}
+            height={790}
+          >
+            <PokedexApp />
+          </BrowserWindow>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+
+# Node / npm
+node_modules/
+*.log
+
+# Secrets / env
+.env
+.env.*
+*.jks
+*.pem
+google-services.json
+
+# Tooling cục bộ
+.zcode/
+
+# Script tạm
+scripts/.tmp-*
